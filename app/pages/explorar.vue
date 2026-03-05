@@ -1,5 +1,5 @@
 <template>
-  <div class="wrap">
+  <div class="container">
     <header class="top">
       <h1>Explorar</h1>
       <p class="sub">Ropa de segunda mano (mock). Precios en €.</p>
@@ -13,37 +13,40 @@
 
 <script setup lang="ts">
 import { mockItems } from '../mock/items'
-
 const items = mockItems
 </script>
 
 <style scoped>
-.wrap {
+.container{
+  /* esto crea el “margen” lateral en TODAS las pantallas */
   max-width: 1100px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 18px 16px;
 }
-.top {
-  margin-bottom: 12px;
+
+.top{ margin-bottom: 12px; }
+.sub{ margin:0; color:#666; font-size:14px; }
+
+.grid{
+  display:grid;
+  gap:16px;
+
+  /* por defecto (móvil) 1 columna */
+  grid-template-columns: 1fr;
 }
-.sub {
-  margin: 0;
-  color: #666;
-  font-size: 14px;
+
+/* 2 columnas cuando ya cabe (móvil grande) */
+@media (min-width: 520px){
+  .grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+
+/* 3 columnas */
+@media (min-width: 820px){
+  .grid{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
-@media (min-width: 640px) {
-  .grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-@media (min-width: 960px) {
-  .grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
+
+/* 4 columnas */
+@media (min-width: 1100px){
+  .grid{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 </style>
