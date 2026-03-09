@@ -18,29 +18,35 @@ const items = mockItems
 
 <style scoped>
 .container{
-  /* en pantallas grandes usamos más ancho, pero sin volverse infinito */
-  max-width: 1320px;
+  /* esto crea el “margen” lateral en TODAS las pantallas */
+  max-width: 1100px;
   margin: 0 auto;
   padding: 18px 16px;
 }
+
+.top{ margin-bottom: 12px; }
+.sub{ margin:0; color:#666; font-size:14px; }
 
 .grid{
   display:grid;
   gap:16px;
 
-  /* magia: mete tantas columnas como quepan */
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  /* por defecto (móvil) 1 columna */
+  grid-template-columns: 1fr;
 }
 
-/* un poquito más de aire en desktop grande */
-@media (min-width: 1024px){
-  .container{ padding: 24px 20px; }
-  .grid{ gap:18px; }
+/* 2 columnas cuando ya cabe (móvil grande) */
+@media (min-width: 520px){
+  .grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-/* si la pantalla es enorme, aprovecha más ancho */
-@media (min-width: 1440px){
-  .container{ max-width: 1500px; }
-  .grid{ gap:20px; }
+/* 3 columnas */
+@media (min-width: 820px){
+  .grid{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* 4 columnas */
+@media (min-width: 1100px){
+  .grid{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 </style>
