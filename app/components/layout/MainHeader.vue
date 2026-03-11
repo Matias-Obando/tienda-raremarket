@@ -1,8 +1,8 @@
 <template>
   <header class="rm-header">
     <div class="rm-container rm-header__inner">
-      <NuxtLink to="/" class="rm-header__logo" aria-label="RareMarket">
-        RareMarket
+      <NuxtLink to="/" class="rm-header__logo" aria-label="Closely">
+        Closely
       </NuxtLink>
 
       <form class="rm-header__search" role="search" @submit.prevent="submitSearch">

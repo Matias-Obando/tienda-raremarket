@@ -1,6 +1,6 @@
 <template>
   <div class="rm-container page">
-    <!-- ✅ Volver “modo app”: usa from si existe; si no, vuelve atrás de verdad -->
+    
     <a class="back" href="#" @click.prevent="goBack">← Volver</a>
 
     <div v-if="!item" class="notfound">
@@ -29,7 +29,7 @@
 
           <p class="desc">{{ item.descripcion }}</p>
 
-          <!-- Desktop: botón normal (en móvil lo ocultamos y usamos solo el sticky) -->
+          
           <button class="btn rm-btn rm-btn--primary" type="button" @click="reservarMock">
             Reservar (mock)
           </button>
@@ -38,7 +38,7 @@
         </div>
       </div>
 
-      <!-- Relacionados (con fallback) -->
+      
       <section v-if="relatedItems.length" class="related">
         <div class="relatedHeader">
           <h2 class="relatedTitle">{{ relatedTitle }}</h2>
@@ -51,7 +51,7 @@
       </section>
     </div>
 
-    <!-- Sticky CTA (mobile) -->
+    
     <div v-if="item" class="stickyCta" role="region" aria-label="Acción principal">
       <div class="stickyInner">
         <div class="stickyLeft">
@@ -107,7 +107,7 @@ function goBack() {
     return
   }
 
-  // ✅ “modo app”: volver atrás de verdad si hay historial
+  
   if (window.history.length > 1) {
     router.back()
     return
@@ -221,7 +221,7 @@ function reservarMock() {
   border-radius: var(--rm-radius);
 }
 
-/* Relacionados */
+
 .related {
   margin-top: 26px;
   padding-top: 14px;
@@ -260,7 +260,7 @@ function reservarMock() {
   }
 }
 
-/* Sticky CTA */
+
 .stickyCta {
   position: fixed;
   left: 0;
@@ -308,7 +308,7 @@ function reservarMock() {
   white-space: nowrap;
 }
 
-/* Desktop */
+
 @media (min-width: 900px) {
   .page {
     padding-bottom: 40px;

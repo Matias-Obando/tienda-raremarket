@@ -2,8 +2,8 @@
   <footer class="footer">
     <div class="inner">
       <div>
-        <div class="brand">RareMarket</div>
-        <div class="copy">© 2026 Raremarket. Todos los derechos reservados</div>
+        <div class="brand">Closely</div>
+        <div class="copy">© 2026 Closely. Todos los derechos reservados</div>
       </div>
 
       <div class="legal">
