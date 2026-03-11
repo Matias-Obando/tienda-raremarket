@@ -1,4 +1,4 @@
-# Notas del proyecto Tienda RareMarket
+# Notas del proyecto Tienda Closely
 
 ## Stack
 - Nuxt 3
@@ -10,3 +10,4 @@
 - main (principal): no se toca directo
 - desarrollo: integración
 - tarea/...: trabajo de cada cosa
+

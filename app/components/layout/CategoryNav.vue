@@ -105,7 +105,7 @@ function isActive(key: string) {
   right: 0;
   bottom: -1px;
   height: 2px;
-  background: var(--rm-red);
+  background: var(--rm-primary);
   border-radius: 2px;
 }
 

@@ -1,8 +1,10 @@
 <template>
   <header class="rm-header">
     <div class="rm-container rm-header__inner">
-      <NuxtLink to="/" class="rm-header__logo" aria-label="RareMarket">
-        RareMarket
+      
+      <NuxtLink to="/" class="rm-header__logo" aria-label="Closely">
+        <img src="/photos/closely-logo.png" srcset="/photos/closely-logo.png 2x" alt="Closely logo"
+          class="brandLogo" />
       </NuxtLink>
 
       <form class="rm-header__search" role="search" @submit.prevent="submitSearch">
@@ -184,5 +186,14 @@ function submitSearch() {
   .rm-header__lang {
     display: inline-flex;
   }
+}
+
+.brandLogo {
+  height: clamp(36px, 5vw, 56px); 
+  width: auto;
+  display: inline-block;
+  vertical-align: middle;
+  object-fit: contain;
+  margin-right: 12px;
 }
 </style>
