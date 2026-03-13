@@ -1,74 +1,97 @@
 <template>
   <div class="rm-container page">
-    
     <a class="back" href="#" @click.prevent="goBack">← Volver</a>
 
-    <div v-if="!item" class="notfound">
-      No se encontró el producto.
-    </div>
+    <div v-if="!item" class="notfound">No se encontró el producto.</div>
 
-    <div v-else>
-      <div class="layout">
+    <div v-else class="product-grid">
+      <div class="leftCol">
         <div class="media">
-          <img :src="item.imagen" :alt="item.titulo" class="img" />
-        </div>
+          <span
+            class="badge"
+            :class="{
+              'badge-new': item.estado === 'Nuevo',
+              'badge-like-new': item.estado === 'Como nuevo',
+              'badge-used': item.estado === 'Usado'
+            }"
+            aria-hidden="true"
+          >{{ item.estado }}</span>
 
-        <div class="info">
-          <h1 class="title">{{ item.titulo }}</h1>
-
-          <div class="priceRow">
-            <div class="price">{{ item.precioEur.toFixed(2) }} €</div>
-          </div>
-
-          <div class="chips">
-            <span class="chip">{{ item.categoria }}</span>
-            <span class="chip">{{ item.marca }}</span>
-            <span class="chip">Talla {{ item.talla }}</span>
-            <span class="chip">{{ item.estado }}</span>
-          </div>
-
-          <p class="desc">{{ item.descripcion }}</p>
-
-          
-          <button class="btn rm-btn rm-btn--primary" type="button" @click="reservarMock">
-            Reservar (mock)
+          <button
+            class="fav-btn"
+            @click.prevent="toggleFavorite"
+            :aria-pressed="isFav"
+            :title="isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'"
+          >
+            <svg v-if="isFav" class="icon fav-on" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 6 4 4 6.5 4c1.74 0 3.41.81 4.5 2.09C12.09 4.81 13.76 4 15.5 4 18 4 20 6 20 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
+            <svg v-else class="icon fav-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
           </button>
 
-          <p class="small">Publicado {{ item.creadoHace }} · Solo envío (por ahora)</p>
+          <img :src="currentImage" :alt="item.titulo" class="img" />
+        </div>
+
+        <div class="thumbs" role="list" aria-label="Miniaturas">
+          <button
+            v-for="(t, i) in thumbs"
+            :key="i"
+            class="thumb"
+            :class="{ active: t === currentImage }"
+            @click="selectImage(t)"
+            @keyup.enter.space.prevent="selectImage(t)"
+            :aria-pressed="t === currentImage"
+            role="listitem"
+            type="button"
+            :title="`Ver imagen ${i + 1}`"
+          >
+            <img :src="t" :alt="`Miniatura ${i + 1} de ${item.titulo}`" />
+          </button>
         </div>
       </div>
 
-      
-      <section v-if="relatedItems.length" class="related">
-        <div class="relatedHeader">
-          <h2 class="relatedTitle">{{ relatedTitle }}</h2>
-          <NuxtLink to="/explorar" class="relatedLink">Ver todo</NuxtLink>
+      <div class="rightCol">
+        <h1 class="title">{{ item.titulo }}</h1>
+
+        <div class="priceWrap">
+          <div class="price">{{ item.precioEur }} €</div>
         </div>
 
-        <div class="relatedGrid">
-          <ItemCard v-for="r in relatedItems" :key="r.id" :item="r" />
-        </div>
-      </section>
-    </div>
-
-    
-    <div v-if="item" class="stickyCta" role="region" aria-label="Acción principal">
-      <div class="stickyInner">
-        <div class="stickyLeft">
-          <div class="stickyPrice">{{ item.precioEur.toFixed(2) }} €</div>
-          <div class="stickyHint">{{ item.titulo }}</div>
+        <div class="chips-real">
+          <span class="chip-real">{{ item.categoria }}</span>
+          <span class="chip-real">{{ item.marca }}</span>
+          <span class="chip-real">Talla {{ item.talla }}</span>
+          <span class="chip-real">{{ item.estado }}</span>
         </div>
 
-        <button class="rm-btn rm-btn--primary stickyBtn" type="button" @click="reservarMock">
-          Reservar
-        </button>
+        <p class="desc">{{ item.descripcion }}</p>
+
+        <div class="actions">
+          <button class="rm-btn rm-btn--primary" @click="comprarMock">Comprar</button>
+          <button class="rm-btn rm-btn--primary" @click="openContact">Enviar mensaje</button>
+        </div>
+
+        <div class="meta small">Publicado {{ item.creadoHace }}</div>
       </div>
     </div>
+
+    <hr class="separator" />
+
+    <section v-if="relatedItems.length" class="related">
+      <h2 class="relatedTitle">Te puede interesar</h2>
+      <div class="relatedGrid">
+        <ItemCard v-for="r in relatedItems" :key="r.id" :item="r" />
+      </div>
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { mockItems } from '~/mock/items'
+import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue'
+import ItemCard from '~/components/ItemCard.vue'
+import { mockItems } from '~/stores/items'
 
 const route = useRoute()
 const router = useRouter()
@@ -76,11 +99,28 @@ const router = useRouter()
 const id = computed(() => String(route.params.id))
 const item = computed(() => mockItems.find((x) => String(x.id) === id.value) ?? null)
 
+const thumbs = computed<string[]>(() => {
+  if (!item.value) return []
+  if (Array.isArray((item.value as any).images) && (item.value as any).images.length > 0) {
+    return (item.value as any).images
+  }
+  const base = item.value.imagen
+  return [base, base] 
+})
+
+const currentImage = ref<string>('')
+
+watch(item, (n) => {
+  currentImage.value = thumbs.value[0] ?? ''
+}, { immediate: true })
+
+function selectImage(src: string) {
+  currentImage.value = src
+}
+
 const hasSameCategoryRelated = computed(() => {
   if (!item.value) return false
-  return mockItems.some(
-    (x) => x.categoria === item.value!.categoria && String(x.id) !== String(item.value!.id),
-  )
+  return mockItems.some((x) => x.categoria === item.value!.categoria && String(x.id) !== String(item.value!.id))
 })
 
 const relatedTitle = computed(() => {
@@ -90,13 +130,8 @@ const relatedTitle = computed(() => {
 
 const relatedItems = computed(() => {
   if (!item.value) return []
-
-  const sameCategory = mockItems
-    .filter((x) => x.categoria === item.value!.categoria && String(x.id) !== String(item.value!.id))
-    .slice(0, 4)
-
+  const sameCategory = mockItems.filter((x) => x.categoria === item.value!.categoria && String(x.id) !== String(item.value!.id)).slice(0, 4)
   if (sameCategory.length) return sameCategory
-
   return mockItems.filter((x) => String(x.id) !== String(item.value!.id)).slice(0, 4)
 })
 
@@ -106,246 +141,174 @@ function goBack() {
     navigateTo(from)
     return
   }
-
-  
-  if (window.history.length > 1) {
-    router.back()
-    return
-  }
-
-  // fallback seguro
+  if (window.history.length > 1) { router.back(); return }
   navigateTo('/explorar')
 }
 
-function reservarMock() {
-  if (!item.value) return
-  alert(`Reserva simulada: ${item.value.titulo}. Luego lo conectamos con Supabase.`)
+function comprarMock() {
+  if (!item.value) return alert(`Compra simulada: ${item.value.titulo}`)
 }
+const showContact = ref(false)
+function openContact() { showContact.value = !showContact.value }
+
+const LS_KEY = 'closely:favorites'
+const isFav = ref(false)
+function readFavorites(): string[] {
+  try { const raw = localStorage.getItem(LS_KEY); return raw ? JSON.parse(raw) : [] } catch { return [] }
+}
+function writeFavorites(arr: string[]) {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(arr))
+    window.dispatchEvent(new CustomEvent('closely:favs:updated', { detail: arr }))
+  } catch {}
+}
+function toggleFavorite() {
+  if (!item.value) return
+  const favs = readFavorites()
+  const idx = favs.indexOf(item.value.id)
+  if (idx >= 0) { favs.splice(idx, 1); isFav.value = false } else { favs.push(item.value.id); isFav.value = true }
+  writeFavorites(favs)
+}
+function syncFavs() {
+  if (!item.value) { isFav.value = false; return }
+  const favs = readFavorites()
+  isFav.value = favs.includes(item.value.id)
+}
+onMounted(() => { syncFavs(); window.addEventListener('storage', syncFavs); window.addEventListener('closely:favs:updated', syncFavs) })
+onBeforeUnmount(() => { window.removeEventListener('storage', syncFavs); window.removeEventListener('closely:favs:updated', syncFavs) })
 </script>
 
 <style scoped>
-.page {
-  padding: 18px 12px 96px;
-}
 
-@media (min-width: 520px) {
-  .page {
-    padding-left: 0;
-    padding-right: 0;
-  }
-}
+.page { padding: 18px 12px 60px; }
 
-.back {
-  display: inline-block;
-  margin: 10px 0 16px;
-  color: var(--rm-text);
-  text-decoration: none;
-}
-
-.layout {
+.product-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 18px;
+  gap: 28px;
 }
+@media (min-width: 900px) {
+  .product-grid { grid-template-columns: 62% 38%; align-items: start; }
+}
+
+.leftCol { display: flex; flex-direction: column; gap: 14px; }
 
 .media {
-  border: 1px solid var(--rm-border);
-  border-radius: var(--rm-radius);
+  position: relative;
+  border-radius: 12px;
   overflow: hidden;
   background: var(--rm-soft);
-  aspect-ratio: 4 / 3;
+  height: 520px;
+}
+@media (min-width: 1200px) { .media { height: 560px; } }
+
+.img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.badge {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  z-index: 20;
+  font-size: 13px;
+  font-weight: 700;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 999px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+}
+.badge-new { background: #16a34a; }
+.badge-like-new { background: #4f46e5; }
+.badge-used { background: #374151; }
+
+.fav-btn {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  z-index: 30;
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.95);
+  border: 1px solid rgba(0,0,0,0.04);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  transition: transform .12s ease;
+}
+.fav-btn:hover { transform: translateY(-3px); }
+.icon { width: 18px; height: 18px; display: block; }
+.fav-on { color: #ef4444; }
+.fav-off { color: #6b7280; }
+
+.thumbs {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+.thumb {
+  flex: 1 1 0;
+  height: 140px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--rm-border);
+  padding: 0;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.thumb.active {
+  outline: 3px solid rgba(16,185,129,0.18);
+  box-shadow: 0 8px 20px rgba(16,185,129,0.06);
+  transform: translateY(-4px);
 }
 
-.img {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: cover;
-}
+.rightCol { padding-top: 6px; }
 
 .title {
   margin: 0 0 10px;
   font-size: 34px;
-  line-height: 1.1;
-  letter-spacing: -0.03em;
+  font-weight: 800;
+  line-height: 1.06;
+  color: var(--rm-text);
 }
 
-.priceRow {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  margin-bottom: 10px;
-}
+@media (min-width: 1200px) { .title { font-size: 40px; } }
 
-.price {
-  font-weight: 900;
-  font-size: 24px;
-}
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 8px 0 14px;
-}
-
-.chip {
-  font-size: 12px;
+.priceWrap { margin-bottom: 12px; }
+.price { font-weight: 900; font-size: 26px; color: var(--rm-text); }
+.chips-real { display:flex; gap:8px; margin-bottom: 14px; flex-wrap:wrap; }
+.chip-real {
   padding: 6px 10px;
   border-radius: 999px;
   border: 1px solid var(--rm-border);
   background: #fff;
   color: var(--rm-text);
-}
-
-.desc {
-  margin: 0 0 14px;
-  color: var(--rm-text);
-}
-
-.btn {
-  display: none;
-  width: 100%;
-  justify-content: center;
-}
-
-.small {
-  margin-top: 10px;
-  color: var(--rm-muted);
-  font-size: 12px;
-}
-
-.notfound {
-  padding: 20px;
-  border: 1px dashed var(--rm-border);
-  border-radius: var(--rm-radius);
-}
-
-
-.related {
-  margin-top: 26px;
-  padding-top: 14px;
-  border-top: 1px solid var(--rm-border);
-}
-
-.relatedHeader {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.relatedTitle {
-  margin: 0;
-  font-size: 16px;
-  letter-spacing: -0.02em;
-}
-
-.relatedLink {
-  color: var(--rm-muted);
-  text-decoration: none;
   font-size: 13px;
+  font-weight: 600;
 }
 
-.relatedGrid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-}
+.desc { margin: 0 0 18px; color: #374151; }
 
-@media (min-width: 520px) {
-  .relatedGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
+.actions { display:flex; gap:14px; align-items:center; margin-bottom:12px; }
 
+.small { font-size: 12px; color: #9aa0a6; margin-top:8px; }
+.separator { border: 0; border-top: 1px solid var(--rm-border); margin: 28px 0; }
+.related { margin-top: 18px; }
+.relatedTitle { font-weight: 700; margin: 6px 0 12px; }
+.relatedGrid { display:grid; grid-template-columns: repeat(2,1fr); gap: 12px; }
 
-.stickyCta {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 9999;
+@media (min-width: 900px) { .relatedGrid { grid-template-columns: repeat(4,1fr); } }
 
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(10px);
-  border-top: 1px solid var(--rm-border);
+.notfound { padding: 16px; border: 1px dashed var(--rm-border); border-radius:8px; }
 
-  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
-}
-
-.stickyInner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 2px;
-}
-
-.stickyLeft {
-  min-width: 0;
-}
-
-.stickyPrice {
-  font-weight: 900;
-  line-height: 1.1;
-}
-
-.stickyHint {
-  font-size: 12px;
-  color: var(--rm-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 54vw;
-}
-
-.stickyBtn {
-  min-height: 44px;
-  white-space: nowrap;
-}
-
-
-@media (min-width: 900px) {
-  .page {
-    padding-bottom: 40px;
-  }
-
-  .layout {
-    grid-template-columns: 1.1fr 0.9fr;
-    align-items: start;
-    gap: 22px;
-  }
-
-  .media {
-    aspect-ratio: 1 / 1;
-  }
-
-  .info {
-    position: sticky;
-    top: 92px;
-    align-self: start;
-  }
-
-  .title {
-    font-size: 40px;
-  }
-
-  .btn {
-    display: inline-flex;
-    width: auto;
-    min-width: 220px;
-  }
-
-  .stickyCta {
-    display: none;
-  }
-
-  .relatedGrid {
-    grid-template-columns: repeat(4, 1fr);
-  }
+@media (max-width: 899px) {
+  .media { height: 360px; }
+  .thumb { height: 96px; }
 }
 </style>
