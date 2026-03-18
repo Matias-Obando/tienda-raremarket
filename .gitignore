@@ -9,6 +9,9 @@ dist
 # Node dependencies
 node_modules
 
+# Java build output
+backend/target
+
 # Logs
 logs
 *.log
