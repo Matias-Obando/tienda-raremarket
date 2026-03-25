@@ -1,16 +1,13 @@
 <template>
   <div class="rm-container rm-page">
     <header class="top">
-      <h1 class="title">
-        Explorar
-        <span v-if="activeLabel" class="titleTag">· {{ activeLabel }}</span>
-      </h1>
+
 
       <div class="subRow">
         <label class="sort">
           <span class="sortLabel">Orden</span>
           <select v-model="sort" class="sortSelect">
-            <option value="new">Recién llegados</option>
+            <option value="new">Últimos añadidos</option>
             <option value="price_asc">Precio: menor a mayor</option>
             <option value="price_desc">Precio: mayor a menor</option>
           </select>
@@ -175,10 +172,9 @@ const resultsText = computed(() => {
 </script>
 
 <style scoped>
-
 .rm-page {
-  --card-max: 360px;
-  --grid-gap: 36px; 
+  --card-max: 280px;
+  --grid-gap: 28px;
 }
 
 
@@ -190,11 +186,45 @@ const resultsText = computed(() => {
   padding-right: 40px;
 }
 
+/* Empuja hacia abajo el bloque de cabecera (Orden / Mostrando)
+   Usamos la altura calculada de la category nav para evitar solapamientos.
+  Añadimos 10px extra de espacio visual. */
+.top {
+  margin-top: calc(var(--catnav-height, 56px) + 10px);
+  margin-bottom: 12px;
+}
 
-.top { margin-bottom: 12px; }
-.title { margin: 6px 0 10px; letter-spacing: -0.03em; }
-.titleTag { font-weight: 700; color: var(--rm-muted); font-size: 0.65em; }
-.hint { margin: 10px 0 0; color: var(--rm-muted); font-size: 13px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+
+@media (min-width: 900px) {
+  .top { margin-top: calc(var(--catnav-height, 56px) + 14px); }
+}
+
+
+.title { 
+  margin: 6px 0 10px; 
+  letter-spacing: -0.03em; 
+}
+.titleTag { 
+  font-weight: 700; 
+  color: var(--rm-muted); 
+  font-size: 0.65em; 
+}
+.hint { 
+  margin: 10px 0 0; 
+  color: var(--rm-muted); 
+  font-size: 13px; display:flex; 
+  gap:10px; 
+  flex-wrap:wrap; 
+  align-items:center; 
+}
+
+
+.top > .subRow,
+.top > .hint {
+  padding-left: 24px !important;
+}
+
+
 .subRow { margin-top:10px; display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
 .sort { display:inline-flex; align-items:center; gap:8px; color:var(--rm-muted); font-size:13px; }
 .sortLabel { display:none; }
@@ -207,7 +237,7 @@ const resultsText = computed(() => {
 .empty { padding:14px; border:1px dashed var(--rm-border); border-radius:var(--rm-radius); background:#fff; color:var(--rm-text); }
 .emptyActions { margin-top:10px; display:flex; gap:10px; flex-wrap:wrap; }
 
- 
+
 .grid {
   display: grid;
   gap: var(--grid-gap);
@@ -215,7 +245,8 @@ const resultsText = computed(() => {
   width: 100%;
   box-sizing: border-box;
   margin: 18px 0 0;
-  grid-template-columns: repeat(auto-fit, minmax(260px, var(--card-max)));
+  grid-template-columns: repeat(4, minmax(0, var(--card-max)));
+  justify-items: center;
 }
 
 
@@ -226,12 +257,14 @@ const resultsText = computed(() => {
 }
 
 
-@media (min-width: 520px) {
-  .rm-container { padding-left: 44px; padding-right: 44px; }
+@media (max-width: 1100px) {
+  .grid { grid-template-columns: repeat(3, minmax(0, calc(var(--card-max) - 40px))); }
 }
-@media (min-width: 1100px) {
-  .rm-page { --card-max: 380px; }
-  .rm-container { padding-left: 48px; padding-right: 48px; }
+@media (max-width: 850px) {
+  .grid { grid-template-columns: repeat(2, minmax(0, calc(var(--card-max) - 80px))); }
+}
+@media (max-width: 520px) {
+  .grid { grid-template-columns: repeat(1, 1fr); }
 }
 
 

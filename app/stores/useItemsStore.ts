@@ -46,7 +46,7 @@ export const useItemsStore = defineStore('items', {
   actions: {
     async fetchMock() {
       this.loading = true
-      // pequeña latencia para simular petición
+
       await new Promise((r) => setTimeout(r, 120))
       this.items = mockItems
       this.loading = false

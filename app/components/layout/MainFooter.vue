@@ -4,7 +4,7 @@
       <div class="container">
         <div class="left">
           <div id="footer-brand" class="brand">closely</div>
-          <div class="copy">© 2026 Raremarket. Todos los derechos reservados</div>
+          <div class="copy">© 2026 Closely. Todos los derechos reservados</div>
 
           <div class="social" aria-label="Redes sociales">
             <a class="icon" href="#" aria-label="Instagram" title="Instagram">
