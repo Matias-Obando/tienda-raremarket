@@ -18,6 +18,7 @@ export type Item = {
   talla: Talla
   estado: Estado
   imagen: string
+  images?: string[] 
   creadoHace: string
 }
 
@@ -32,6 +33,11 @@ export const mockItems: Item[] = [
     talla: 'M',
     estado: 'Usado',
     imagen: 'https://picsum.photos/seed/ropa1/800/800',
+    images: [
+      'https://picsum.photos/seed/ropa1a/1200/900',
+      'https://picsum.photos/seed/ropa1b/1200/900',
+      'https://picsum.photos/seed/ropa1c/1200/900'
+    ],
     creadoHace: 'hace 2 horas',
   },
   {
@@ -44,6 +50,11 @@ export const mockItems: Item[] = [
     talla: 'S',
     estado: 'Como nuevo',
     imagen: 'https://picsum.photos/seed/ropa2/800/800',
+    images: [
+      'https://picsum.photos/seed/ropa2a/1200/900',
+      'https://picsum.photos/seed/ropa2b/1200/900',
+      'https://picsum.photos/seed/ropa2c/1200/900'
+    ],
     creadoHace: 'hace 1 día',
   },
   {
@@ -56,6 +67,11 @@ export const mockItems: Item[] = [
     talla: 'L',
     estado: 'Usado',
     imagen: 'https://picsum.photos/seed/ropa3/800/800',
+    images: [
+      'https://picsum.photos/seed/ropa3a/1200/900',
+      'https://picsum.photos/seed/ropa3b/1200/900',
+      'https://picsum.photos/seed/ropa3c/1200/900'
+    ],
     creadoHace: 'hace 3 días',
   },
   {
@@ -68,6 +84,11 @@ export const mockItems: Item[] = [
     talla: 'M',
     estado: 'Como nuevo',
     imagen: 'https://picsum.photos/seed/ropa4/800/800',
+    images: [
+      'https://picsum.photos/seed/ropa4a/1200/900',
+      'https://picsum.photos/seed/ropa4b/1200/900',
+      'https://picsum.photos/seed/ropa4c/1200/900'
+    ],
     creadoHace: 'hace 5 horas',
   },
   {
@@ -80,6 +101,11 @@ export const mockItems: Item[] = [
     talla: 'L',
     estado: 'Usado',
     imagen: 'https://picsum.photos/seed/ropa5/800/800',
+    images: [
+      'https://picsum.photos/seed/ropa5a/1200/900',
+      'https://picsum.photos/seed/ropa5b/1200/900',
+      'https://picsum.photos/seed/ropa5c/1200/900'
+    ],
     creadoHace: 'hace 4 días',
   },
 ]

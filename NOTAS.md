@@ -1,6 +1,6 @@
-# Notas del proyecto Tienda RareMarket
 
-## Stack
+
+
 - Nuxt 3
 - Tailwind CSS
 - Pinia
@@ -10,3 +10,4 @@
 - main (principal): no se toca directo
 - desarrollo: integración
 - tarea/...: trabajo de cada cosa
+

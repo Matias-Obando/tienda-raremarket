@@ -1,4 +1,4 @@
-# Nuxt dev/build outputs
+
 .output
 .data
 .nuxt
@@ -6,22 +6,24 @@
 .cache
 dist
 
-# Node dependencies
+
 node_modules
 
 # Java build output
 backend/target
 
-# Logs
+
 logs
 *.log
 
-# Misc
+
 .DS_Store
 .fleet
 .idea
 
-# Local env files
+
 .env
 .env.*
 !.env.example
+
+*.bak
