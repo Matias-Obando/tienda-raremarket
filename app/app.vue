@@ -7,7 +7,7 @@
       <NuxtPage />
     </main>
 
-    <MainFooter />
+    <MainFooter v-if="$route.path !== '/auth'" />
   </div>
 </template>
 

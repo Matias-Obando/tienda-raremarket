@@ -2,7 +2,7 @@
   <article class="card">
     <NuxtLink :to="`/item/${item.id}`" class="card-link">
       <div class="media">
-        <!-- Badge estado (posición absoluta dentro de la media) -->
+
         <span
           class="badge"
           :class="{
@@ -15,7 +15,7 @@
           {{ item.estado }}
         </span>
 
-        <!-- Botón favorito -->
+
         <button
           class="fav-btn"
           @click.prevent="toggleFavorite"
@@ -115,10 +115,10 @@ onBeforeUnmount(() => {
   box-shadow: var(--rm-shadow);
 }
 
-/* Link dentro de la card para que todo sea clicable excepto el botón favorito */
+
 .card-link { display: block; color: inherit; text-decoration: none; }
 
-/* Imagen con aspect ratio y posición relativa para badges */
+
 .media {
   position: relative;
   aspect-ratio: 4 / 3;
@@ -132,7 +132,7 @@ onBeforeUnmount(() => {
   display: block;
 }
 
-/* Badge estado: discreto y dentro de la imagen */
+
 .badge {
   position: absolute;
   left: 10px;
@@ -145,11 +145,11 @@ onBeforeUnmount(() => {
   border-radius: 999px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.12);
 }
-.badge-new { background: #16a34a; }       /* verde */
-.badge-like-new { background: #4f46e5; }  /* índigo */
-.badge-used { background: #374151; }      /* gris oscuro */
+.badge-new { background: #16a34a; }
+.badge-like-new { background: #4f46e5; }
+.badge-used { background: #374151; }
 
-/* Botón favorito: pequeño círculo en la esquina superior derecha */
+
 .fav-btn {
   position: absolute;
   right: 8px;
@@ -171,7 +171,7 @@ onBeforeUnmount(() => {
 .fav-on { color: #ef4444; }
 .fav-off { color: #6b7280; }
 
-/* Body */
+
 .body {
   padding: 12px;
 }

@@ -191,7 +191,13 @@ onBeforeUnmount(() => { window.removeEventListener('storage', syncFavs); window.
   .product-grid { grid-template-columns: 62% 38%; align-items: start; }
 }
 
-.leftCol { display: flex; flex-direction: column; gap: 14px; }
+.leftCol { 
+  margin-top: 50px;
+  max-width: 90%;
+  max-height: 80%;
+  display: flex; 
+  flex-direction: column; 
+  gap: 14px; }
 
 .media {
   position: relative;
@@ -268,7 +274,10 @@ onBeforeUnmount(() => { window.removeEventListener('storage', syncFavs); window.
   transform: translateY(-4px);
 }
 
-.rightCol { padding-top: 6px; }
+.rightCol { 
+  padding-top: 6px;
+  margin-top: 60px;
+}
 
 .title {
   margin: 0 0 10px;

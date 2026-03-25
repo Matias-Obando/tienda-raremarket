@@ -1,6 +1,6 @@
-# Notas del proyecto Tienda Closely
 
-## Stack
+
+
 - Nuxt 3
 - Tailwind CSS
 - Pinia
