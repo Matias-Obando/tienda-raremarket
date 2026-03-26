@@ -3,7 +3,9 @@
     <NuxtLink :to="`/item/${item.id}`" class="card-link">
       <div class="media">
 
+
         <span
+          v-if="showBadge && item.estado"
           class="badge"
           :class="{
             'badge-new': item.estado === 'Nuevo',
@@ -16,7 +18,9 @@
         </span>
 
 
+
         <button
+          v-if="showFav"
           class="fav-btn"
           @click.prevent="toggleFavorite"
           :aria-pressed="isFav"
@@ -55,10 +59,17 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
+
 import type { Item } from '~/mock/items'
 
-const props = defineProps<{ item: Item }>()
+const props = defineProps<{
+  item: Item,
+  showBadge?: boolean,
+  showFav?: boolean
+}>()
 const item = props.item
+const showBadge = props.showBadge !== false
+const showFav = props.showFav !== false
 
 const LS_KEY = 'closely:favorites'
 const isFav = ref(false)
