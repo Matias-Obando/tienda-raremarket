@@ -1,7 +1,7 @@
 <template>
   <div>
-    <MainHeader />
-    <CategoryNav />
+    <MainHeader v-if="$route.path !== '/auth'" />
+    <CategoryNav v-if="$route.path !== '/auth'" />
 
     <main class="main">
       <NuxtPage />
