@@ -1,69 +1,63 @@
 package com.raremarket.backend.controller;
 
-import com.raremarket.backend.model.Item;
-import org.springframework.web.bind.annotation.*;
+import com.raremarket.backend.dto.item.ItemResponse;
+import com.raremarket.backend.dto.item.ItemUpsertRequest;
+import com.raremarket.backend.service.ItemService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/items")
 public class ItemController {
-    private final Map<String, Item> items = new HashMap<>();
+    private final ItemService itemService;
 
-    // Constructor con algunos datos de ejemplo
-    public ItemController() {
-        Item item1 = new Item();
-        item1.setId("1");
-        item1.setTitulo("Sudadera Nike vintage");
-        item1.setDescripcion("Sudadera cómoda, sin rotos. Pequeño desgaste normal.");
-        item1.setPrecioEur(25);
-        item1.setCategoria("Sudaderas");
-        item1.setMarca("Nike");
-        item1.setTalla("M");
-        item1.setEstado("Usado");
-        item1.setImagen("https://picsum.photos/seed/ropa1/800/800");
-        item1.setImages(new String[]{
-            "https://picsum.photos/seed/ropa1a/1200/900",
-            "https://picsum.photos/seed/ropa1b/1200/900",
-            "https://picsum.photos/seed/ropa1c/1200/900"
-        });
-        item1.setCreadoHace("hace 2 horas");
-        items.put(item1.getId(), item1);
-
-        Item item2 = new Item();
-        item2.setId("2");
-        item2.setTitulo("Camiseta básica blanca");
-        item2.setDescripcion("Algodón, corte regular. Ideal para diario.");
-        item2.setPrecioEur(8);
-        item2.setCategoria("Camisetas");
-        item2.setMarca("Zara");
-        item2.setTalla("S");
-        item2.setEstado("Como nuevo");
-        item2.setImagen("https://picsum.photos/seed/ropa2/800/800");
-        item2.setImages(new String[]{
-            "https://picsum.photos/seed/ropa2a/1200/900",
-            "https://picsum.photos/seed/ropa2b/1200/900",
-            "https://picsum.photos/seed/ropa2c/1200/900"
-        });
-        item2.setCreadoHace("hace 1 día");
-        items.put(item2.getId(), item2);
+    public ItemController(ItemService itemService) {
+        this.itemService = itemService;
     }
 
     @GetMapping
-    public Collection<Item> getAllItems() {
-        return items.values();
+    public List<ItemResponse> getAllItems(
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) String categoria,
+            @RequestParam(required = false) String talla,
+            @RequestParam(required = false) String estado,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) UUID sellerId,
+            @RequestParam(required = false) String sort
+    ) {
+        return itemService.listItems(query, categoria, talla, estado, minPrice, maxPrice, sellerId, sort);
     }
 
     @GetMapping("/{id}")
-    public Item getItemById(@PathVariable String id) {
-        return items.get(id);
+    public ItemResponse getItemById(@PathVariable String id) {
+        return itemService.getItemById(id);
     }
 
     @PostMapping
-    public Item createItem(@RequestBody Item item) {
-        String id = UUID.randomUUID().toString();
-        item.setId(id);
-        items.put(id, item);
-        return item;
+    public ItemResponse createItem(@RequestBody ItemUpsertRequest request) {
+        return itemService.createItem(request);
+    }
+
+    @PutMapping("/{id}")
+    public ItemResponse updateItem(@PathVariable String id, @RequestBody ItemUpsertRequest request) {
+        return itemService.updateItem(id, request);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteItem(@PathVariable String id) {
+        itemService.deleteItem(id);
+        return ResponseEntity.noContent().build();
     }
 }
