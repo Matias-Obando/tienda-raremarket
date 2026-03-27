@@ -21,7 +21,9 @@ public class UserService {
             userRepository.findByEmail(user.getEmail()).isPresent()) {
             return false;
         }
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        String encoded = passwordEncoder.encode(user.getPassword());
+        user.setPassword(encoded); // Para compatibilidad legacy
+        user.setPasswordHash(encoded); // Para compatibilidad con columna password_hash
         userRepository.save(user);
         return true;
     }

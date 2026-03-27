@@ -14,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 @Service
 public class ItemService {
@@ -46,7 +47,7 @@ public class ItemService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "minPrice cannot be greater than maxPrice");
         }
 
-        List<Specification<Item>> specs = List.of(
+        List<Specification<Item>> specs = Stream.of(
             searchSpecification(query),
             equalsIgnoreCase("categoria", categoria),
             equalsIgnoreCase("talla", talla),
@@ -54,7 +55,7 @@ public class ItemService {
             sellerId == null ? null : (root, ignoredQuery, cb) -> cb.equal(root.get("sellerId"), sellerId),
             minPrice == null ? null : (root, ignoredQuery, cb) -> cb.greaterThanOrEqualTo(root.get("precioEur"), minPrice),
             maxPrice == null ? null : (root, ignoredQuery, cb) -> cb.lessThanOrEqualTo(root.get("precioEur"), maxPrice)
-        ).stream().filter(s -> s != null).toList();
+        ).filter(s -> s != null).toList();
         Specification<Item> specification = specs.isEmpty() ? null : Specification.allOf(specs.toArray(new Specification[0]));
 
         return itemRepository.findAll(specification, resolveSort(sort)).stream()

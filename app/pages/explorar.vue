@@ -71,7 +71,7 @@ const route = useRoute()
 
 
 onMounted(async () => {
-  if (store.items.length === 0) await store.fetchMock()
+  if (store.items.length === 0) await store.fetchAll()
 })
 
 const cat = computed(() => {
