@@ -46,15 +46,16 @@ public class ItemService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "minPrice cannot be greater than maxPrice");
         }
 
-        Specification<Item> specification = Specification.allOf(
-                searchSpecification(query),
-                equalsIgnoreCase("categoria", categoria),
-                equalsIgnoreCase("talla", talla),
-                equalsIgnoreCase("estado", estado),
-                sellerId == null ? null : (root, ignoredQuery, cb) -> cb.equal(root.get("sellerId"), sellerId),
-                minPrice == null ? null : (root, ignoredQuery, cb) -> cb.greaterThanOrEqualTo(root.get("precioEur"), minPrice),
-                maxPrice == null ? null : (root, ignoredQuery, cb) -> cb.lessThanOrEqualTo(root.get("precioEur"), maxPrice)
-        );
+        List<Specification<Item>> specs = List.of(
+            searchSpecification(query),
+            equalsIgnoreCase("categoria", categoria),
+            equalsIgnoreCase("talla", talla),
+            equalsIgnoreCase("estado", estado),
+            sellerId == null ? null : (root, ignoredQuery, cb) -> cb.equal(root.get("sellerId"), sellerId),
+            minPrice == null ? null : (root, ignoredQuery, cb) -> cb.greaterThanOrEqualTo(root.get("precioEur"), minPrice),
+            maxPrice == null ? null : (root, ignoredQuery, cb) -> cb.lessThanOrEqualTo(root.get("precioEur"), maxPrice)
+        ).stream().filter(s -> s != null).toList();
+        Specification<Item> specification = specs.isEmpty() ? null : Specification.allOf(specs.toArray(new Specification[0]));
 
         return itemRepository.findAll(specification, resolveSort(sort)).stream()
                 .map(ItemResponse::from)

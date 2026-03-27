@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import type { Item, Categoria, Talla, Estado } from './items'
 import { mockItems } from './items'
+import axios from 'axios'
 
 type Filters = {
   query: string
@@ -44,12 +45,36 @@ export const useItemsStore = defineStore('items', {
     }
   },
   actions: {
-    async fetchMock() {
+    async fetchAll() {
       this.loading = true
+      try {
+        const params: any = {}
+        if (this.filters.query) params.query = this.filters.query
+        if (this.filters.categoria) params.categoria = this.filters.categoria
+        if (this.filters.talla) params.talla = this.filters.talla
+        if (this.filters.estado) params.estado = this.filters.estado
+        if (this.filters.minPrice != null) params.minPrice = this.filters.minPrice
+        if (this.filters.maxPrice != null) params.maxPrice = this.filters.maxPrice
+        const res = await axios.get('/api/items', { params })
+        this.items = res.data
+      } catch (e) {
+        // Puedes agregar manejo de error aquí
+        this.items = []
+      } finally {
+        this.loading = false
+      }
+    },
 
-      await new Promise((r) => setTimeout(r, 120))
-      this.items = mockItems
-      this.loading = false
+    async fetchById(id: string) {
+      this.loading = true
+      try {
+        const res = await axios.get(`/api/items/${id}`)
+        return res.data
+      } catch (e) {
+        return null
+      } finally {
+        this.loading = false
+      }
     },
     setFilters(payload: Partial<Filters>) {
       this.filters = { ...this.filters, ...payload }
@@ -57,6 +82,7 @@ export const useItemsStore = defineStore('items', {
     clearFilters() {
       this.filters = { query: '', categoria: undefined, talla: undefined, estado: undefined, minPrice: null, maxPrice: null }
     },
+    // getById local solo si ya tienes los items cargados
     getById(id: string) {
       return this.items.find((i) => i.id === id)
     }
