@@ -95,6 +95,7 @@ import { mockItems } from '~/stores/items'
 
 const route = useRoute()
 const router = useRouter()
+const { sessionUser, loadSessionUser } = useSessionUser()
 
 const id = computed(() => String(route.params.id))
 const item = computed(() => mockItems.find((x) => String(x.id) === id.value) ?? null)
@@ -146,10 +147,32 @@ function goBack() {
 }
 
 function comprarMock() {
-  if (!item.value) return alert(`Compra simulada: ${item.value.titulo}`)
+  if (!item.value) return
+  alert(`Compra simulada: ${item.value.titulo}`)
 }
-const showContact = ref(false)
-function openContact() { showContact.value = !showContact.value }
+function openContact() {
+  loadSessionUser()
+  if (!item.value) return
+
+  if (!sessionUser.value) {
+    navigateTo({
+      path: '/auth',
+      query: {
+        mode: 'login',
+        redirect: `/chat?itemId=${encodeURIComponent(item.value.id)}&itemTitle=${encodeURIComponent(item.value.titulo)}`
+      }
+    })
+    return
+  }
+
+  navigateTo({
+    path: '/chat',
+    query: {
+      itemId: item.value.id,
+      itemTitle: item.value.titulo
+    }
+  })
+}
 
 const LS_KEY = 'closely:favorites'
 const isFav = ref(false)

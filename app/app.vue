@@ -1,7 +1,6 @@
 <template>
   <div>
     <MainHeader v-if="$route.path !== '/auth'" />
-    <CategoryNav v-if="$route.path !== '/auth'" />
 
     <main class="main">
       <NuxtPage />
@@ -13,7 +12,6 @@
 
 <script setup lang="ts">
 import MainHeader from '~/components/layout/MainHeader.vue'
-import CategoryNav from '~/components/layout/CategoryNav.vue'
 import MainFooter from '~/components/layout/MainFooter.vue'
 </script>
 

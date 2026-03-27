@@ -2,17 +2,17 @@
   <div class="split-auth-bg">
     <div class="split-auth-left">
       <div class="split-visual-content">
-        <h2>¡Bienvenido a Closely!</h2>
+        <h2>Bienvenido a Closely</h2>
         <p>Accede o crea tu cuenta para disfrutar de todas las funciones.</p>
       </div>
     </div>
     <div class="split-auth-right">
       <div class="split-auth-switch">
-        <button :class="{active: mode==='login'}" @click="mode='login'">Inicia sesión</button>
-        <button :class="{active: mode==='register'}" @click="mode='register'">Regístrate</button>
+        <button :class="{ active: mode === 'login' }" @click="mode = 'login'">Inicia sesión</button>
+        <button :class="{ active: mode === 'register' }" @click="mode = 'register'">Regístrate</button>
       </div>
       <transition name="fade" mode="out-in">
-        <form v-if="mode==='register'" key="register" class="split-form" @submit.prevent="submitRegister">
+        <form v-if="mode === 'register'" key="register" class="split-form" @submit.prevent="submitRegister">
           <label>
             <span>Nombre completo</span>
             <input v-model="registerForm.name" type="text" required placeholder="Tu nombre completo" />
@@ -26,7 +26,9 @@
             <input v-model="registerForm.password" type="password" required placeholder="Contraseña" />
           </label>
           <div class="split-form-actions">
-            <button type="submit" class="split-btn-primary">Registrarse</button>
+            <button type="submit" class="split-btn-primary" :disabled="isSubmitting">
+              {{ isSubmitting ? 'Registrando...' : 'Registrarse' }}
+            </button>
           </div>
         </form>
         <form v-else key="login" class="split-form" @submit.prevent="submitLogin">
@@ -39,10 +41,13 @@
             <input v-model="loginForm.password" type="password" required placeholder="Contraseña" />
           </label>
           <div class="split-form-actions">
-            <button type="submit" class="split-btn-primary">Iniciar sesión</button>
+            <button type="submit" class="split-btn-primary" :disabled="isSubmitting">
+              {{ isSubmitting ? 'Entrando...' : 'Iniciar sesión' }}
+            </button>
           </div>
         </form>
       </transition>
+      <p v-if="errorMessage" class="split-error">{{ errorMessage }}</p>
     </div>
   </div>
 </template>
@@ -53,10 +58,16 @@ import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
-const mode = ref<'login'|'register'>(route.query.mode === 'login' ? 'login' : 'register')
+const config = useRuntimeConfig()
+const { saveSessionUser } = useSessionUser()
+const mode = ref<'login' | 'register'>(route.query.mode === 'login' ? 'login' : 'register')
+const isSubmitting = ref(false)
+const errorMessage = ref('')
 
 watch(() => route.query.mode, (val) => {
-  if (val === 'login' || val === 'register') mode.value = val
+  if (val === 'login' || val === 'register') {
+    mode.value = val
+  }
 })
 
 const registerForm = ref({
@@ -64,27 +75,71 @@ const registerForm = ref({
   email: '',
   password: ''
 })
+
 const loginForm = ref({
   email: '',
   password: ''
 })
 
-function submitRegister() {
-  alert('Registro simulado: ' + JSON.stringify(registerForm.value))
+function getRedirectPath() {
+  const redirect = route.query.redirect
+  return typeof redirect === 'string' && redirect.startsWith('/') ? redirect : '/perfil'
 }
-function submitLogin() {
-  alert('Login simulado: ' + JSON.stringify(loginForm.value))
+
+async function submitRegister() {
+  errorMessage.value = ''
+  isSubmitting.value = true
+
+  try {
+    const user = await $fetch<{ id: string; username: string; email: string }>(`${config.public.API_BASE_URL}/api/users/register`, {
+      method: 'POST',
+      body: {
+        username: registerForm.value.name.trim(),
+        email: registerForm.value.email.trim(),
+        password: registerForm.value.password
+      }
+    })
+
+    saveSessionUser(user)
+    await router.push(getRedirectPath())
+  } catch (error: any) {
+    errorMessage.value = error?.data?.message || error?.data || 'No se pudo completar el registro.'
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+async function submitLogin() {
+  errorMessage.value = ''
+  isSubmitting.value = true
+
+  try {
+    const user = await $fetch<{ id: string; username: string; email: string }>(`${config.public.API_BASE_URL}/api/users/login`, {
+      method: 'POST',
+      body: {
+        email: loginForm.value.email.trim(),
+        password: loginForm.value.password
+      }
+    })
+
+    saveSessionUser(user)
+    await router.push(getRedirectPath())
+  } catch (error: any) {
+    errorMessage.value = error?.data?.message || error?.data || 'Email o contraseña incorrectos.'
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>
 
 <style scoped>
-
 .split-auth-bg {
   min-height: 100vh;
   width: 100vw;
   display: flex;
   flex-direction: row;
 }
+
 .split-auth-left {
   flex: 1 1 0;
   background: linear-gradient(120deg, #2fbf9b 0%, #3ed6b7 100%);
@@ -114,19 +169,20 @@ function submitLogin() {
   position: relative;
   z-index: 1;
   opacity: 0.98;
-}
-.split-visual-content {
   text-align: center;
 }
+
 .split-visual-content h2 {
   font-size: 1.7rem;
   font-weight: 700;
   margin: 24px 0 8px 0;
 }
+
 .split-visual-content p {
   font-size: 1rem;
   opacity: 0.92;
 }
+
 .split-auth-right {
   flex: 1 1 0;
   background: #16202a;
@@ -138,6 +194,7 @@ function submitLogin() {
   position: relative;
   padding: 0 4vw;
 }
+
 .split-auth-switch {
   position: absolute;
   top: 72px;
@@ -147,8 +204,9 @@ function submitLogin() {
   background: #223042;
   border-radius: 999px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
+
 .split-auth-switch button {
   background: none;
   border: none;
@@ -159,20 +217,22 @@ function submitLogin() {
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
 }
+
 .split-auth-switch button.active {
   background: #2fbf9b;
   color: #fff;
 }
+
 .split-form {
   display: flex;
   flex-direction: column;
   gap: 16px;
   width: 100%;
   max-width: 320px;
-  margin: 0 auto;
-  margin-top: 48px;
+  margin: 48px auto 0;
   color: #fff;
 }
+
 .split-form label {
   display: flex;
   flex-direction: column;
@@ -180,25 +240,29 @@ function submitLogin() {
   font-size: 1rem;
   color: #fff;
 }
+
 .split-form input {
   border: 1.5px solid #bfead9;
   border-radius: 8px;
   padding: 10px 14px;
-  font-size: 0,97rem;
+  font-size: 0.97rem;
   background: #223042;
   color: #fff;
   outline: none;
   transition: border 0.2s, background 0.2s;
 }
+
 .split-form input:focus {
   border-color: #2fbf9b;
   background: #1e2a3a;
 }
+
 .split-form-actions {
   margin-top: 18px;
   display: flex;
   justify-content: center;
 }
+
 .split-btn-primary {
   background: linear-gradient(120deg, #2fbf9b 0%, #3ed6b7 100%);
   color: #fff;
@@ -207,17 +271,34 @@ function submitLogin() {
   padding: 10px 28px;
   font-size: 1rem;
   font-weight: 700;
-  box-shadow: 0 2px 8px rgba(47,191,155,0.08);
+  box-shadow: 0 2px 8px rgba(47, 191, 155, 0.08);
   cursor: pointer;
   transition: background 0.2s;
 }
+
 .split-btn-primary:hover {
   background: linear-gradient(120deg, #27a685 0%, #2fbf9b 100%);
 }
-.fade-enter-active, .fade-leave-active {
+
+.split-btn-primary:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.split-error {
+  margin-top: 18px;
+  max-width: 320px;
+  color: #fda4af;
+  text-align: center;
+}
+
+.fade-enter-active,
+.fade-leave-active {
   transition: opacity 0.3s;
 }
-.fade-enter-from, .fade-leave-to {
+
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
 }
 </style>
