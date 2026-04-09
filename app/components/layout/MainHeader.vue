@@ -1,5 +1,6 @@
 <template>
-  <header class="sticky top-0 z-50 bg-white pt-3 pb-0">
+  <header class="sticky top-0 z-[90] bg-white/95 backdrop-blur border-b border-gray-100 pt-0 pb-0 shadow-sm">
+    <TopBar />
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between gap-4">
         <div class="flex items-center gap-4 flex-1 min-w-0">
@@ -85,7 +86,7 @@
               </svg>
             </NuxtLink>
 
-            <button class="bg-teal-600 text-white px-3 py-2 rounded-full text-sm" @click="$emit('sell')">Vender</button>
+            <button class="bg-teal-600 text-white px-3 py-2 rounded-full text-sm" @click="handleSell">Vender</button>
 
             <button class="p-2 rounded-md ml-1 focus:outline-none" aria-label="Abrir menú" @click="toggleMobile">
               <svg v-if="!mobileOpen" class="h-6 w-6 text-gray-700" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -131,8 +132,22 @@
             <NuxtLink v-if="user" to="/chat" class="block w-full py-3 rounded-full border text-gray-700 text-center">
               Mis mensajes
             </NuxtLink>
-            <button class="w-full py-3 rounded-full bg-teal-600 text-white" @click="$emit('sell')">Vender ahora</button>
+            <button class="w-full py-3 rounded-full bg-teal-600 text-white" @click="handleSell">Vender ahora</button>
             <button v-if="user" class="w-full py-3 rounded-full border text-red-600" @click="signOut">Cerrar sesión</button>
+          </div>
+
+          <div class="border-t pt-3 mb-2">
+            <div class="flex flex-col gap-1">
+              <NuxtLink
+                v-for="link in navLinks"
+                :key="`mobile-${link.to}`"
+                :to="link.to"
+                class="text-left py-2 px-1 text-sm text-gray-700 hover:text-teal-600"
+                @click="mobileOpen = false"
+              >
+                {{ link.label }}
+              </NuxtLink>
+            </div>
           </div>
 
           <div class="border-t pt-3">
@@ -165,11 +180,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import logoAsset from '~/assets/photos/closely-logo.png'
 import CategoryNav from '~/components/layout/CategoryNav.vue'
+import TopBar from '~/components/layout/TopBar.vue'
 
 const { sessionUser, loadSessionUser, clearSessionUser, storageEventName } = useSessionUser()
+const route = useRoute()
 
 const emit = defineEmits<{
   (e: 'sell'): void
@@ -185,8 +202,19 @@ const dropdownOpen = ref(false)
 const mobileOpen = ref(false)
 const mobileSearchOpen = ref(false)
 const avatarRef = ref<HTMLElement | null>(null)
+const navLinks = [
+  { label: 'Explorar', to: '/explorar' },
+  { label: 'Mensajes', to: '/chat' },
+  { label: 'Vender', to: '/vender' }
+]
+
+function isActivePath(path: string) {
+  return route.path === path || route.path.startsWith(`${path}/`)
+}
 
 function onSearch() {
+  const trimmed = query.value.trim()
+  navigateTo({ path: '/explorar', query: trimmed ? { q: trimmed } : {} })
   emit('search', query.value)
 }
 
@@ -209,6 +237,12 @@ function openMobileSearch() {
 
 function closeMobileSearch() {
   mobileSearchOpen.value = false
+}
+
+function handleSell() {
+  mobileOpen.value = false
+  emit('sell')
+  navigateTo('/vender')
 }
 
 function signOut() {
@@ -234,10 +268,19 @@ function syncSession() {
 
 onMounted(() => {
   loadSessionUser()
+  const q = route.query.q
+  query.value = typeof q === 'string' ? q : ''
   document.addEventListener('click', onOutsideClick)
   window.addEventListener(storageEventName, syncSession)
   window.addEventListener('storage', syncSession)
 })
+
+watch(
+  () => route.query.q,
+  (value) => {
+    query.value = typeof value === 'string' ? value : ''
+  }
+)
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', onOutsideClick)
@@ -303,5 +346,27 @@ header img {
 
 .z-70 {
   z-index: 70;
+}
+
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background .15s ease, color .15s ease;
+}
+
+.nav-link:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.nav-link.active {
+  background: #dff8f2;
+  color: #0f766e;
 }
 </style>

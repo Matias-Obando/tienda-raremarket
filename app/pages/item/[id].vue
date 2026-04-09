@@ -2,7 +2,9 @@
   <div class="rm-container page">
     <a class="back" href="#" @click.prevent="goBack">← Volver</a>
 
-    <div v-if="!item" class="notfound">No se encontró el producto.</div>
+    <div v-if="loading" class="notfound">Cargando producto...</div>
+
+    <div v-else-if="!item" class="notfound">No se encontró el producto.</div>
 
     <div v-else class="product-grid">
       <div class="leftCol">
@@ -91,14 +93,30 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue'
 import ItemCard from '~/components/ItemCard.vue'
-import { mockItems } from '~/stores/items'
+import type { Item } from '~/stores/items'
+import { useItemsStore } from '~/stores/useItemsStore'
 
 const route = useRoute()
 const router = useRouter()
 const { sessionUser, loadSessionUser } = useSessionUser()
+const store = useItemsStore()
 
 const id = computed(() => String(route.params.id))
-const item = computed(() => mockItems.find((x) => String(x.id) === id.value) ?? null)
+const item = ref<Item | null>(null)
+const loading = ref(false)
+
+async function loadItem() {
+  loading.value = true
+  try {
+    item.value = await store.fetchById(id.value)
+
+    if (store.items.length === 0) {
+      await store.fetchAll()
+    }
+  } finally {
+    loading.value = false
+  }
+}
 
 const thumbs = computed<string[]>(() => {
   if (!item.value) return []
@@ -115,13 +133,17 @@ watch(item, (n) => {
   currentImage.value = thumbs.value[0] ?? ''
 }, { immediate: true })
 
+watch(id, async () => {
+  await loadItem()
+})
+
 function selectImage(src: string) {
   currentImage.value = src
 }
 
 const hasSameCategoryRelated = computed(() => {
   if (!item.value) return false
-  return mockItems.some((x) => x.categoria === item.value!.categoria && String(x.id) !== String(item.value!.id))
+  return store.items.some((x) => x.categoria === item.value!.categoria && String(x.id) !== String(item.value!.id))
 })
 
 const relatedTitle = computed(() => {
@@ -131,9 +153,9 @@ const relatedTitle = computed(() => {
 
 const relatedItems = computed(() => {
   if (!item.value) return []
-  const sameCategory = mockItems.filter((x) => x.categoria === item.value!.categoria && String(x.id) !== String(item.value!.id)).slice(0, 4)
+  const sameCategory = store.items.filter((x) => x.categoria === item.value!.categoria && String(x.id) !== String(item.value!.id)).slice(0, 4)
   if (sameCategory.length) return sameCategory
-  return mockItems.filter((x) => String(x.id) !== String(item.value!.id)).slice(0, 4)
+  return store.items.filter((x) => String(x.id) !== String(item.value!.id)).slice(0, 4)
 })
 
 function goBack() {
@@ -199,6 +221,10 @@ function syncFavs() {
 }
 onMounted(() => { syncFavs(); window.addEventListener('storage', syncFavs); window.addEventListener('closely:favs:updated', syncFavs) })
 onBeforeUnmount(() => { window.removeEventListener('storage', syncFavs); window.removeEventListener('closely:favs:updated', syncFavs) })
+
+onMounted(async () => {
+  await loadItem()
+})
 </script>
 
 <style scoped>

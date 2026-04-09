@@ -4,7 +4,9 @@ import com.raremarket.backend.dto.UserResponse;
 import com.raremarket.backend.model.User;
 import com.raremarket.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,16 +18,16 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody User user) {
+    public ResponseEntity<UserResponse> register(@RequestBody User user) {
         boolean registered = userService.register(user);
         if (!registered) {
-            return ResponseEntity.badRequest().body("Username or email already exists");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid registration data or user already exists");
         }
-        User savedUser = userService.authenticate(user.getEmail(), user.getPassword()).orElse(null);
-        if (savedUser != null) {
-            return ResponseEntity.ok(UserResponse.from(savedUser));
-        }
-        return ResponseEntity.ok("User registered successfully");
+
+        User savedUser = userService.authenticate(user.getEmail(), user.getPassword())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "User created but could not be authenticated"));
+
+        return ResponseEntity.ok(UserResponse.from(savedUser));
     }
 
     @PostMapping("/login")

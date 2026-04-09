@@ -60,6 +60,7 @@ const route = useRoute()
 const router = useRouter()
 const config = useRuntimeConfig()
 const { saveSessionUser } = useSessionUser()
+const uiMessages = useUiMessages()
 const mode = ref<'login' | 'register'>(route.query.mode === 'login' ? 'login' : 'register')
 const isSubmitting = ref(false)
 const errorMessage = ref('')
@@ -101,9 +102,11 @@ async function submitRegister() {
     })
 
     saveSessionUser(user)
+    uiMessages.success('Registro completado. Bienvenido a Closely.')
     await router.push(getRedirectPath())
   } catch (error: any) {
     errorMessage.value = error?.data?.message || error?.data || 'No se pudo completar el registro.'
+    uiMessages.error(errorMessage.value)
   } finally {
     isSubmitting.value = false
   }
@@ -123,9 +126,11 @@ async function submitLogin() {
     })
 
     saveSessionUser(user)
+    uiMessages.success('Sesion iniciada correctamente.')
     await router.push(getRedirectPath())
   } catch (error: any) {
     errorMessage.value = error?.data?.message || error?.data || 'Email o contraseña incorrectos.'
+    uiMessages.error(errorMessage.value)
   } finally {
     isSubmitting.value = false
   }

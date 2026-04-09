@@ -124,7 +124,8 @@ onBeforeUnmount(() => {
 <style scoped>
 
 .rm-catnav-placeholder {
-  display: none;
+  display: block;
+  height: var(--catnav-height, 56px);
 }
 
 
@@ -133,7 +134,7 @@ onBeforeUnmount(() => {
   top: var(--catnav-top, 72px);
   left: 0;
   right: 0;
-  z-index: 60;
+  z-index: 40;
   background: #fff;
   border-bottom: 1px solid var(--rm-border);
   box-sizing: border-box;
@@ -176,4 +177,10 @@ onBeforeUnmount(() => {
 .rm-catnav__item[aria-current="true"]::after{ content:""; position:absolute; left:6px; right:6px; bottom:0; height:2px; background:var(--rm-primary); border-radius:2px; }
 
 @media (max-width:640px){ .rm-catnav__scroller{ gap:12px } .rm-catnav__item{ padding:6px 4px; font-size:13px } }
+
+@media (max-width: 768px) {
+  .rm-catnav-placeholder {
+    height: 0;
+  }
+}
 </style>

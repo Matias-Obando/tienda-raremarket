@@ -7,7 +7,12 @@
             <p class="eyebrow">Mensajes</p>
             <h1>Tu bandeja</h1>
           </div>
-          <button class="ghost-btn" type="button" @click="loadData">Actualizar</button>
+          <div class="sidebar-actions">
+            <button class="ghost-btn" type="button" @click="demoMode = !demoMode">
+              {{ demoMode ? 'Modo real' : 'Chat simulado' }}
+            </button>
+            <button class="ghost-btn" type="button" @click="loadData">Actualizar</button>
+          </div>
         </div>
 
         <div v-if="itemId" class="start-card">
@@ -27,13 +32,13 @@
           </button>
         </div>
 
-        <div v-if="loadingConversations" class="sidebar-empty">Cargando conversaciones...</div>
-        <div v-else-if="!conversations.length" class="sidebar-empty">
+        <div v-if="!demoMode && loadingConversations" class="sidebar-empty">Cargando conversaciones...</div>
+        <div v-else-if="!activeConversations.length" class="sidebar-empty">
           Aún no tienes conversaciones. Registra dos usuarios y abre un chat desde un producto o desde aquí.
         </div>
 
         <button
-          v-for="conversation in conversations"
+          v-for="conversation in activeConversations"
           :key="conversation.id"
           type="button"
           class="conversation-row"
@@ -50,15 +55,16 @@
       </aside>
 
       <section class="chat-main">
-        <div v-if="!sessionReady" class="chat-empty">
+        <div v-if="!demoMode && !sessionReady" class="chat-empty">
           Cargando tu sesión...
         </div>
 
-        <div v-else-if="!sessionUser" class="chat-empty">
+        <div v-else-if="!demoMode && !sessionUser" class="chat-empty">
           <p>Necesitas iniciar sesión para usar el chat.</p>
           <NuxtLink class="primary-btn link-btn" :to="{ path: '/auth', query: { mode: 'login', redirect: '/chat' } }">
             Ir a login
           </NuxtLink>
+          <button class="ghost-btn" type="button" @click="demoMode = true">Probar chat simulado</button>
         </div>
 
         <div v-else-if="!selectedConversation" class="chat-empty">
@@ -82,14 +88,18 @@
             </div>
 
             <article
-              v-for="message in messages"
+              v-for="message in orderedMessages"
               :key="message.id"
+              ref="messageRows"
               class="message-bubble"
               :class="{ own: message.senderId === sessionUser?.id }"
             >
               <p class="message-author">{{ message.senderName }}</p>
               <p class="message-content">{{ message.content }}</p>
-              <p class="message-time">{{ formatDate(message.createdAt) }}</p>
+              <p class="message-time">
+                {{ formatDate(message.createdAt) }}
+                <span v-if="message.senderId === sessionUser?.id" class="message-state">{{ message.isRead ? 'Leido' : 'Enviado' }}</span>
+              </p>
             </article>
           </div>
 
@@ -99,9 +109,11 @@
               rows="3"
               maxlength="1000"
               placeholder="Escribe tu mensaje"
+              @keydown.enter.exact.prevent="sendMessage"
             />
             <div class="composer-actions">
               <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
+              <p v-else class="counter-text">{{ draftMessage.trim().length }}/1000</p>
               <button class="primary-btn" type="submit" :disabled="sendingMessage || !draftMessage.trim()">
                 {{ sendingMessage ? 'Enviando...' : 'Enviar' }}
               </button>
@@ -114,6 +126,8 @@
 </template>
 
 <script setup lang="ts">
+import { nextTick } from 'vue'
+
 type ChatUser = {
   id: string
   username: string
@@ -135,18 +149,24 @@ type Message = {
   senderId: string
   senderName: string
   content: string
+  isRead: boolean
   createdAt: string
 }
+
+type MessageMap = Record<string, Message[]>
 
 const config = useRuntimeConfig()
 const route = useRoute()
 const router = useRouter()
 const { sessionUser, loadSessionUser, storageEventName } = useSessionUser()
+const uiMessages = useUiMessages()
 
 const sessionReady = ref(false)
+const demoMode = ref(false)
 const users = ref<ChatUser[]>([])
 const conversations = ref<Conversation[]>([])
 const messages = ref<Message[]>([])
+const messageRows = ref<HTMLElement[] | null>(null)
 const loadingConversations = ref(false)
 const loadingMessages = ref(false)
 const startingConversation = ref(false)
@@ -159,13 +179,104 @@ const draftMessage = ref('')
 const itemId = computed(() => typeof route.query.itemId === 'string' ? route.query.itemId : '')
 const itemTitle = computed(() => typeof route.query.itemTitle === 'string' ? route.query.itemTitle : '')
 
+const demoConversations = ref<Conversation[]>([
+  {
+    id: 'demo-conv-1',
+    itemId: 'demo-item-1',
+    counterpartId: 'demo-seller-1',
+    counterpartName: 'Laura Vintage',
+    unreadCount: 1,
+    lastMessage: 'Si, sigue disponible.'
+  },
+  {
+    id: 'demo-conv-2',
+    itemId: 'demo-item-2',
+    counterpartId: 'demo-seller-2',
+    counterpartName: 'Alex Closet',
+    unreadCount: 0,
+    lastMessage: 'Te puedo hacer envio hoy.'
+  }
+])
+
+const demoMessages = ref<MessageMap>({
+  'demo-conv-1': [
+    {
+      id: 'demo-msg-1',
+      conversationId: 'demo-conv-1',
+      senderId: 'demo-seller-1',
+      senderName: 'Laura Vintage',
+      content: 'Hola! Te interesa la chaqueta?',
+      isRead: true,
+      createdAt: new Date(Date.now() - 1000 * 60 * 16).toISOString()
+    },
+    {
+      id: 'demo-msg-2',
+      conversationId: 'demo-conv-1',
+      senderId: 'guest-user',
+      senderName: 'Tu',
+      content: 'Si, sigue disponible?',
+      isRead: true,
+      createdAt: new Date(Date.now() - 1000 * 60 * 13).toISOString()
+    },
+    {
+      id: 'demo-msg-3',
+      conversationId: 'demo-conv-1',
+      senderId: 'demo-seller-1',
+      senderName: 'Laura Vintage',
+      content: 'Si, sigue disponible.',
+      isRead: false,
+      createdAt: new Date(Date.now() - 1000 * 60 * 9).toISOString()
+    }
+  ],
+  'demo-conv-2': [
+    {
+      id: 'demo-msg-4',
+      conversationId: 'demo-conv-2',
+      senderId: 'demo-seller-2',
+      senderName: 'Alex Closet',
+      content: 'Te puedo hacer envio hoy.',
+      isRead: true,
+      createdAt: new Date(Date.now() - 1000 * 60 * 35).toISOString()
+    }
+  ]
+})
+
 const recipientOptions = computed(() =>
   users.value.filter((user) => user.id !== sessionUser.value?.id)
 )
 
 const selectedConversation = computed(() =>
-  conversations.value.find((conversation) => conversation.id === selectedConversationId.value) ?? null
+  activeConversations.value.find((conversation) => conversation.id === selectedConversationId.value) ?? null
 )
+
+const activeConversations = computed(() =>
+  demoMode.value ? demoConversations.value : conversations.value
+)
+
+const activeMessages = computed(() => {
+  if (demoMode.value) {
+    return demoMessages.value[selectedConversationId.value] ?? []
+  }
+  return messages.value
+})
+
+const orderedMessages = computed(() =>
+  [...activeMessages.value].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+)
+
+function parseApiError(error: any, fallback: string) {
+  return error?.data?.message || error?.data || fallback
+}
+
+async function scrollToBottom() {
+  await nextTick()
+  const rows = messageRows.value
+  if (!rows || !rows.length) {
+    return
+  }
+
+  rows[rows.length - 1]?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+}
 
 function syncSession() {
   loadSessionUser()
@@ -212,12 +323,22 @@ async function loadMessages(conversationId: string) {
     messages.value = await $fetch<Message[]>(`${config.public.API_BASE_URL}/api/chat/conversations/${conversationId}/messages`, {
       params: { userId: sessionUser.value.id }
     })
+    await scrollToBottom()
   } finally {
     loadingMessages.value = false
   }
 }
 
 async function selectConversation(conversationId: string) {
+  if (demoMode.value) {
+    selectedConversationId.value = conversationId
+    demoConversations.value = demoConversations.value.map((conversation) =>
+      conversation.id === conversationId ? { ...conversation, unreadCount: 0 } : conversation
+    )
+    await scrollToBottom()
+    return
+  }
+
   selectedConversationId.value = conversationId
   await loadMessages(conversationId)
   if (sessionUser.value) {
@@ -250,15 +371,70 @@ async function startConversation() {
     await router.replace({ path: '/chat', query: {} })
     selectedConversationId.value = conversation.id
     await loadMessages(conversation.id)
+    uiMessages.success('Conversacion iniciada correctamente.')
   } catch (error: any) {
-    errorMessage.value = error?.data?.message || 'No se pudo abrir la conversación.'
+    errorMessage.value = parseApiError(error, 'No se pudo abrir la conversacion.')
+    uiMessages.error(errorMessage.value)
   } finally {
     startingConversation.value = false
   }
 }
 
 async function sendMessage() {
-  if (!sessionUser.value || !selectedConversationId.value || !draftMessage.value.trim()) {
+  if (!selectedConversationId.value || !draftMessage.value.trim()) {
+    return
+  }
+
+  if (demoMode.value) {
+    const content = draftMessage.value.trim()
+    const conversationId = selectedConversationId.value
+    const timestamp = new Date().toISOString()
+    const currentConversation = demoConversations.value.find((conversation) => conversation.id === conversationId)
+
+    const outgoing: Message = {
+      id: `demo-local-${Date.now()}`,
+      conversationId,
+      senderId: sessionUser.value?.id ?? 'guest-user',
+      senderName: sessionUser.value?.username ?? 'Tu',
+      content,
+      isRead: false,
+      createdAt: timestamp
+    }
+
+    demoMessages.value[conversationId] = [...(demoMessages.value[conversationId] ?? []), outgoing]
+    draftMessage.value = ''
+    demoConversations.value = demoConversations.value.map((conversation) =>
+      conversation.id === conversationId ? { ...conversation, lastMessage: content } : conversation
+    )
+    await scrollToBottom()
+
+    if (process.client && currentConversation) {
+      window.setTimeout(async () => {
+        const replyContent = 'Perfecto, si quieres lo cerramos hoy mismo.'
+        const incoming: Message = {
+          id: `demo-reply-${Date.now()}`,
+          conversationId,
+          senderId: currentConversation.counterpartId,
+          senderName: currentConversation.counterpartName,
+          content: replyContent,
+          isRead: false,
+          createdAt: new Date().toISOString()
+        }
+
+        demoMessages.value[conversationId] = [...(demoMessages.value[conversationId] ?? []), incoming]
+        demoConversations.value = demoConversations.value.map((conversation) =>
+          conversation.id === conversationId
+            ? { ...conversation, lastMessage: replyContent, unreadCount: conversation.unreadCount + 1 }
+            : conversation
+        )
+        await scrollToBottom()
+      }, 850)
+    }
+
+    return
+  }
+
+  if (!sessionUser.value) {
     return
   }
 
@@ -269,20 +445,28 @@ async function sendMessage() {
       method: 'POST',
       body: {
         senderId: sessionUser.value.id,
-        content: draftMessage.value
+        content: draftMessage.value.trim()
       }
     })
     draftMessage.value = ''
     await loadMessages(selectedConversationId.value)
     await loadConversations()
   } catch (error: any) {
-    errorMessage.value = error?.data?.message || 'No se pudo enviar el mensaje.'
+    errorMessage.value = parseApiError(error, 'No se pudo enviar el mensaje.')
+    uiMessages.error(errorMessage.value)
   } finally {
     sendingMessage.value = false
   }
 }
 
 async function loadData() {
+  if (demoMode.value) {
+    if (!selectedConversationId.value && demoConversations.value.length) {
+      selectedConversationId.value = demoConversations.value[0].id
+    }
+    return
+  }
+
   await loadUsers()
   await loadConversations()
   if (!selectedConversationId.value && conversations.value.length) {
@@ -305,27 +489,46 @@ onBeforeUnmount(() => {
   window.removeEventListener(storageEventName, syncSession)
   window.removeEventListener('storage', syncSession)
 })
+
+watch(orderedMessages, async () => {
+  await scrollToBottom()
+})
+
+watch(demoMode, async (enabled) => {
+  selectedConversationId.value = ''
+  messages.value = []
+
+  if (enabled) {
+    uiMessages.info('Modo chat simulado activado.')
+  } else {
+    uiMessages.info('Modo chat real activado.')
+  }
+
+  await loadData()
+})
 </script>
 
 <style scoped>
 .chat-page {
-  padding: 24px 16px 48px;
+  padding: 18px 16px 48px;
 }
 
 .chat-shell {
-  max-width: 1200px;
+  max-width: 1320px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 340px 1fr;
-  gap: 20px;
+  grid-template-columns: 360px 1fr;
+  gap: 18px;
+  align-items: start;
 }
 
 .chat-sidebar,
 .chat-main {
-  background: #fff;
+  background: rgba(255, 255, 255, 0.96);
   border: 1px solid var(--rm-border);
   border-radius: 22px;
-  box-shadow: var(--rm-shadow);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(4px);
 }
 
 .chat-sidebar {
@@ -333,6 +536,10 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  position: sticky;
+  top: calc(var(--catnav-top, 72px) + var(--catnav-height, 56px) + 12px);
+  max-height: calc(100vh - (var(--catnav-top, 72px) + var(--catnav-height, 56px) + 28px));
+  overflow: auto;
 }
 
 .sidebar-top,
@@ -343,6 +550,12 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+.sidebar-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .eyebrow {
@@ -426,7 +639,7 @@ onBeforeUnmount(() => {
 }
 
 .chat-main {
-  min-height: 680px;
+  min-height: min(760px, calc(100vh - (var(--catnav-top, 72px) + var(--catnav-height, 56px) + 28px)));
   display: flex;
   flex-direction: column;
 }
@@ -443,6 +656,7 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 12px;
   overflow: auto;
+  background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(248,250,252,0.66) 100%);
 }
 
 .message-bubble {
@@ -479,9 +693,18 @@ onBeforeUnmount(() => {
   font-size: 12px;
 }
 
+.message-state {
+  margin-left: 8px;
+  color: #0f766e;
+  font-weight: 600;
+}
+
 .chat-empty,
 .sidebar-empty {
   padding: 20px 8px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  background: #f8fafc;
 }
 
 .composer {
@@ -524,9 +747,44 @@ onBeforeUnmount(() => {
   color: #dc2626;
 }
 
+.counter-text {
+  margin: 0;
+  color: #64748b;
+  font-size: 12px;
+}
+
 @media (max-width: 960px) {
+  .chat-page {
+    margin-top: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
   .chat-shell {
     grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .chat-sidebar {
+    position: static;
+    max-height: none;
+  }
+
+  .chat-main {
+    min-height: 62vh;
+  }
+
+  .chat-header,
+  .composer {
+    padding: 14px;
+  }
+
+  .messages-panel {
+    padding: 8px 14px 14px;
+  }
+
+  .message-bubble {
+    max-width: 90%;
   }
 }
 </style>

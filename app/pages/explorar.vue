@@ -190,13 +190,13 @@ const resultsText = computed(() => {
    Usamos la altura calculada de la category nav para evitar solapamientos.
   Añadimos 10px extra de espacio visual. */
 .top {
-  margin-top: calc(var(--catnav-height, 56px) + 10px);
+  margin-top: 10px;
   margin-bottom: 12px;
 }
 
 
 @media (min-width: 900px) {
-  .top { margin-top: calc(var(--catnav-height, 56px) + 14px); }
+  .top { margin-top: 14px; }
 }
 
 

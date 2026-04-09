@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import type { Item, Categoria, Talla, Estado } from './items'
 import { mockItems } from './items'
-import axios from 'axios'
 
 type Filters = {
   query: string
@@ -48,6 +47,7 @@ export const useItemsStore = defineStore('items', {
     async fetchAll() {
       this.loading = true
       try {
+        const config = useRuntimeConfig()
         const params: any = {}
         if (this.filters.query) params.query = this.filters.query
         if (this.filters.categoria) params.categoria = this.filters.categoria
@@ -55,10 +55,9 @@ export const useItemsStore = defineStore('items', {
         if (this.filters.estado) params.estado = this.filters.estado
         if (this.filters.minPrice != null) params.minPrice = this.filters.minPrice
         if (this.filters.maxPrice != null) params.maxPrice = this.filters.maxPrice
-        const res = await axios.get('/api/items', { params })
-        this.items = res.data
+        this.items = await $fetch<Item[]>(`${config.public.API_BASE_URL}/api/items`, { params })
       } catch (e) {
-        // Puedes agregar manejo de error aquí
+        console.error('Error cargando items desde backend:', e)
         this.items = []
       } finally {
         this.loading = false
@@ -68,9 +67,10 @@ export const useItemsStore = defineStore('items', {
     async fetchById(id: string) {
       this.loading = true
       try {
-        const res = await axios.get(`/api/items/${id}`)
-        return res.data
+        const config = useRuntimeConfig()
+        return await $fetch<Item>(`${config.public.API_BASE_URL}/api/items/${id}`)
       } catch (e) {
+        console.error('Error cargando item por id:', e)
         return null
       } finally {
         this.loading = false

@@ -58,7 +58,11 @@ public class ItemService {
         ).filter(s -> s != null).toList();
         Specification<Item> specification = specs.isEmpty() ? null : Specification.allOf(specs.toArray(new Specification[0]));
 
-        return itemRepository.findAll(specification, resolveSort(sort)).stream()
+        List<Item> items = specification == null
+            ? itemRepository.findAll(resolveSort(sort))
+            : itemRepository.findAll(specification, resolveSort(sort));
+
+        return items.stream()
                 .map(ItemResponse::from)
                 .toList();
     }
