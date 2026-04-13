@@ -44,12 +44,37 @@ export const useItemsStore = defineStore('items', {
     }
   },
   actions: {
-    async fetchMock() {
+    async fetchAll() {
       this.loading = true
+      try {
+        const config = useRuntimeConfig()
+        const params: any = {}
+        if (this.filters.query) params.query = this.filters.query
+        if (this.filters.categoria) params.categoria = this.filters.categoria
+        if (this.filters.talla) params.talla = this.filters.talla
+        if (this.filters.estado) params.estado = this.filters.estado
+        if (this.filters.minPrice != null) params.minPrice = this.filters.minPrice
+        if (this.filters.maxPrice != null) params.maxPrice = this.filters.maxPrice
+        this.items = await $fetch<Item[]>(`${config.public.API_BASE_URL}/api/items`, { params })
+      } catch (e) {
+        console.error('Error cargando items desde backend:', e)
+        this.items = []
+      } finally {
+        this.loading = false
+      }
+    },
 
-      await new Promise((r) => setTimeout(r, 120))
-      this.items = mockItems
-      this.loading = false
+    async fetchById(id: string) {
+      this.loading = true
+      try {
+        const config = useRuntimeConfig()
+        return await $fetch<Item>(`${config.public.API_BASE_URL}/api/items/${id}`)
+      } catch (e) {
+        console.error('Error cargando item por id:', e)
+        return null
+      } finally {
+        this.loading = false
+      }
     },
     setFilters(payload: Partial<Filters>) {
       this.filters = { ...this.filters, ...payload }
@@ -57,6 +82,7 @@ export const useItemsStore = defineStore('items', {
     clearFilters() {
       this.filters = { query: '', categoria: undefined, talla: undefined, estado: undefined, minPrice: null, maxPrice: null }
     },
+    // getById local solo si ya tienes los items cargados
     getById(id: string) {
       return this.items.find((i) => i.id === id)
     }

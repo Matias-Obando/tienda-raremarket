@@ -3,5 +3,6 @@ await navigateTo('/explorar')
 </script>
 
 <template>
-  <div />
+  <div>
+  </div>
 </template>

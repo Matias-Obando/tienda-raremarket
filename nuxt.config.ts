@@ -12,7 +12,14 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
 
   // módulos
-  modules: ['@pinia/nuxt'],
+  modules: [
+    '@pinia/nuxt',
+    '@nuxtjs/tailwindcss',
+    '@nuxtjs/color-mode',
+    '@nuxt-alt/proxy'
+  ],
+
+
 
   // PostCSS config (Nuxt usará estos plugins en la compilación)
   postcss: {
@@ -21,4 +28,12 @@ export default defineNuxtConfig({
       autoprefixer: {},
     },
   },
+
+  runtimeConfig: {
+    public: {
+      API_BASE_URL: process.env.API_BASE_URL || 'http://localhost:8080'
+    }
+  },
+
+  
 })

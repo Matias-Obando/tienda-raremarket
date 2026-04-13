@@ -59,8 +59,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
-
-import type { Item } from '~/mock/items'
+import type { Item } from '~/stores/items'
 
 const props = defineProps<{
   item: Item,
