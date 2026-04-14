@@ -92,7 +92,7 @@ async function submitRegister() {
   isSubmitting.value = true
 
   try {
-    const user = await $fetch<{ id: string; username: string; email: string }>(`${config.public.API_BASE_URL}/api/users/register`, {
+    const user = await $fetch<{ id: string; username: string; email: string }>(`${config.public.API_BASE_URL}/users/register`, {
       method: 'POST',
       body: {
         username: registerForm.value.name.trim(),
@@ -117,7 +117,7 @@ async function submitLogin() {
   isSubmitting.value = true
 
   try {
-    const user = await $fetch<{ id: string; username: string; email: string }>(`${config.public.API_BASE_URL}/api/users/login`, {
+    const user = await $fetch<{ id: string; username: string; email: string }>(`${config.public.API_BASE_URL}/users/login`, {
       method: 'POST',
       body: {
         email: loginForm.value.email.trim(),

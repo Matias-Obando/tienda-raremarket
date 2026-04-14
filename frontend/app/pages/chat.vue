@@ -294,7 +294,7 @@ function formatDate(value?: string) {
 }
 
 async function loadUsers() {
-  users.value = await $fetch<ChatUser[]>(`${config.public.API_BASE_URL}/api/users`)
+  users.value = await $fetch<ChatUser[]>(`${config.public.API_BASE_URL}/users`)
 }
 
 async function loadConversations() {
@@ -305,7 +305,7 @@ async function loadConversations() {
 
   loadingConversations.value = true
   try {
-    conversations.value = await $fetch<Conversation[]>(`${config.public.API_BASE_URL}/api/chat/conversations`, {
+    conversations.value = await $fetch<Conversation[]>(`${config.public.API_BASE_URL}/chat/conversations`, {
       params: { userId: sessionUser.value.id }
     })
   } finally {
@@ -320,7 +320,7 @@ async function loadMessages(conversationId: string) {
 
   loadingMessages.value = true
   try {
-    messages.value = await $fetch<Message[]>(`${config.public.API_BASE_URL}/api/chat/conversations/${conversationId}/messages`, {
+    messages.value = await $fetch<Message[]>(`${config.public.API_BASE_URL}/chat/conversations/${conversationId}/messages`, {
       params: { userId: sessionUser.value.id }
     })
     await scrollToBottom()
@@ -342,7 +342,7 @@ async function selectConversation(conversationId: string) {
   selectedConversationId.value = conversationId
   await loadMessages(conversationId)
   if (sessionUser.value) {
-    await $fetch(`${config.public.API_BASE_URL}/api/chat/conversations/${conversationId}/read`, {
+    await $fetch(`${config.public.API_BASE_URL}/chat/conversations/${conversationId}/read`, {
       method: 'PATCH',
       params: { userId: sessionUser.value.id }
     })
@@ -358,7 +358,7 @@ async function startConversation() {
   errorMessage.value = ''
   startingConversation.value = true
   try {
-    const conversation = await $fetch<Conversation>(`${config.public.API_BASE_URL}/api/chat/conversations`, {
+    const conversation = await $fetch<Conversation>(`${config.public.API_BASE_URL}/chat/conversations`, {
       method: 'POST',
       body: {
         itemId: itemId.value,
@@ -441,7 +441,7 @@ async function sendMessage() {
   errorMessage.value = ''
   sendingMessage.value = true
   try {
-    await $fetch(`${config.public.API_BASE_URL}/api/chat/conversations/${selectedConversationId.value}/messages`, {
+    await $fetch(`${config.public.API_BASE_URL}/chat/conversations/${selectedConversationId.value}/messages`, {
       method: 'POST',
       body: {
         senderId: sessionUser.value.id,
