@@ -90,7 +90,7 @@ function updateCatnavVars() {
 
   const navH = navEl ? Math.round(navEl.getBoundingClientRect().height) : 0
 
-  document.documentElement.style.setProperty('--catnav-top', `${headerH}px`)
+  document.documentElement.style.setProperty('--catnav-top', `${headerH + -2}px`)
   document.documentElement.style.setProperty('--catnav-height', `${navH}px`)
 }
 
