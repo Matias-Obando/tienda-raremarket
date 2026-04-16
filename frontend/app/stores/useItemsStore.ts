@@ -55,7 +55,7 @@ export const useItemsStore = defineStore('items', {
         if (this.filters.estado) params.estado = this.filters.estado
         if (this.filters.minPrice != null) params.minPrice = this.filters.minPrice
         if (this.filters.maxPrice != null) params.maxPrice = this.filters.maxPrice
-        this.items = await $fetch<Item[]>(`${config.public.API_BASE_URL}/api/items`, { params })
+        this.items = await $fetch<Item[]>(`${config.public.API_BASE_URL}/items`, { params })
       } catch (e) {
         console.error('Error cargando items desde backend:', e)
         this.items = []
@@ -68,7 +68,7 @@ export const useItemsStore = defineStore('items', {
       this.loading = true
       try {
         const config = useRuntimeConfig()
-        return await $fetch<Item>(`${config.public.API_BASE_URL}/api/items/${id}`)
+        return await $fetch<Item>(`${config.public.API_BASE_URL}/items/${id}`)
       } catch (e) {
         console.error('Error cargando item por id:', e)
         return null

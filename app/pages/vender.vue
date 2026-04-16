@@ -1,107 +1,78 @@
 <template>
-  <div class="sell-page">
-    <div class="sell-shell">
-      <header class="sell-header">
-        <p class="sell-kicker">Closely Studio</p>
-        <h1 class="sell-title">Publica tu artículo</h1>
-        <p class="sell-sub">Prepara un anuncio claro, añade buenas fotos y publica cuando esté listo para destacar.</p>
+  <div class="vender-bg">
+    <div class="vender-center">
+      <header class="vender-header">
+        <h1 class="page-title">Subir artículo</h1>
+        <p class="page-sub">Rellena los datos y revisa la vista previa en tiempo real</p>
       </header>
-
-      <div class="sell-layout">
-        <aside class="preview-column">
-          <div class="preview-card">
-            <div class="preview-card__head">
-              <h2>Así se verá tu anuncio</h2>
-              <span class="preview-card__badge">Vista en directo</span>
-            </div>
-            <SellPreviewCard :item="form" :imagenes="form.imagenes" />
-          </div>
+      <div class="vender-flex">
+        <aside class="preview-area">
+          <SellPreviewCard :item="form" :imagenes="form.imagenes" />
         </aside>
-
-        <main class="form-column">
-          <form @submit.prevent="onSubmit" class="sell-form">
-            <section class="form-block">
-              <h3>1. Lo esencial</h3>
-              <p class="block-note">Define lo básico para que los compradores encuentren tu prenda rápido.</p>
-              <div class="grid two">
-                <label class="field">
-                  <span class="label">Título*</span>
-                  <input type="text" v-model="form.titulo" placeholder="Ej: Chaqueta vaquera oversize" />
-                </label>
-                <label class="field">
-                  <span class="label">Precio final (€)*</span>
-                  <input type="number" v-model.number="form.precioEur" min="0" placeholder="0" />
-                </label>
-              </div>
-
-              <div class="grid two">
-                <label class="field">
-                  <span class="label">Categoría*</span>
-                  <select v-model="form.categoria" required>
-                    <option value="" disabled selected>Selecciona una categoría</option>
-                    <option value="Camisetas">Camisetas</option>
-                    <option value="Abrigos">Abrigos</option>
-                    <option value="Chaquetas">Chaquetas</option>
-                    <option value="Jerséis & Sudaderas">Jerséis & Sudaderas</option>
-                    <option value="Vestidos">Vestidos</option>
-                    <option value="Camisas & Camisetas">Camisas & Camisetas</option>
-                    <option value="Pantalones">Pantalones</option>
-                    <option value="Vaqueros">Vaqueros</option>
-                    <option value="Calzado">Calzado</option>
-                    <option value="Bolsos">Bolsos</option>
-                    <option value="Otros">Otros</option>
-                  </select>
-                </label>
-                <label class="field">
-                  <span class="label">Marca</span>
-                  <input type="text" v-model="form.marca" placeholder="Ej: Zara, Nike, Mango" />
-                </label>
-              </div>
-
-              <div class="grid two">
-                <label class="field">
-                  <span class="label">Talla</span>
-                  <input type="text" v-model="form.talla" placeholder="Ej: M / 42 / Única" />
-                </label>
-                <label class="field">
-                  <span class="label">Estado*</span>
-                  <select v-model="form.estado">
-                    <option value="Usado">Usado</option>
-                    <option value="Como nuevo">Como nuevo</option>
-                    <option value="Nuevo">Nuevo</option>
-                  </select>
-                </label>
-              </div>
-            </section>
-
-            <section class="form-block">
-              <h3>2. Cuéntanos más</h3>
-              <p class="block-note">Cuanto más preciso seas, más confianza generará tu anuncio.</p>
+        <main class="form-area">
+          <form @submit.prevent="onSubmit" class="vender-form">
+            <div class="row two">
               <label class="field">
-                <span class="label">Descripción*</span>
-                <textarea v-model="form.descripcion" rows="4" placeholder="Cuenta el estado real, medidas, detalles y cualquier defecto para vender antes."></textarea>
+                <span class="label">Título*</span>
+                <input type="text" v-model="form.titulo" placeholder="Título del producto" />
               </label>
-            </section>
-
-            <section class="form-block">
-              <h3>3. Añade tus fotos</h3>
-              <p class="block-note">Muestra frontal, trasera y detalle para mejorar la conversión.</p>
-              <label class="upload-drop">
-                <input class="file-input" type="file" accept="image/*" multiple @change="onImagesChange" />
-                <span class="upload-title">Arrastra tus fotos o haz clic para seleccionarlas</span>
-                <span class="upload-sub">Sube hasta {{ maxImages }} imágenes en JPG, PNG o WEBP. La primera será la portada.</span>
+              <label class="field">
+                <span class="label">Precio (€)*</span>
+                <input type="number" v-model.number="form.precioEur" min="0" placeholder="" />
               </label>
-
+            </div>
+            <div class="row two">
+              <label class="field">
+                <span class="label">Categoría*</span>
+                <select v-model="form.categoria" required>
+                  <option value="" disabled selected>Selecciona una categoría</option>
+                  <option value="Camisetas">Camisetas</option>
+                  <option value="Abrigos">Abrigos</option>
+                  <option value="Chaquetas">Chaquetas</option>
+                  <option value="Jerséis & Sudaderas">Jerséis & Sudaderas</option>
+                  <option value="Vestidos">Vestidos</option>
+                  <option value="Camisas & Camisetas">Camisas & Camisetas</option>
+                  <option value="Pantalones">Pantalones</option>
+                  <option value="Vaqueros">Vaqueros</option>
+                  <option value="Calzado">Calzado</option>
+                  <option value="Bolsos">Bolsos</option>
+                  <option value="Otros">Otros</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="label">Marca</span>
+                <input type="text" v-model="form.marca" placeholder="Ej: Nike" />
+              </label>
+            </div>
+            <div class="row two">
+              <label class="field">
+                <span class="label">Talla</span>
+                <input type="text" v-model="form.talla" placeholder="Ej: M / 42 / Única" />
+              </label>
+              <label class="field">
+                <span class="label">Estado*</span>
+                <select v-model="form.estado">
+                  <option value="Usado">Usado</option>
+                  <option value="Como nuevo">Como nuevo</option>
+                  <option value="Nuevo">Nuevo</option>
+                </select>
+              </label>
+            </div>
+            <label class="field">
+              <span class="label">Descripción*</span>
+              <textarea v-model="form.descripcion" rows="4" placeholder="Describe el producto, defectos, medidas, etc."></textarea>
+            </label>
+            <label class="field">
+              <span class="label">Imagen*</span>
+              <input type="file" accept="image/*" multiple @change="onImagesChange" />
+              <small class="hint">Puedes subir hasta 3 imágenes</small>
               <div class="preview-thumbs" v-if="form.imagenes.length">
                 <img v-for="(img, i) in form.imagenes" :key="i" :src="img" class="thumb" />
               </div>
-              <p v-if="form.imagenes.length" class="upload-count">{{ form.imagenes.length }} / {{ maxImages }} fotos cargadas</p>
-            </section>
-
+            </label>
             <div class="form-actions">
-              <p class="action-note">Podrás editar tu anuncio después de publicarlo.</p>
-              <button type="button" class="btn btn-ghost" @click="resetForm">Empezar de cero</button>
-              <button type="submit" class="btn btn-primary" :disabled="!isFormReady">Publicar en Closely</button>
+              <button type="button" class="btn btn-ghost" @click="resetForm">Limpiar</button>
+              <button type="submit" class="btn btn-primary">Subir</button>
             </div>
           </form>
         </main>
@@ -111,11 +82,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive } from 'vue'
+import { reactive } from 'vue'
 import SellPreviewCard from '~/components/SellPreviewCard.vue'
-
-const maxImages = 3
-const uiMessages = useUiMessages()
 
 const form = reactive({
   titulo: '',
@@ -131,12 +99,7 @@ const form = reactive({
 function onImagesChange(e: Event) {
   const files = (e.target as HTMLInputElement)?.files
   if (!files) return
-  const max = maxImages
-
-  if (files.length > max) {
-    uiMessages.info(`Solo se guardaran las primeras ${max} imagenes.`)
-  }
-
+  const max = 3
   form.imagenes = []
   const fileArr = Array.from(files).slice(0, max)
   fileArr.forEach(file => {
@@ -161,345 +124,258 @@ function resetForm() {
   form.imagenes = []
 }
 
-function validateForm(): string | null {
-  if (!form.titulo.trim()) return 'Añade un titulo para el articulo.'
-  if (!form.categoria) return 'Selecciona una categoria.'
-  if (!form.descripcion.trim()) return 'Añade una descripcion del articulo.'
-  if (!form.precioEur || form.precioEur <= 0) return 'Indica un precio mayor que 0.'
-  if (form.imagenes.length === 0) return 'Sube al menos una imagen para publicar.'
-  return null
-}
-
-const isFormReady = computed(() => validateForm() === null)
-
 function onSubmit() {
-  const validationError = validateForm()
-
-  if (validationError) {
-    uiMessages.error(validationError)
-    return
-  }
-
-  uiMessages.success('Articulo publicado correctamente. Ya puedes verlo en tu perfil.')
+  alert('Publicar (mock): datos listos en consola')
   resetForm()
 }
 </script>
 <style scoped>
-.sell-page {
+:root {
+  --preview-w: 340px;
+  --form-w: 420px;
+  --page-bg: #d6d6d6;
+}
+
+.vender-bg {
   min-height: 100vh;
-  background: linear-gradient(180deg, #f8fafc 0%, #eef2f6 100%);
-  padding: 24px 16px 42px;
+  background: var(--page-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  opacity: 1 !important;
+  color: #000 !important;
+  filter: none !important;
+  position: relative;
+  z-index: 10;
 }
 
-.sell-shell {
-  max-width: 1240px;
+.vender-center {
+  max-width: 980px;
   margin: 0 auto;
+  padding: 40px 0 0 0;
+  position: relative;
+  z-index: 11;
+  opacity: 1 !important;
+  color: #000 !important;
+  filter: none !important;
 }
 
-.sell-header {
+.vender-header {
   text-align: center;
-  margin: 18px auto 26px;
+  margin-bottom: 32px;
+  margin-top: 32px;
+  opacity: 1 !important;
+}
+.page-title {
+  font-size: 32px;
+  font-weight: 900;
+  color: #000 !important;
+  margin-bottom: 8px;
+  background: transparent !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+}
+.page-sub {
+  margin-top: 8px;
+  color: #888 !important;
+  font-size: 17px;
+  background: transparent !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  font-weight: 500;
+  text-shadow: none !important;
 }
 
-.sell-kicker {
-  margin: 0;
-  display: inline-flex;
-  align-items: center;
-  padding: 8px 14px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #0f766e;
-  background: rgba(15, 118, 110, 0.12);
-}
-
-.sell-title {
-  margin: 12px 0 0;
-  font-size: clamp(2rem, 3.2vw, 3rem);
-  line-height: 1.06;
-  letter-spacing: -0.05em;
-  color: #0f172a;
-}
-
-.sell-sub {
-  margin: 12px auto 0;
-  max-width: 62ch;
-  color: #64748b;
-  font-size: 1.02rem;
-  line-height: 1.6;
-}
-
-.sell-layout {
-  display: grid;
-  grid-template-columns: minmax(320px, 430px) minmax(360px, 1fr);
-  gap: 26px;
-  align-items: start;
-}
-
-.preview-column {
-  position: sticky;
-  top: 128px;
-}
-
-.preview-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 20px;
-  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.08);
-  padding: 14px;
-}
-
-.preview-card__head {
+.vender-flex {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 64px;
 }
 
-.preview-card__head h2 {
-  margin: 0;
-  font-size: 1rem;
-  color: #0f172a;
-}
-
-.preview-card__badge {
-  font-size: 12px;
-  font-weight: 700;
-  color: #0f766e;
-  background: rgba(15, 118, 110, 0.12);
-  border-radius: 999px;
-  padding: 6px 10px;
-}
-
-.form-column {
-  min-width: 0;
-}
-
-.sell-form {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 20px;
-  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.08);
-  padding: 20px;
-}
-
-.form-block + .form-block {
-  margin-top: 20px;
-}
-
-.form-block h3 {
-  margin: 0 0 12px;
-  font-size: 1.02rem;
-  color: #0f172a;
-}
-
-.block-note {
-  margin: -4px 0 12px;
-  font-size: 0.88rem;
-  color: #64748b;
-}
-
-.grid.two {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-  margin-bottom: 14px;
-}
-
-.field {
+.preview-area {
+  min-width: var(--preview-w);
+  max-width: var(--preview-w);
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  align-items: flex-start;
+  margin-top: 8px;
+  gap: 12px;
+  box-sizing: border-box;
 }
-
-.label {
-  font-size: 0.92rem;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-input,
-select,
-textarea {
+.preview-area .sell-card {
   width: 100%;
-  border: 1px solid #d1d5db;
-  border-radius: 14px;
-  padding: 12px 14px;
-  font-size: 1rem;
-  color: #0f172a;
-  background: #ffffff;
-  outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  max-width: var(--preview-w);
+  box-sizing: border-box;
+}
+.preview-area .sell-card__media {
+  height: 320px;
+  max-height: 420px;
+  overflow: hidden;
+}
+.help-note {
+  font-size: 13px;
+  color: #6b7280;
+  width: 100%;
+  text-align: center;
 }
 
-input:hover,
-select:hover,
-textarea:hover {
-  border-color: #9ca3af;
+.form-area {
+  width: 100%;
+  max-width: var(--form-w);
+  box-sizing: border-box;
+  position: relative;
+  z-index: 12;
+  opacity: 1 !important;
+  color: #181818 !important;
+  filter: none !important;
 }
-
-input:focus,
-select:focus,
-textarea:focus {
-  border-color: #0f766e;
-  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.16);
-  background: #f8fffd;
-}
-
-textarea {
-  resize: vertical;
-  min-height: 112px;
-}
-
-.upload-drop {
+.vender-form {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  border: 2px dashed #cbd5e1;
-  border-radius: 16px;
-  padding: 18px 16px;
-  background: #f8fafc;
-  cursor: pointer;
-  transition: border-color 0.2s ease, background-color 0.2s ease;
+  gap: 18px;
+  padding: 6px 0;
+  opacity: 1 !important;
+  color: #181818 !important;
+  filter: none !important;
 }
-
-.upload-drop:hover {
-  border-color: #0f766e;
-  background: #f2fbf9;
-}
-
-.upload-title {
-  font-weight: 700;
-  color: #0f172a;
-}
-
-.upload-sub {
-  font-size: 0.88rem;
-  color: #64748b;
-}
-
-.file-input {
-  display: none;
-}
-
-.preview-thumbs {
+.row.two {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 10px;
+  gap: 18px;
 }
-
-.upload-count {
-  margin: 8px 0 0;
-  font-size: 0.86rem;
-  color: #0f766e;
-  font-weight: 600;
+.row.two .field { flex: 1; }
+@media (max-width: 880px) {
+  .vender-flex { flex-direction: column; align-items: center; }
+  .row.two { flex-direction: column; gap: 8px; }
 }
-
-.thumb {
-  width: 72px;
-  height: 72px;
-  border-radius: 10px;
-  object-fit: cover;
-  border: 1px solid #cbd5e1;
-  background: #e5e7eb;
+.field { display: flex; flex-direction: column; gap: 8px; }
+        .label {
+  font-size: 17px;
+  color: #181818 !important;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  margin-bottom: 2px;
+  opacity: 1 !important;
+        }
+input, select, textarea {
+  background: #fff !important;
+  border: 1.5px solid #e6e6e8 !important;
+  border-radius: 12px !important;
+  padding: 14px 16px !important;
+  font-size: 16px !important;
+  color: #181818 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  transition: box-shadow .12s !important;
+  opacity: 1 !important;
 }
-
-.form-actions {
-  position: sticky;
-  bottom: 0;
-  margin: 20px -20px -20px;
-  padding: 14px 20px;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(6px);
-  border-top: 1px solid #e2e8f0;
+input:focus, select:focus, textarea:focus {
+  box-shadow: 0 8px 20px rgba(16,24,40,0.06);
+}
+textarea { resize: none; }
+.hint { font-size: 13px; color: #a0a0a0; margin-top: 6px; }
+.vender-form .form-actions {
   display: flex;
   justify-content: flex-end;
-  align-items: center;
-  gap: 10px;
+  gap: 16px;
+  margin-top: 32px;
+  margin-bottom: 48px;
 }
-
-.action-note {
-  margin: 0 auto 0 0;
-  font-size: 0.86rem;
-  color: #64748b;
-}
-
 .btn {
-  min-height: 44px;
-  padding: 0 16px;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 7px 22px;
+  border: none;
   cursor: pointer;
+  opacity: 1 !important;
+  color: #181818 !important;
 }
-
-.btn-ghost {
-  border-color: #cbd5e1;
-  background: #ffffff;
-  color: #334155;
-}
-
 .btn-primary {
-  background: #0f766e;
-  color: #ffffff;
-  box-shadow: 0 10px 24px rgba(15, 118, 110, 0.26);
+  background: #22b89a !important;
+  color: #fff !important;
+  opacity: 1 !important;
+}
+.btn-ghost {
+  background: #fff !important;
+  color: #181818 !important;
+  border: 1.5px solid #e6e6e8 !important;
+  opacity: 1 !important;
+}
+.preview-thumbs {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.thumb {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1.5px solid #e6e6e8;
+  background: #f3f4f6;
+}
+@media (min-width: 1025px) {
+  .preview-area { align-items:flex-end; }
+}
+.vender-header, .vender-grid { transform: none !important; }
+
+
+.row.two {
+  display:flex;
+  gap:12px;
+}
+.row.two .field { flex:1; }
+
+
+@media (max-width: 880px) {
+  .row.two { flex-direction:column; }
 }
 
-.btn-primary:hover {
-  background: #0d655f;
+
+.field { display:flex; flex-direction:column; gap:8px; }
+  .label { font-size: 14px; color: var(--rm-muted, #6b7280); font-weight: 600; }
+
+
+input, select, textarea {
+  background: #fff;
+  border-radius: 12px 12px 12px 12px;
+  border: 2.5px solid #e6e6e8;
+  box-shadow: 0 10px 30px rgba(16,24,40,0.06);
+  font-size:14px;
+.sell-card__body {
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+  color:var(--rm-text,#111827);
+  outline:none;
+  box-shadow:none;
+  transition: border-color .12s ease, box-shadow .12s ease;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: color-mix(in srgb, var(--rm-primary,#10b981) 70%, black 0%);
+  box-shadow: 0 8px 20px rgba(16,24,40,0.06);
+}
+textarea { resize:none; }
+
+
+.hint { font-size:12px; color:var(--rm-muted); margin-top:6px; }
+
+
+.vender-form .form-actions {
+  display:flex;
+  justify-content:flex-end;
+  gap:12px;
+  margin-top: 8px;
 }
 
-.btn:disabled {
-  opacity: 0.58;
-  cursor: not-allowed;
-  box-shadow: none;
-  transform: none;
-}
 
-@media (max-width: 980px) {
-  .sell-layout {
-    grid-template-columns: 1fr;
-  }
+.vender-header, .vender-grid { transform: none !important; }
 
-  .preview-column {
-    position: static;
-  }
-
-  .preview-card {
-    max-width: 460px;
-    margin: 0 auto;
-  }
-}
-
-@media (max-width: 760px) {
-  .grid.two {
-    grid-template-columns: 1fr;
-    margin-bottom: 12px;
-  }
-
-  .sell-form {
-    padding: 16px;
-  }
-
-  .form-actions {
-    margin: 18px -16px -16px;
-    padding: 12px 16px;
-    justify-content: stretch;
-    flex-wrap: wrap;
-  }
-
-  .action-note {
-    width: 100%;
-    margin: 0;
-  }
-
-  .btn {
-    flex: 1;
-  }
-}
+/* keep everything boxed properly */
+.vender-header, .vender-grid { transform: none !important; }
 
 </style>

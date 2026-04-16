@@ -73,3 +73,21 @@ bun run preview
 ```
 
 Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+
+## Backend (Spring Boot) + Supabase
+
+El backend ya esta configurado para leer la conexion desde variables de entorno:
+
+- `SUPABASE_DB_URL`
+- `SUPABASE_DB_USER`
+- `SUPABASE_DB_PASSWORD`
+
+Puedes usar [backend/.env.example](backend/.env.example) como base.
+
+Ejemplo de URL JDBC de Supabase (pooler):
+
+```bash
+jdbc:postgresql://aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require
+```
+
+Luego inicia el backend desde la carpeta `backend`.
