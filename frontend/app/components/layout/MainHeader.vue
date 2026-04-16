@@ -1,7 +1,6 @@
 <template>
-  <header class="sticky top-0 z-[90] bg-white/95 backdrop-blur border-b border-gray-100 pt-0 pb-0 shadow-sm">
-    <TopBar />
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <header class="sticky top-0 z-[90] bg-white border-b border-gray-100 pt-0 pb-0 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 md:py-3">
       <div class="flex items-center justify-between gap-4">
         <div class="flex items-center gap-4 flex-1 min-w-0">
           <NuxtLink to="/" class="flex items-center gap-3 shrink-0">
@@ -183,7 +182,6 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import logoAsset from '~/assets/photos/closely-logo.png'
 import CategoryNav from '~/components/layout/CategoryNav.vue'
-import TopBar from '~/components/layout/TopBar.vue'
 
 const { sessionUser, loadSessionUser, clearSessionUser, storageEventName } = useSessionUser()
 const route = useRoute()

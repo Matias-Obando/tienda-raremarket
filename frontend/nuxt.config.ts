@@ -15,8 +15,7 @@ export default defineNuxtConfig({
   modules: [
     '@pinia/nuxt',
     '@nuxtjs/tailwindcss',
-    '@nuxtjs/color-mode',
-    '@nuxt-alt/proxy'
+    '@nuxtjs/color-mode'
   ],
 
 

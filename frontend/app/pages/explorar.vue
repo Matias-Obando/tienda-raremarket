@@ -1,6 +1,31 @@
 <template>
-  <div class="rm-container rm-page">
-    <header class="top">
+  <div class="rm-page">
+    <section class="promo-hero" :style="{ '--promo-hero-image': `url(${promoHeroImage})` }">
+      <div class="rm-container promo-hero__inner">
+        <div class="promo-hero__content">
+          <p class="promo-kicker">Moda sostenible · Venta rápida</p>
+          <h1 class="promo-title">¿Tienes ropa en tu armario que ya no usas?</h1>
+          <p class="promo-text">
+            Sube prendas que ya no uses y dales una segunda vida. Publicar es rápido y tus
+            artículos aparecen junto al resto del catálogo.
+          </p>
+
+          <div class="promo-actions">
+            <NuxtLink to="/vender" class="promo-btn promo-btn--primary">Vender ahora</NuxtLink>
+            <a href="#catalogo" class="promo-btn promo-btn--ghost">Ver productos</a>
+          </div>
+
+          <div class="promo-stats" aria-hidden="true">
+            <span>Publica en minutos</span>
+            <span>Compra y vende</span>
+            <span>Envía con facilidad</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="rm-container">
+      <header class="top">
 
 
       <div class="subRow">
@@ -31,9 +56,9 @@
       <p v-else class="hint">
         Mostrando: <strong>Todos</strong>
       </p>
-    </header>
+      </header>
 
-    <div v-if="filteredItems.length === 0" class="empty">
+      <div v-if="filteredItems.length === 0" class="empty">
       No hay productos con ese filtro/búsqueda.
 
       <div class="emptyActions">
@@ -53,10 +78,11 @@
           Ver todos
         </NuxtLink>
       </div>
-    </div>
+      </div>
 
-    <div v-else class="grid">
-      <ItemCard v-for="it in filteredItems" :key="it.id" :item="it" />
+      <div v-else id="catalogo" class="grid">
+        <ItemCard v-for="it in filteredItems" :key="it.id" :item="it" />
+      </div>
     </div>
   </div>
 </template>
@@ -68,6 +94,7 @@ import { useItemsStore } from '~/stores/useItemsStore'
 
 const store = useItemsStore()
 const route = useRoute()
+const promoHeroImage = '/bg/bg.png'
 
 
 onMounted(async () => {
@@ -186,6 +213,132 @@ const resultsText = computed(() => {
   padding-right: 40px;
 }
 
+.promo-hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 380px;
+  width: 100vw;
+  margin: -21px calc(50% - 50vw) 12px;
+  border-radius: 0;
+  background-image:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 34%, rgba(255, 255, 255, 0.1) 72%),
+    var(--promo-hero-image);
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+  background-size: cover, cover;
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
+}
+
+.promo-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 70% 20%, rgba(255, 255, 255, 0.18), transparent 32%);
+  pointer-events: none;
+}
+
+.promo-hero__content {
+  position: relative;
+  z-index: 1;
+  max-width: 460px;
+  margin: 0;
+  padding: 28px 0;
+}
+
+.promo-hero__inner {
+  min-height: 380px;
+  display: flex;
+  align-items: center;
+}
+
+.promo-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(13, 148, 136, 0.1);
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.promo-title {
+  margin: 0;
+  font-size: clamp(2rem, 3.2vw, 3.35rem);
+  line-height: 1.06;
+  letter-spacing: -0.05em;
+  color: #0f172a;
+}
+
+.promo-text {
+  margin: 18px 0 0;
+  max-width: 36ch;
+  font-size: 16px;
+  line-height: 1.65;
+  color: #475569;
+}
+
+.promo-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+
+.promo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 18px;
+  border-radius: 999px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.promo-btn:hover {
+  transform: translateY(-1px);
+}
+
+.promo-btn--primary {
+  background: #0f766e;
+  color: #fff;
+  box-shadow: 0 12px 30px rgba(15, 118, 110, 0.25);
+}
+
+.promo-btn--primary:hover {
+  background: #0e6b64;
+}
+
+.promo-btn--ghost {
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(255, 255, 255, 0.72);
+  color: #0f172a;
+  backdrop-filter: blur(8px);
+}
+
+.promo-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.promo-stats span {
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  color: #334155;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+}
+
 /* Empuja hacia abajo el bloque de cabecera (Orden / Mostrando)
    Usamos la altura calculada de la category nav para evitar solapamientos.
   Añadimos 10px extra de espacio visual. */
@@ -197,6 +350,56 @@ const resultsText = computed(() => {
 
 @media (min-width: 900px) {
   .top { margin-top: 14px; }
+}
+
+@media (max-width: 900px) {
+  .promo-hero {
+    min-height: 320px;
+    width: 100vw;
+    margin: 0 calc(50% - 50vw) 12px;
+    background-image:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0.9) 54%, rgba(255, 255, 255, 0.52) 100%),
+      var(--promo-hero-image);
+    background-position: center, center;
+    background-repeat: no-repeat, no-repeat;
+    background-size: cover, cover;
+  }
+
+  .promo-hero__content {
+    max-width: 100%;
+    padding: 28px 0;
+  }
+
+  .promo-hero__inner {
+    min-height: 320px;
+  }
+}
+
+@media (max-width: 640px) {
+  .promo-hero {
+    min-height: auto;
+    width: 100vw;
+  }
+
+  .promo-hero__inner {
+    min-height: auto;
+  }
+
+  .promo-title {
+    font-size: 1.8rem;
+  }
+
+  .promo-text {
+    font-size: 15px;
+  }
+
+  .promo-actions {
+    gap: 10px;
+  }
+
+  .promo-btn {
+    width: 100%;
+  }
 }
 
 
