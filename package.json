@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "@heroicons/vue": "^2.2.0",
+    "@nuxt/cli": "^3.34.0",
+    "@nuxt/nitro-server": "^4.4.2",
+    "@nuxt/vite-builder": "^4.4.2",
+    "nitropack": "^2.13.3",
+    "nuxt": "^4.4.2"
+  }
+}
