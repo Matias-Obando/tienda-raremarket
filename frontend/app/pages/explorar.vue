@@ -479,16 +479,13 @@ const resultsText = computed(() => {
 }
 
 
-::v-deep(.rm-catnav),
-::v-deep(.rm-catnav__list) {
+::v-deep(.rm-catnav) {
   max-width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  white-space: nowrap;
   box-sizing: border-box;
   padding-left: 12px;
   padding-right: 12px;
 }
-::v-deep(.rm-catnav__list) { display:flex; gap:12px; align-items:center; }
-::v-deep(.rm-catnav__item) { flex:0 0 auto; white-space:nowrap; }
+::v-deep(.rm-catnav__scroller) {
+  justify-content: center;
+}
 </style>

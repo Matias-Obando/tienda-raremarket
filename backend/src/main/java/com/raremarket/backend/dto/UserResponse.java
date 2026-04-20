@@ -2,10 +2,8 @@ package com.raremarket.backend.dto;
 
 import com.raremarket.backend.model.User;
 
-import java.util.UUID;
-
 public class UserResponse {
-    private UUID id;
+    private String id;
     private String username;
     private String email;
 
@@ -17,11 +15,11 @@ public class UserResponse {
         return response;
     }
 
-    public UUID getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(UUID id) {
+    public void setId(String id) {
         this.id = id;
     }
 

@@ -2,42 +2,27 @@
   <div class="profile-page">
     <section v-if="sessionReady && profileUser" class="profile-grid">
       <article class="profile-card profile-card--hero">
+        <NuxtLink to="/editprofile" class="profile-link profile-link--soft profile-edit-top">Editar perfil</NuxtLink>
+
         <div class="hero-left">
           <span class="avatar">{{ userInitial }}</span>
           <div>
             <p class="eyebrow">Cuenta</p>
-            <h1>Mi perfil</h1>
             <p class="profile-name">{{ profileUser.username }}</p>
             <p class="profile-email">{{ profileUser.email }}</p>
-            <p class="hero-note">Gestiona tus favoritos, conversaciones y anuncios en un solo lugar.</p>
+            <p class="hero-note">Gestiona tus publicaciones y conversaciones en un solo lugar.</p>
             <p v-if="isDemoMode" class="section-note">Vista demo activa</p>
           </div>
         </div>
 
         <div class="hero-actions">
-          <NuxtLink to="/editprofile" class="profile-link profile-link--soft">Editar perfil</NuxtLink>
           <NuxtLink to="/chat" class="profile-link">Ir a mensajes</NuxtLink>
           <NuxtLink to="/explorar" class="profile-link profile-link--soft">Explorar artículos</NuxtLink>
           <button type="button" class="profile-link profile-link--danger" @click="signOut">Cerrar sesión</button>
         </div>
       </article>
 
-      <article class="profile-card stats-row">
-        <div class="stat-card">
-          <p class="stat-label">Favoritos</p>
-          <p class="stat-value">{{ favoriteItems.length }}</p>
-        </div>
-        <div class="stat-card">
-          <p class="stat-label">Conversaciones</p>
-          <p class="stat-value">{{ conversationsCount }}</p>
-        </div>
-        <div class="stat-card">
-          <p class="stat-label">Sesión</p>
-          <p class="stat-value">{{ isDemoMode ? 'Demo' : 'Activa' }}</p>
-        </div>
-      </article>
-
-      <article class="profile-card">
+      <article class="profile-card profile-card--compact">
         <div class="section-head">
           <h2>Accesos rápidos</h2>
         </div>
@@ -58,29 +43,23 @@
 
       <article class="profile-card">
         <div class="section-head">
-          <h2>Favoritos recientes</h2>
-          <span class="section-note">Los últimos que guardaste</span>
+          <h2>Mis publicaciones</h2>
+          <span class="section-note">Los productos que subiste desde tu perfil</span>
         </div>
 
-        <div v-if="loadingFavorites" class="empty">Cargando favoritos...</div>
-        <div v-else-if="!favoriteItems.length" class="empty">
-          Aún no tienes favoritos. Guarda artículos desde explorar para verlos aquí.
+        <div v-if="loadingPublished" class="empty">Cargando tus publicaciones...</div>
+        <div v-else-if="!publishedItems.length" class="empty">
+          Todavía no has publicado artículos.
         </div>
 
-        <div v-else class="favorites-grid">
-          <NuxtLink
-            v-for="item in favoriteItems"
+        <div v-else class="published-grid">
+          <ItemCard
+            v-for="item in publishedItems"
             :key="item.id"
-            :to="`/item/${item.id}`"
-            class="fav-card"
-          >
-            <img :src="item.imagen" :alt="item.titulo" class="fav-image" />
-            <div class="fav-body">
-              <p class="fav-title">{{ item.titulo }}</p>
-              <p class="fav-meta">{{ item.marca }} · {{ item.talla }} · {{ item.estado }}</p>
-              <p class="fav-price">{{ item.precioEur }} €</p>
-            </div>
-          </NuxtLink>
+            :item="item"
+            :show-badge="true"
+            :show-fav="true"
+          />
         </div>
       </article>
     </section>
@@ -102,6 +81,7 @@
 </template>
 
 <script setup lang="ts">
+import ItemCard from '~/components/ItemCard.vue'
 import type { Item } from '~/stores/items'
 import type { SessionUser } from '~/composables/useSessionUser'
 
@@ -110,10 +90,9 @@ const store = useItemsStore()
 const route = useRoute()
 const uiMessages = useUiMessages()
 const sessionReady = ref(false)
-const loadingFavorites = ref(false)
+const loadingPublished = ref(false)
 const conversationsCount = ref(0)
-const favoriteItems = ref<Item[]>([])
-const LS_FAVORITES_KEY = 'closely:favorites'
+const publishedItems = ref<Item[]>([])
 
 const demoUser: SessionUser = {
   id: 'demo-user',
@@ -132,25 +111,10 @@ const profileUser = computed<SessionUser | null>(() => {
 const userInitial = computed(() => profileUser.value?.username?.charAt(0).toUpperCase() || 'U')
 
 const quickActions = [
-  { to: '/editprofile', title: 'Editar perfil', description: 'Actualiza tus datos y tu foto para generar mas confianza.', cta: 'Editar' },
   { to: '/vender', title: 'Publicar articulo', description: 'Sube una nueva prenda y activa tu anuncio en minutos.', cta: 'Publicar' },
   { to: '/chat', title: 'Responder mensajes', description: 'Gestiona tus conversaciones con compradores y vendedores.', cta: 'Responder' },
   { to: '/explorar', title: 'Buscar gangas', description: 'Descubre piezas interesantes para tu armario.', cta: 'Explorar' }
 ]
-
-function readFavoriteIds() {
-  if (!process.client) {
-    return [] as string[]
-  }
-
-  try {
-    const raw = localStorage.getItem(LS_FAVORITES_KEY)
-    const parsed = raw ? JSON.parse(raw) : []
-    return Array.isArray(parsed) ? parsed.map((id) => String(id)) : []
-  } catch {
-    return []
-  }
-}
 
 async function loadConversationsCount() {
   if (!profileUser.value) {
@@ -174,31 +138,33 @@ async function loadConversationsCount() {
   }
 }
 
-async function loadFavoriteItems() {
-  loadingFavorites.value = true
+async function loadPublishedItems() {
+  loadingPublished.value = true
   try {
     if (!store.items.length) {
       await store.fetchAll()
     }
 
     if (isDemoMode.value) {
-      favoriteItems.value = store.items.slice(0, 6)
+      publishedItems.value = store.items.slice(0, 3)
       return
     }
 
-    const ids = readFavoriteIds()
-    favoriteItems.value = ids
-      .map((id) => store.items.find((item) => item.id === id))
-      .filter((item): item is Item => Boolean(item))
-      .slice(0, 6)
+    const currentUserId = profileUser.value?.id
+    if (!currentUserId) {
+      publishedItems.value = []
+      return
+    }
+
+    publishedItems.value = store.items.filter((item) => String(item.sellerId ?? '') === currentUserId).slice(0, 6)
   } finally {
-    loadingFavorites.value = false
+    loadingPublished.value = false
   }
 }
 
 async function refreshProfileData() {
   await Promise.all([
-    loadFavoriteItems(),
+    loadPublishedItems(),
     loadConversationsCount()
   ])
 }
@@ -211,7 +177,7 @@ function signOut() {
 
   clearSessionUser()
   conversationsCount.value = 0
-  favoriteItems.value = []
+  publishedItems.value = []
   uiMessages.info('Sesion cerrada correctamente.')
   navigateTo('/')
 }
@@ -233,13 +199,11 @@ onMounted(async () => {
 
   window.addEventListener(storageEventName, syncSession)
   window.addEventListener('storage', syncSession)
-  window.addEventListener('closely:favs:updated', loadFavoriteItems)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener(storageEventName, syncSession)
   window.removeEventListener('storage', syncSession)
-  window.removeEventListener('closely:favs:updated', loadFavoriteItems)
 })
 </script>
 
@@ -261,6 +225,10 @@ onBeforeUnmount(() => {
   padding: 30px;
 }
 
+.profile-card--compact {
+  padding: 20px 18px;
+}
+
 .profile-grid {
   max-width: 1140px;
   margin: 0 auto;
@@ -269,22 +237,32 @@ onBeforeUnmount(() => {
 }
 
 .profile-card--hero {
+  position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 24px;
   background: linear-gradient(135deg, #ffffff 0%, #f7fcfb 52%, #eefcf8 100%);
+}
+
+.profile-edit-top {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  z-index: 2;
 }
 
 .hero-left {
   display: flex;
   align-items: center;
   gap: 18px;
+  width: 100%;
 }
 
 .avatar {
-  width: 78px;
-  height: 78px;
+  width: 108px;
+  height: 108px;
   border-radius: 999px;
   background: linear-gradient(145deg, #dcfce7 0%, #ccfbf1 100%);
   color: #0f766e;
@@ -292,16 +270,24 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 30px;
+  font-size: 44px;
   font-weight: 800;
-  box-shadow: 0 8px 22px rgba(20, 184, 166, 0.22);
+  box-shadow: 0 14px 28px rgba(20, 184, 166, 0.24);
 }
 
 .hero-actions {
   display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.profile-card--hero .profile-link {
+  min-height: 36px;
+  padding: 0 14px;
+  font-size: 0.78rem;
+  letter-spacing: 0.01em;
 }
 
 .eyebrow {
@@ -313,16 +299,9 @@ onBeforeUnmount(() => {
   font-weight: 700;
 }
 
-.profile-card h1,
 .profile-name,
 .profile-email {
   margin: 0 0 10px;
-}
-
-.profile-card h1 {
-  font-size: clamp(1.85rem, 2.5vw, 2.35rem);
-  line-height: 1.08;
-  letter-spacing: -0.04em;
 }
 
 .profile-name {
@@ -375,43 +354,17 @@ onBeforeUnmount(() => {
   border-color: #fecdd3;
 }
 
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.stat-card {
-  border: 1px solid #e2e8f0;
-  border-radius: 18px;
-  padding: 16px;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-}
-
-.stat-label {
-  margin: 0;
-  color: #64748b;
-  font-size: 13px;
-}
-
-.stat-value {
-  margin: 6px 0 0;
-  font-size: 27px;
-  font-weight: 800;
-  letter-spacing: -0.04em;
-}
-
 .section-head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .section-head h2 {
   margin: 0;
-  font-size: 22px;
+  font-size: 18px;
   line-height: 1.12;
   letter-spacing: -0.03em;
 }
@@ -423,34 +376,34 @@ onBeforeUnmount(() => {
 
 .quick-links {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .quick-link {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  min-height: 120px;
+  gap: 4px;
+  min-height: 74px;
   border-radius: 16px;
   border: 1px solid #dbe4ee;
   background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   color: #0f172a;
-  padding: 14px;
+  padding: 10px;
   text-align: left;
   transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .quick-link__title {
   font-weight: 700;
-  font-size: 0.98rem;
+  font-size: 0.89rem;
   line-height: 1.2;
 }
 
 .quick-link__desc {
   color: #64748b;
-  font-size: 0.86rem;
-  line-height: 1.45;
+  font-size: 0.74rem;
+  line-height: 1.35;
 }
 
 .quick-link__cta {
@@ -458,13 +411,13 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 30px;
+  min-height: 24px;
   width: fit-content;
-  padding: 0 10px;
+  padding: 0 8px;
   border-radius: 999px;
   border: 1px solid #a7f3d0;
   color: #0f766e;
-  font-size: 0.78rem;
+  font-size: 0.69rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -478,6 +431,12 @@ onBeforeUnmount(() => {
 }
 
 .favorites-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.published-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
@@ -547,17 +506,23 @@ onBeforeUnmount(() => {
 
 @media (max-width: 960px) {
   .profile-card--hero {
-    flex-direction: column;
     align-items: flex-start;
   }
 
+  .profile-edit-top {
+    position: static;
+    margin-left: auto;
+    margin-bottom: 6px;
+  }
+
   .hero-actions {
+    flex-wrap: wrap;
     justify-content: flex-start;
   }
 
-  .stats-row,
   .quick-links,
-  .favorites-grid {
+  .favorites-grid,
+  .published-grid {
     grid-template-columns: 1fr 1fr;
   }
 }
@@ -575,6 +540,10 @@ onBeforeUnmount(() => {
     border-radius: 16px;
   }
 
+  .profile-card--compact {
+    padding: 16px;
+  }
+
   .profile-card h1 {
     font-size: 1.75rem;
   }
@@ -589,9 +558,9 @@ onBeforeUnmount(() => {
   }
 
   .avatar {
-    width: 64px;
-    height: 64px;
-    font-size: 24px;
+    width: 84px;
+    height: 84px;
+    font-size: 34px;
   }
 
   .hero-actions {
@@ -609,16 +578,8 @@ onBeforeUnmount(() => {
     gap: 4px;
   }
 
-  .stat-card {
-    padding: 14px;
-  }
-
-  .stat-value {
-    font-size: 24px;
-  }
-
-  .stats-row,
-  .favorites-grid {
+  .favorites-grid,
+  .published-grid {
     grid-template-columns: 1fr;
   }
 
