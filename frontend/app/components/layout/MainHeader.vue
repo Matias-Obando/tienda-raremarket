@@ -22,7 +22,7 @@
                   v-model="query"
                   type="search"
                   placeholder="Busca artículos"
-                  class="w-full bg-gray-50 rounded-full py-3 pl-12 pr-4 text-sm placeholder-gray-400 border border-transparent focus:outline-none focus:ring-2 focus:ring-teal-200 focus:bg-white"
+                  class="w-full bg-slate-100 rounded-full py-3 pl-12 pr-4 text-sm text-slate-700 placeholder-slate-500 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-200 focus:bg-white focus:border-teal-300"
                 />
               </div>
             </form>
@@ -43,12 +43,19 @@
               </div>
             </template>
 
-            <NuxtLink to="/vender" class="ml-1 bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-full text-sm">
+            <NuxtLink to="/vender" class="ml-1 bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-full text-sm font-semibold shadow-sm transition-colors">
               Vender ahora
             </NuxtLink>
 
             <div v-if="user" class="flex items-center gap-2">
-              <NuxtLink to="/chat" class="p-2 rounded-full hover:bg-gray-100" aria-label="Mensajes">
+              <NuxtLink to="/favoritos" class="action-pill" aria-label="Favoritos" title="Favoritos">
+                <svg class="h-5 w-5 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+                <span v-if="favoriteCount > 0" class="action-pill-count">{{ favoriteCount }}</span>
+              </NuxtLink>
+
+              <NuxtLink to="/chat" class="action-pill" aria-label="Mensajes" title="Mensajes">
                 <svg class="h-5 w-5 text-gray-700" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
                 </svg>
@@ -97,7 +104,7 @@
             </button>
           </div>
 
-          <div class="hidden md:block text-sm text-gray-600 ml-2">ES</div>
+          <div class="hidden md:block text-sm font-medium text-slate-500 ml-2 tracking-wide">ES</div>
         </div>
       </div>
     </div>
@@ -127,6 +134,9 @@
             </NuxtLink>
             <NuxtLink v-if="!user" :to="{ path: '/auth', query: { mode: 'login' } }" class="block w-full py-3 rounded-full bg-teal-600 text-white text-center">
               Inicia sesión
+            </NuxtLink>
+            <NuxtLink v-if="user" to="/favoritos" class="block w-full py-3 rounded-full border text-gray-700 text-center">
+              Favoritos
             </NuxtLink>
             <NuxtLink v-if="user" to="/chat" class="block w-full py-3 rounded-full border text-gray-700 text-center">
               Mis mensajes
@@ -200,6 +210,8 @@ const dropdownOpen = ref(false)
 const mobileOpen = ref(false)
 const mobileSearchOpen = ref(false)
 const avatarRef = ref<HTMLElement | null>(null)
+const favoriteCount = ref(0)
+const favoritesStorageKey = 'closely:favorites'
 const navLinks = [
   { label: 'Explorar', to: '/explorar' },
   { label: 'Mensajes', to: '/chat' },
@@ -264,13 +276,30 @@ function syncSession() {
   loadSessionUser()
 }
 
+function syncFavorites() {
+  if (!import.meta.client) {
+    return
+  }
+
+  try {
+    const raw = localStorage.getItem(favoritesStorageKey)
+    const ids = raw ? JSON.parse(raw) : []
+    favoriteCount.value = Array.isArray(ids) ? ids.length : 0
+  } catch {
+    favoriteCount.value = 0
+  }
+}
+
 onMounted(() => {
   loadSessionUser()
+  syncFavorites()
   const q = route.query.q
   query.value = typeof q === 'string' ? q : ''
   document.addEventListener('click', onOutsideClick)
   window.addEventListener(storageEventName, syncSession)
   window.addEventListener('storage', syncSession)
+  window.addEventListener('closely:favs:updated', syncFavorites)
+  window.addEventListener('storage', syncFavorites)
 })
 
 watch(
@@ -284,6 +313,8 @@ onBeforeUnmount(() => {
   document.removeEventListener('click', onOutsideClick)
   window.removeEventListener(storageEventName, syncSession)
   window.removeEventListener('storage', syncSession)
+  window.removeEventListener('closely:favs:updated', syncFavorites)
+  window.removeEventListener('storage', syncFavorites)
 })
 
 const categories = [
@@ -320,22 +351,67 @@ const categories = [
   opacity: 0;
 }
 
+#header-search {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+#header-search::placeholder {
+  font-weight: 500;
+}
+
 header img {
   height: auto;
   max-height: 56px;
 }
 
 .avatar-circle {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #dff8f2;
-  border: 1px solid #99f6e4;
+  background: linear-gradient(180deg, #ebfffb 0%, #d9faf2 100%);
+  border: 1px solid #8ce8d8;
   color: #0f766e;
   font-weight: 700;
+  box-shadow: 0 6px 16px rgba(15, 118, 110, 0.12);
+}
+
+.action-pill {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.action-pill:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+.action-pill-count {
+  position: absolute;
+  top: -4px;
+  right: -5px;
+  min-width: 17px;
+  height: 17px;
+  border-radius: 999px;
+  padding: 0 4px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 17px;
+  text-align: center;
+  border: 2px solid #fff;
 }
 
 .z-60 {

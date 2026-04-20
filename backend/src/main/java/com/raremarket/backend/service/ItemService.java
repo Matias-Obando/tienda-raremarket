@@ -106,7 +106,7 @@ public class ItemService {
     }
 
     private void ensureUserExists(UUID userId) {
-        if (!userRepository.existsById(userId)) {
+        if (!userRepository.existsById(userId.toString())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }
     }

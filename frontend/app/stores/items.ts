@@ -10,6 +10,7 @@ export type Categoria =
 
 export type Item = {
   id: string
+  sellerId?: string
   titulo: string
   descripcion: string
   precioEur: number

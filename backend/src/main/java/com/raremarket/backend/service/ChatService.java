@@ -16,12 +16,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class ChatService {
@@ -130,14 +130,24 @@ public class ChatService {
     }
 
     private void ensureUserExists(UUID userId) {
-        if (!userRepository.existsById(userId)) {
+        if (!userRepository.existsById(userId.toString())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }
     }
 
     private Map<UUID, User> loadUsers(Collection<UUID> ids) {
-        return userRepository.findAllById(ids).stream()
-                .collect(Collectors.toMap(User::getId, user -> user));
+        List<String> userIds = ids.stream().map(UUID::toString).toList();
+        Map<UUID, User> usersById = new HashMap<>();
+
+        for (User user : userRepository.findAllById(userIds)) {
+            try {
+                usersById.put(UUID.fromString(user.getId()), user);
+            } catch (IllegalArgumentException ignored) {
+                // Ignora ids legacy no-UUID para no romper el flujo de chat.
+            }
+        }
+
+        return usersById;
     }
 
     private ConversationResponse toConversationResponse(Conversation conversation, UUID currentUserId) {
