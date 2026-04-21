@@ -2,6 +2,7 @@ package com.raremarket.backend.service;
 
 import com.raremarket.backend.model.User;
 import com.raremarket.backend.repository.UserRepository;
+import com.raremarket.backend.dto.ProfileUpdateRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -86,6 +87,59 @@ public class UserService {
         return userRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
+    public Optional<User> findById(String userId) {
+        if (userId == null || userId.isBlank()) {
+            return Optional.empty();
+        }
+        return userRepository.findById(userId);
+    }
+
+    @Transactional
+    public Optional<User> updateProfile(String userId, ProfileUpdateRequest profileData, boolean clearAvatar) {
+        if (userId == null || userId.isBlank() || profileData == null) {
+            return Optional.empty();
+        }
+
+        Optional<User> existingOpt = userRepository.findById(userId);
+        if (existingOpt.isEmpty()) {
+            return Optional.empty();
+        }
+
+        User existing = existingOpt.get();
+
+        String normalizedEmail = normalizeEmail(profileData.getEmail());
+        if (normalizedEmail == null) {
+            return Optional.empty();
+        }
+
+        String normalizedUsername = normalizeUsername(profileData.getUsername(), normalizedEmail);
+        if (normalizedUsername == null) {
+            return Optional.empty();
+        }
+
+        userRepository.findByUsername(normalizedUsername)
+            .filter(user -> !user.getId().equals(userId))
+            .ifPresent(user -> { throw new IllegalArgumentException("Username already exists"); });
+
+        userRepository.findByEmail(normalizedEmail)
+            .filter(user -> !user.getId().equals(userId))
+            .ifPresent(user -> { throw new IllegalArgumentException("Email already exists"); });
+
+        existing.setUsername(normalizedUsername);
+        existing.setEmail(normalizedEmail);
+        if (profileData.getAvatarUrl() != null) {
+            existing.setAvatarUrl(blankToNull(profileData.getAvatarUrl()));
+        } else if (clearAvatar) {
+            existing.setAvatarUrl(null);
+        }
+        existing.setLocation(blankToNull(profileData.getLocation()));
+        existing.setPhone(blankToNull(profileData.getPhone()));
+        existing.setBio(blankToNull(profileData.getBio()));
+
+        return Optional.of(userRepository.save(existing));
+    }
+
     private String normalizeEmail(String email) {
         if (email == null || email.isBlank()) {
             return null;
@@ -113,5 +167,14 @@ public class UserService {
             return second;
         }
         return null;
+    }
+
+    private String blankToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 }

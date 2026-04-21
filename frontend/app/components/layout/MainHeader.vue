@@ -63,7 +63,10 @@
 
               <div class="relative" ref="avatarRef">
                 <button class="flex items-center gap-2 focus:outline-none" :aria-expanded="dropdownOpen" @click="toggleDropdown">
-                  <span class="avatar-circle">{{ userInitial }}</span>
+                  <span class="avatar-circle">
+                    <img v-if="userAvatar" :src="userAvatar" alt="Foto de perfil" class="avatar-circle__image" />
+                    <span v-else>{{ userInitial }}</span>
+                  </span>
                 </button>
                 <transition name="fade">
                   <div v-if="dropdownOpen" class="absolute right-0 mt-2 w-44 bg-white border rounded-md shadow-lg py-1 z-50" role="menu" aria-label="User menu">
@@ -205,6 +208,7 @@ const emit = defineEmits<{
 const logo = logoAsset
 const user = computed(() => sessionUser.value)
 const userInitial = computed(() => user.value?.username?.charAt(0).toUpperCase() || 'U')
+const userAvatar = computed(() => user.value?.avatarUrl || '')
 const query = ref('')
 const dropdownOpen = ref(false)
 const mobileOpen = ref(false)
@@ -368,6 +372,7 @@ header img {
   width: 38px;
   height: 38px;
   border-radius: 999px;
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -376,6 +381,13 @@ header img {
   color: #0f766e;
   font-weight: 700;
   box-shadow: 0 6px 16px rgba(15, 118, 110, 0.12);
+}
+
+.avatar-circle__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .action-pill {

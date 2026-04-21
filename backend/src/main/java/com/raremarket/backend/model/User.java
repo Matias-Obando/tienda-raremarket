@@ -21,6 +21,18 @@ public class User {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
+    @Column(name = "avatar_url", length = 2048)
+    private String avatarUrl;
+
+    @Column(length = 120)
+    private String location;
+
+    @Column(length = 40)
+    private String phone;
+
+    @Column(length = 500)
+    private String bio;
+
     // Getters and setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -36,4 +48,16 @@ public class User {
 
     public String getPasswordHash() { return passwordHash; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+
+    public String getAvatarUrl() { return avatarUrl; }
+    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+
+    public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
+
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+
+    public String getBio() { return bio; }
+    public void setBio(String bio) { this.bio = bio; }
 }

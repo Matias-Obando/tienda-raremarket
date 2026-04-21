@@ -1,35 +1,12 @@
 package com.raremarket.backend.dto;
 
-import com.raremarket.backend.model.User;
-
-public class UserResponse {
-    private String id;
+public class ProfileUpdateRequest {
     private String username;
     private String email;
     private String avatarUrl;
     private String location;
     private String phone;
     private String bio;
-
-    public static UserResponse from(User user) {
-        UserResponse response = new UserResponse();
-        response.setId(user.getId());
-        response.setUsername(user.getUsername());
-        response.setEmail(user.getEmail());
-        response.setAvatarUrl(user.getAvatarUrl());
-        response.setLocation(user.getLocation());
-        response.setPhone(user.getPhone());
-        response.setBio(user.getBio());
-        return response;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
 
     public String getUsername() {
         return username;

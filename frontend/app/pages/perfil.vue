@@ -5,12 +5,17 @@
         <NuxtLink to="/editprofile" class="profile-link profile-link--soft profile-edit-top">Editar perfil</NuxtLink>
 
         <div class="hero-left">
-          <span class="avatar">{{ userInitial }}</span>
+          <span class="avatar">
+            <img v-if="profileAvatar" :src="profileAvatar" :alt="`Foto de perfil de ${profileUser.username}`" class="avatar__image" />
+            <span v-else>{{ userInitial }}</span>
+          </span>
           <div>
             <p class="eyebrow">Cuenta</p>
             <p class="profile-name">{{ profileUser.username }}</p>
             <p class="profile-email">{{ profileUser.email }}</p>
+            <p v-if="profileSummary" class="profile-summary">{{ profileSummary }}</p>
             <p class="hero-note">Gestiona tus publicaciones y conversaciones en un solo lugar.</p>
+            <p v-if="profileUser.bio" class="profile-bio">{{ profileUser.bio }}</p>
             <p v-if="isDemoMode" class="section-note">Vista demo activa</p>
           </div>
         </div>
@@ -97,7 +102,10 @@ const publishedItems = ref<Item[]>([])
 const demoUser: SessionUser = {
   id: 'demo-user',
   username: 'Closely Demo',
-  email: 'demo@closely.app'
+  email: 'demo@closely.app',
+  location: 'Madrid',
+  phone: '+34 600 111 222',
+  bio: 'Perfil de prueba para ver cómo se comporta la edición sin tocar tu cuenta real.'
 }
 
 const isDemoMode = computed(() => route.query.demo === '1' && !sessionUser.value)
@@ -109,6 +117,11 @@ const profileUser = computed<SessionUser | null>(() => {
 })
 
 const userInitial = computed(() => profileUser.value?.username?.charAt(0).toUpperCase() || 'U')
+const profileAvatar = computed(() => profileUser.value?.avatarUrl || '')
+const profileSummary = computed(() => {
+  const parts = [profileUser.value?.location, profileUser.value?.phone].filter(Boolean)
+  return parts.length ? parts.join(' · ') : ''
+})
 
 const quickActions = [
   { to: '/vender', title: 'Publicar articulo', description: 'Sube una nueva prenda y activa tu anuncio en minutos.', cta: 'Publicar' },
@@ -264,6 +277,7 @@ onBeforeUnmount(() => {
   width: 108px;
   height: 108px;
   border-radius: 999px;
+  overflow: hidden;
   background: linear-gradient(145deg, #dcfce7 0%, #ccfbf1 100%);
   color: #0f766e;
   border: 1px solid #99f6e4;
@@ -273,6 +287,13 @@ onBeforeUnmount(() => {
   font-size: 44px;
   font-weight: 800;
   box-shadow: 0 14px 28px rgba(20, 184, 166, 0.24);
+}
+
+.avatar__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .hero-actions {
@@ -314,11 +335,24 @@ onBeforeUnmount(() => {
   color: #64748b;
 }
 
+.profile-summary {
+  margin: 0 0 8px;
+  color: #0f766e;
+  font-weight: 600;
+}
+
 .hero-note {
   margin: 0;
   max-width: 56ch;
   color: #475569;
   font-size: 0.94rem;
+}
+
+.profile-bio {
+  margin: 10px 0 0;
+  max-width: 56ch;
+  color: #334155;
+  font-size: 0.92rem;
 }
 
 .profile-link {
