@@ -111,6 +111,19 @@ const loginForm = ref({
   password: ''
 })
 
+type AuthApiResponse = {
+  token: string
+  user: {
+    id: string
+    username: string
+    email: string
+    avatarUrl?: string
+    location?: string
+    phone?: string
+    bio?: string
+  }
+}
+
 function getRedirectPath() {
   const redirect = route.query.redirect
   return typeof redirect === 'string' && redirect.startsWith('/') ? redirect : '/explorar'
@@ -121,7 +134,7 @@ async function submitRegister() {
   isSubmitting.value = true
 
   try {
-    const user = await $fetch<{ id: string; username: string; email: string }>(`${config.public.API_BASE_URL}/users/register`, {
+    const response = await $fetch<AuthApiResponse>(`${config.public.API_BASE_URL}/users/register`, {
       method: 'POST',
       body: {
         username: registerForm.value.name.trim(),
@@ -130,7 +143,10 @@ async function submitRegister() {
       }
     })
 
-    saveSessionUser(user)
+    saveSessionUser({
+      ...response.user,
+      token: response.token
+    })
     uiMessages.success('Registro completado. Bienvenido a Closely.')
     await router.push(getRedirectPath())
   } catch (error: any) {
@@ -146,7 +162,7 @@ async function submitLogin() {
   isSubmitting.value = true
 
   try {
-    const user = await $fetch<{ id: string; username: string; email: string }>(`${config.public.API_BASE_URL}/users/login`, {
+    const response = await $fetch<AuthApiResponse>(`${config.public.API_BASE_URL}/users/login`, {
       method: 'POST',
       body: {
         email: loginForm.value.email.trim(),
@@ -154,7 +170,10 @@ async function submitLogin() {
       }
     })
 
-    saveSessionUser(user)
+    saveSessionUser({
+      ...response.user,
+      token: response.token
+    })
     uiMessages.success('Sesion iniciada correctamente.')
     await router.push(getRedirectPath())
   } catch (error: any) {

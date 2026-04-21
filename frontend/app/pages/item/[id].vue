@@ -1,13 +1,14 @@
 <template>
-  <div class="rm-container page">
-    <a class="back" href="#" @click.prevent="goBack">← Volver</a>
+  <div class="rm-page">
+    <div class="rm-container page">
+    <a class="back" href="#" @click.prevent="goBack">← Volver al catalogo</a>
 
     <div v-if="loading" class="notfound">Cargando producto...</div>
 
     <div v-else-if="!item" class="notfound">No se encontró el producto.</div>
 
     <div v-else class="product-grid">
-      <div class="leftCol">
+      <div class="leftCol product-panel product-panel--media">
         <div class="media">
           <span
             class="badge"
@@ -54,7 +55,8 @@
         </div>
       </div>
 
-      <div class="rightCol">
+      <div class="rightCol product-panel product-panel--info">
+        <p class="eyebrow">Detalles del articulo</p>
         <h1 class="title">{{ item.titulo }}</h1>
 
         <div class="priceWrap">
@@ -72,7 +74,7 @@
 
         <div class="actions">
           <button class="rm-btn rm-btn--primary" @click="comprarMock">Comprar</button>
-          <button class="rm-btn rm-btn--primary" @click="openContact">Enviar mensaje</button>
+          <button class="rm-btn rm-btn--secondary" @click="openContact">Enviar mensaje</button>
         </div>
 
         <div class="meta small">Publicado {{ item.creadoHace }}</div>
@@ -82,11 +84,12 @@
     <hr class="separator" />
 
     <section v-if="relatedItems.length" class="related">
-      <h2 class="relatedTitle">Te puede interesar</h2>
+      <h2 class="relatedTitle">{{ relatedTitle }}</h2>
       <div class="relatedGrid">
         <ItemCard v-for="r in relatedItems" :key="r.id" :item="r" />
       </div>
     </section>
+    </div>
   </div>
 </template>
 
@@ -229,31 +232,64 @@ onMounted(async () => {
 
 <style scoped>
 
-.page { padding: 18px 12px 60px; }
+.rm-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.58), transparent 32%),
+    radial-gradient(circle at 88% 14%, rgba(255, 255, 255, 0.4), transparent 24%),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.05) 0 2px, rgba(15, 23, 42, 0.015) 2px 4px),
+    linear-gradient(180deg, #eef2f5 0%, #e9edf1 46%, #e5eaee 100%);
+}
+
+.rm-container {
+  box-sizing: border-box;
+  max-width: 1360px;
+  margin: 0 auto;
+  padding-left: 40px;
+  padding-right: 40px;
+}
+
+.page { padding: 20px 0 60px; }
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #334155;
+  text-decoration: none;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
 
 .product-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 28px;
+  gap: 22px;
 }
 @media (min-width: 900px) {
-  .product-grid { grid-template-columns: 62% 38%; align-items: start; }
+  .product-grid { grid-template-columns: 60% 40%; align-items: start; }
 }
 
-.leftCol { 
-  margin-top: 50px;
-  max-width: 90%;
-  max-height: 80%;
-  display: flex; 
-  flex-direction: column; 
-  gap: 14px; }
+.product-panel {
+  border: 1px solid #dbe4ee;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbfe 100%);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
+}
+
+.leftCol {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px;
+}
 
 .media {
   position: relative;
   border-radius: 12px;
   overflow: hidden;
   background: var(--rm-soft);
-  height: 520px;
+  height: 540px;
 }
 @media (min-width: 1200px) { .media { height: 560px; } }
 
@@ -304,7 +340,7 @@ onMounted(async () => {
 }
 .thumb {
   flex: 1 1 0;
-  height: 140px;
+  height: 126px;
   border-radius: 8px;
   overflow: hidden;
   border: 1px solid var(--rm-border);
@@ -320,45 +356,87 @@ onMounted(async () => {
 .thumb.active {
   outline: 3px solid rgba(16,185,129,0.18);
   box-shadow: 0 8px 20px rgba(16,185,129,0.06);
-  transform: translateY(-4px);
+  transform: translateY(-2px);
 }
 
-.rightCol { 
-  padding-top: 6px;
-  margin-top: 60px;
+.rightCol {
+  padding: 24px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #0f766e;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .title {
-  margin: 0 0 10px;
-  font-size: 34px;
+  margin: 8px 0 10px;
+  font-size: 48px;
   font-weight: 800;
-  line-height: 1.06;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
   color: var(--rm-text);
 }
 
-@media (min-width: 1200px) { .title { font-size: 40px; } }
+@media (max-width: 1200px) { .title { font-size: 42px; line-height: 1; } }
+@media (max-width: 960px) { .title { font-size: 34px; } }
 
-.priceWrap { margin-bottom: 12px; }
-.price { font-weight: 900; font-size: 26px; color: var(--rm-text); }
-.chips-real { display:flex; gap:8px; margin-bottom: 14px; flex-wrap:wrap; }
+.priceWrap { margin-bottom: 10px; }
+.price { font-weight: 900; font-size: 34px; color: #0f172a; }
+.chips-real { display:flex; gap:8px; margin-bottom: 16px; flex-wrap:wrap; }
 .chip-real {
   padding: 6px 10px;
   border-radius: 999px;
   border: 1px solid var(--rm-border);
-  background: #fff;
+  background: #f8fafc;
   color: var(--rm-text);
   font-size: 13px;
   font-weight: 600;
 }
 
-.desc { margin: 0 0 18px; color: #374151; }
+.desc {
+  margin: 0 0 20px;
+  color: #334155;
+  font-size: 1.08rem;
+  line-height: 1.6;
+}
 
-.actions { display:flex; gap:14px; align-items:center; margin-bottom:12px; }
+.actions { display:flex; gap:10px; align-items:center; margin-bottom:12px; flex-wrap: wrap; }
+
+.rm-btn {
+  min-height: 46px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.rm-btn--primary {
+  background: #0f766e;
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(15, 118, 110, 0.24);
+}
+
+.rm-btn--secondary {
+  background: #ffffff;
+  color: #0f766e;
+  border-color: #99f6e4;
+}
 
 .small { font-size: 12px; color: #9aa0a6; margin-top:8px; }
 .separator { border: 0; border-top: 1px solid var(--rm-border); margin: 28px 0; }
 .related { margin-top: 18px; }
-.relatedTitle { font-weight: 700; margin: 6px 0 12px; }
+.relatedTitle {
+  font-weight: 800;
+  font-size: 1.3rem;
+  margin: 6px 0 12px;
+  color: #0f172a;
+}
 .relatedGrid { display:grid; grid-template-columns: repeat(2,1fr); gap: 12px; }
 
 @media (min-width: 900px) { .relatedGrid { grid-template-columns: repeat(4,1fr); } }
@@ -368,5 +446,12 @@ onMounted(async () => {
 @media (max-width: 899px) {
   .media { height: 360px; }
   .thumb { height: 96px; }
+  .rm-container {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  .rightCol {
+    padding: 18px;
+  }
 }
 </style>

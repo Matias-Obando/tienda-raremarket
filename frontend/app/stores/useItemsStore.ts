@@ -11,6 +11,18 @@ type Filters = {
   maxPrice?: number | null
 }
 
+type CreateItemRequest = {
+  titulo: string
+  descripcion: string
+  precioEur: number
+  categoria: string
+  marca: string
+  talla: string
+  estado: string
+  imagen: string
+  images: string[]
+}
+
 export const useItemsStore = defineStore('items', {
   state: () => ({
     items: [] as Item[],
@@ -75,6 +87,90 @@ export const useItemsStore = defineStore('items', {
       } finally {
         this.loading = false
       }
+    },
+    async createItem(payload: CreateItemRequest) {
+      const config = useRuntimeConfig()
+      const { loadSessionUser } = useSessionUser()
+      const user = loadSessionUser().value
+
+      if (!user?.token) {
+        throw new Error('Debes iniciar sesion para publicar un articulo.')
+      }
+
+      const created = await $fetch<Item>(`${config.public.API_BASE_URL}/items`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${user.token}`
+        },
+        body: payload
+      })
+
+      this.items = [created, ...this.items]
+      return created
+    },
+    async uploadImages(files: File[]) {
+      const config = useRuntimeConfig()
+      const { loadSessionUser } = useSessionUser()
+      const user = loadSessionUser().value
+
+      if (!user?.token) {
+        throw new Error('Debes iniciar sesion para subir imagenes.')
+      }
+      if (!files.length) {
+        throw new Error('Selecciona al menos una imagen.')
+      }
+
+      const formData = new FormData()
+      files.forEach((file) => {
+        formData.append('files', file)
+      })
+
+      const response = await $fetch<{ urls: string[] }>(`${config.public.API_BASE_URL}/items/images`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${user.token}`
+        },
+        body: formData
+      })
+
+      return response.urls ?? []
+    },
+    async cleanupUploadedImages(urls: string[]) {
+      const config = useRuntimeConfig()
+      const { loadSessionUser } = useSessionUser()
+      const user = loadSessionUser().value
+
+      if (!user?.token || !urls.length) {
+        return 0
+      }
+
+      const response = await $fetch<{ deleted: number }>(`${config.public.API_BASE_URL}/items/images/cleanup`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${user.token}`
+        },
+        body: { urls }
+      })
+
+      return response.deleted ?? 0
+    },
+    async deleteItem(itemId: string) {
+      const config = useRuntimeConfig()
+      const { loadSessionUser } = useSessionUser()
+      const user = loadSessionUser().value
+
+      if (!user?.token) {
+        throw new Error('Debes iniciar sesion para eliminar articulos.')
+      }
+
+      await $fetch(`${config.public.API_BASE_URL}/items/${itemId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${user.token}`
+        }
+      })
+
+      this.items = this.items.filter((item) => item.id !== itemId)
     },
     setFilters(payload: Partial<Filters>) {
       this.filters = { ...this.filters, ...payload }

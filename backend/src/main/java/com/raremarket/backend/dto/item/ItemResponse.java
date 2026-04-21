@@ -4,11 +4,10 @@ import com.raremarket.backend.model.Item;
 
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.UUID;
 
 public class ItemResponse {
     private String id;
-    private UUID sellerId;
+    private String sellerId;
     private String titulo;
     private String descripcion;
     private double precioEur;
@@ -49,11 +48,11 @@ public class ItemResponse {
         this.id = id;
     }
 
-    public UUID getSellerId() {
+    public String getSellerId() {
         return sellerId;
     }
 
-    public void setSellerId(UUID sellerId) {
+    public void setSellerId(String sellerId) {
         this.sellerId = sellerId;
     }
 

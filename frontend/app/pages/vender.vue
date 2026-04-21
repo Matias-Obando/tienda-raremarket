@@ -103,6 +103,14 @@
               <button type="button" class="btn btn-ghost" @click="resetForm">Empezar de cero</button>
               <button type="submit" class="btn btn-primary" :disabled="!isFormReady">Publicar en Closely</button>
             </div>
+
+            <section v-if="submitError.message" class="submit-error-panel" aria-live="polite">
+              <p class="submit-error-panel__title">No se pudo publicar el articulo</p>
+              <p class="submit-error-panel__message">{{ submitError.message }}</p>
+              <ul v-if="submitError.details.length" class="submit-error-panel__list">
+                <li v-for="detail in submitError.details" :key="detail">{{ detail }}</li>
+              </ul>
+            </section>
           </form>
         </main>
       </div>
@@ -112,10 +120,18 @@
 
 <script setup lang="ts">
 import { computed, reactive } from 'vue'
+import { useRouter } from 'vue-router'
 import SellPreviewCard from '~/components/SellPreviewCard.vue'
 
 const maxImages = 3
 const uiMessages = useUiMessages()
+const router = useRouter()
+const itemsStore = useItemsStore()
+const { loadSessionUser } = useSessionUser()
+const submitError = reactive({
+  message: '',
+  details: [] as string[]
+})
 
 const form = reactive({
   titulo: '',
@@ -127,6 +143,7 @@ const form = reactive({
   descripcion: '',
   imagenes: [] as string[]
 })
+const selectedFiles = reactive<File[]>([])
 
 function onImagesChange(e: Event) {
   const files = (e.target as HTMLInputElement)?.files
@@ -138,8 +155,10 @@ function onImagesChange(e: Event) {
   }
 
   form.imagenes = []
+  selectedFiles.splice(0, selectedFiles.length)
   const fileArr = Array.from(files).slice(0, max)
   fileArr.forEach(file => {
+    selectedFiles.push(file)
     const reader = new FileReader()
     reader.onload = (ev) => {
       if (typeof ev.target?.result === 'string') {
@@ -159,6 +178,9 @@ function resetForm() {
   form.estado = 'Usado'
   form.descripcion = ''
   form.imagenes = []
+  selectedFiles.splice(0, selectedFiles.length)
+  submitError.message = ''
+  submitError.details = []
 }
 
 function validateForm(): string | null {
@@ -166,13 +188,16 @@ function validateForm(): string | null {
   if (!form.categoria) return 'Selecciona una categoria.'
   if (!form.descripcion.trim()) return 'Añade una descripcion del articulo.'
   if (!form.precioEur || form.precioEur <= 0) return 'Indica un precio mayor que 0.'
-  if (form.imagenes.length === 0) return 'Sube al menos una imagen para publicar.'
+  if (selectedFiles.length === 0) return 'Sube al menos una imagen para publicar.'
   return null
 }
 
 const isFormReady = computed(() => validateForm() === null)
 
-function onSubmit() {
+async function onSubmit() {
+  submitError.message = ''
+  submitError.details = []
+
   const validationError = validateForm()
 
   if (validationError) {
@@ -180,8 +205,56 @@ function onSubmit() {
     return
   }
 
-  uiMessages.success('Articulo publicado correctamente. Ya puedes verlo en tu perfil.')
-  resetForm()
+  const currentUser = loadSessionUser().value
+  if (!currentUser?.token) {
+    uiMessages.info('Inicia sesion para publicar tu articulo.')
+    await router.push('/auth?mode=login&redirect=/vender')
+    return
+  }
+
+  let uploadedImageUrls: string[] = []
+
+  try {
+    uploadedImageUrls = await itemsStore.uploadImages([...selectedFiles])
+    if (!uploadedImageUrls.length) {
+      uiMessages.error('No se pudieron subir las imagenes. Intentalo de nuevo.')
+      return
+    }
+
+    await itemsStore.createItem({
+      titulo: form.titulo.trim(),
+      descripcion: form.descripcion.trim(),
+      precioEur: form.precioEur,
+      categoria: form.categoria,
+      marca: form.marca.trim(),
+      talla: form.talla.trim(),
+      estado: form.estado,
+      imagen: uploadedImageUrls[0],
+      images: uploadedImageUrls
+    })
+
+    uiMessages.success('Articulo publicado correctamente. Ya aparece en el marketplace.')
+    resetForm()
+    await router.push('/explorar')
+  } catch (error: any) {
+    if (uploadedImageUrls.length) {
+      try {
+        await itemsStore.cleanupUploadedImages(uploadedImageUrls)
+      } catch (cleanupError) {
+        console.error('No se pudieron limpiar imagenes subidas tras fallo de publicacion:', cleanupError)
+      }
+    }
+
+    const fallbackMessage = 'No se pudo publicar el articulo. Revisa los datos e intentalo de nuevo.'
+    const message = error?.data?.message || fallbackMessage
+    const details = error?.data?.errors && typeof error.data.errors === 'object'
+      ? Object.values(error.data.errors).map((value) => String(value))
+      : []
+
+    submitError.message = message
+    submitError.details = [...new Set(details)]
+    uiMessages.error(message)
+  }
 }
 </script>
 <style scoped>
@@ -458,6 +531,35 @@ textarea {
   cursor: not-allowed;
   box-shadow: none;
   transform: none;
+}
+
+.submit-error-panel {
+  margin-top: 14px;
+  border: 1px solid #fecdd3;
+  background: linear-gradient(180deg, #fff1f2 0%, #fff7f8 100%);
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.submit-error-panel__title {
+  margin: 0;
+  color: #be123c;
+  font-size: 0.83rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.submit-error-panel__message {
+  margin: 6px 0 0;
+  color: #881337;
+  font-weight: 600;
+}
+
+.submit-error-panel__list {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: #9f1239;
 }
 
 @media (max-width: 980px) {

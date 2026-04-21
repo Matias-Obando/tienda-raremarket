@@ -46,7 +46,7 @@
         </div>
       </article>
 
-      <article class="profile-card">
+      <article id="mis-publicaciones" class="profile-card">
         <div class="section-head">
           <h2>Mis publicaciones</h2>
           <span class="section-note">Los productos que subiste desde tu perfil</span>
@@ -58,18 +58,52 @@
         </div>
 
         <div v-else class="published-grid">
-          <ItemCard
-            v-for="item in publishedItems"
-            :key="item.id"
-            :item="item"
-            :show-badge="true"
-            :show-fav="true"
-          />
+          <article v-for="item in publishedItems" :key="item.id" class="published-item">
+            <ItemCard
+              :item="item"
+              :show-badge="true"
+              :show-fav="true"
+            />
+            <button
+              v-if="!isDemoMode"
+              type="button"
+              class="delete-publication-btn"
+              :disabled="deletingItemId === item.id"
+              @click="openDeleteModal(item.id, item.titulo)"
+            >
+              {{ deletingItemId === item.id ? 'Eliminando...' : 'Eliminar publicacion' }}
+            </button>
+          </article>
         </div>
       </article>
     </section>
 
-    <section v-else-if="sessionReady" class="profile-card profile-card--guest">
+    <Teleport to="body">
+      <div v-if="deleteModal.open" class="delete-modal" @click.self="closeDeleteModal">
+        <div class="delete-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
+          <p class="delete-modal__eyebrow">Eliminar publicacion</p>
+          <h3 id="delete-modal-title">¿Seguro que quieres eliminar este articulo?</h3>
+          <p class="delete-modal__text">
+            Se eliminara <strong>"{{ deleteModal.itemTitle }}"</strong> de tu perfil y no podras recuperarlo.
+          </p>
+          <div class="delete-modal__actions">
+            <button type="button" class="delete-modal__btn delete-modal__btn--ghost" @click="closeDeleteModal">
+              Cancelar
+            </button>
+            <button
+              type="button"
+              class="delete-modal__btn delete-modal__btn--danger"
+              :disabled="deletingItemId === deleteModal.itemId"
+              @click="confirmDeletePublishedItem"
+            >
+              {{ deletingItemId === deleteModal.itemId ? 'Eliminando...' : 'Si, eliminar' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <section v-if="sessionReady && !profileUser" class="profile-card profile-card--guest">
       <p class="eyebrow">Cuenta</p>
       <h1>Mi perfil</h1>
       <p class="profile-email">Todavía no has iniciado sesión. Entra para ver tus favoritos y actividad.</p>
@@ -98,6 +132,12 @@ const sessionReady = ref(false)
 const loadingPublished = ref(false)
 const conversationsCount = ref(0)
 const publishedItems = ref<Item[]>([])
+const deletingItemId = ref<string | null>(null)
+const deleteModal = reactive({
+  open: false,
+  itemId: '',
+  itemTitle: ''
+})
 
 const demoUser: SessionUser = {
   id: 'demo-user',
@@ -180,6 +220,44 @@ async function refreshProfileData() {
     loadPublishedItems(),
     loadConversationsCount()
   ])
+}
+
+function openDeleteModal(itemId: string, itemTitle: string) {
+  deleteModal.open = true
+  deleteModal.itemId = itemId
+  deleteModal.itemTitle = itemTitle
+}
+
+function closeDeleteModal() {
+  if (deletingItemId.value) {
+    return
+  }
+  deleteModal.open = false
+  deleteModal.itemId = ''
+  deleteModal.itemTitle = ''
+}
+
+async function confirmDeletePublishedItem() {
+  if (isDemoMode.value) {
+    return
+  }
+
+  if (!deleteModal.itemId) {
+    return
+  }
+
+  deletingItemId.value = deleteModal.itemId
+  try {
+    await store.deleteItem(deleteModal.itemId)
+    publishedItems.value = publishedItems.value.filter((item) => item.id !== deleteModal.itemId)
+    uiMessages.success('Publicacion eliminada correctamente.')
+    closeDeleteModal()
+  } catch (error: any) {
+    const message = error?.data?.message || 'No se pudo eliminar la publicacion. Intentalo de nuevo.'
+    uiMessages.error(message)
+  } finally {
+    deletingItemId.value = null
+  }
 }
 
 function signOut() {
@@ -474,6 +552,105 @@ onBeforeUnmount(() => {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
+}
+
+.published-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.delete-publication-btn {
+  min-height: 36px;
+  border-radius: 10px;
+  border: 1px solid #fecdd3;
+  background: #fff1f2;
+  color: #be123c;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.delete-publication-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.delete-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(15, 23, 42, 0.48);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+}
+
+.delete-modal__dialog {
+  width: min(520px, 100%);
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  background: linear-gradient(180deg, #ffffff 0%, #fff7f8 100%);
+  box-shadow: 0 26px 60px rgba(15, 23, 42, 0.26);
+  padding: 22px;
+}
+
+.delete-modal__eyebrow {
+  margin: 0;
+  color: #be123c;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.delete-modal h3 {
+  margin: 8px 0 0;
+  color: #0f172a;
+  font-size: 1.25rem;
+  line-height: 1.2;
+}
+
+.delete-modal__text {
+  margin: 12px 0 0;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.delete-modal__actions {
+  margin-top: 18px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.delete-modal__btn {
+  min-height: 40px;
+  border-radius: 999px;
+  padding: 0 16px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.delete-modal__btn--ghost {
+  background: #ffffff;
+  color: #334155;
+  border-color: #cbd5e1;
+}
+
+.delete-modal__btn--danger {
+  background: #e11d48;
+  color: #ffffff;
+  box-shadow: 0 12px 24px rgba(225, 29, 72, 0.28);
+}
+
+.delete-modal__btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 .fav-card {

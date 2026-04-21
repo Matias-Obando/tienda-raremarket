@@ -1,25 +1,57 @@
 package com.raremarket.backend.dto.item;
 
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 import java.util.List;
-import java.util.UUID;
 
 public class ItemUpsertRequest {
-    private UUID sellerId;
+    private String sellerId;
+
+    @NotBlank
+    @Size(max = 140)
     private String titulo;
+
+    @NotBlank
+    @Size(max = 2000)
     private String descripcion;
+
+    @DecimalMin(value = "0.0", inclusive = false)
     private double precioEur;
+
+    @NotBlank
+    @Size(max = 80)
     private String categoria;
+
+    @NotBlank
+    @Size(max = 80)
     private String marca;
+
+    @NotBlank
+    @Size(max = 40)
     private String talla;
+
+    @NotBlank
+    @Size(max = 40)
     private String estado;
+
+    @NotBlank
+    @Size(max = 2048)
     private String imagen;
+
+    @NotNull
+    @NotEmpty
+    @Size(max = 6)
     private List<String> images;
 
-    public UUID getSellerId() {
+    public String getSellerId() {
         return sellerId;
     }
 
-    public void setSellerId(UUID sellerId) {
+    public void setSellerId(String sellerId) {
         this.sellerId = sellerId;
     }
 

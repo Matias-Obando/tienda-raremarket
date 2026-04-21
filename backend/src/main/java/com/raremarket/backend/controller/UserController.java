@@ -1,8 +1,10 @@
 package com.raremarket.backend.controller;
 
+import com.raremarket.backend.dto.AuthResponse;
 import com.raremarket.backend.dto.UserResponse;
 import com.raremarket.backend.dto.ProfileUpdateRequest;
 import com.raremarket.backend.model.User;
+import com.raremarket.backend.security.AuthTokenService;
 import com.raremarket.backend.service.UserService;
 import com.raremarket.backend.service.SupabaseStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,8 +27,11 @@ public class UserController {
     @Autowired
     private SupabaseStorageService supabaseStorageService;
 
+    @Autowired
+    private AuthTokenService authTokenService;
+
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(@RequestBody User user) {
+    public ResponseEntity<AuthResponse> register(@RequestBody User user) {
         boolean registered = userService.register(user);
         if (!registered) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid registration data or user already exists");
@@ -35,7 +40,9 @@ public class UserController {
         User savedUser = userService.authenticate(user.getEmail(), user.getPassword())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "User created but could not be authenticated"));
 
-        return ResponseEntity.ok(UserResponse.from(savedUser));
+        String token = authTokenService.issueToken(savedUser.getId());
+
+        return ResponseEntity.ok(AuthResponse.of(token, UserResponse.from(savedUser)));
     }
 
     @PostMapping("/login")
@@ -46,7 +53,8 @@ public class UserController {
 
         User user = userService.authenticate(identifier, loginRequest.getPassword()).orElse(null);
         if (user != null) {
-            return ResponseEntity.ok(UserResponse.from(user));
+            String token = authTokenService.issueToken(user.getId());
+            return ResponseEntity.ok(AuthResponse.of(token, UserResponse.from(user)));
         }
         return ResponseEntity.status(401).body("Invalid credentials");
     }

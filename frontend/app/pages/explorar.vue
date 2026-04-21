@@ -25,58 +25,11 @@
     </section>
 
     <div class="rm-container">
-      <header class="top">
-
-
-      <div class="subRow">
-        <label class="sort">
-          <span class="sortLabel">Orden</span>
-          <select v-model="sort" class="sortSelect">
-            <option value="new">Últimos añadidos</option>
-            <option value="price_asc">Precio: menor a mayor</option>
-            <option value="price_desc">Precio: mayor a menor</option>
-          </select>
-        </label>
-
-        <div class="results">{{ resultsText }}</div>
-      </div>
-
-      <p v-if="activeLabel || q" class="hint">
-        <span v-if="q">Búsqueda: <strong>{{ q }}</strong></span>
-
-        <button v-if="q" class="pill" type="button" @click="clearSearch">
-          Quitar búsqueda
-        </button>
-
-        <NuxtLink v-if="activeLabel" :to="clearCatHref" class="pill">
-          Quitar categoría
-        </NuxtLink>
-      </p>
-
-      <p v-else class="hint">
-        Mostrando: <strong>Todos</strong>
-      </p>
-      </header>
-
       <div v-if="filteredItems.length === 0" class="empty">
       No hay productos con ese filtro/búsqueda.
 
       <div class="emptyActions">
-        <NuxtLink v-if="q && activeLabel" :to="clearSearchAndCatHref" class="pill">
-          Quitar búsqueda y categoría
-        </NuxtLink>
-
-        <NuxtLink v-else-if="q" :to="clearSearchHref" class="pill">
-          Quitar búsqueda
-        </NuxtLink>
-
-        <NuxtLink v-else-if="activeLabel" :to="clearCatHref" class="pill">
-          Quitar categoría
-        </NuxtLink>
-
-        <NuxtLink v-else to="/explorar" class="pill">
-          Ver todos
-        </NuxtLink>
+        <NuxtLink to="/explorar" class="pill">Ver todos</NuxtLink>
       </div>
       </div>
 
@@ -109,43 +62,6 @@ const cat = computed(() => {
 const q = computed(() => {
   const v = route.query.q
   return typeof v === 'string' ? v : ''
-})
-
-const clearCatHref = computed(() => {
-  const next: Record<string, any> = { ...route.query }
-  delete next.cat
-  return { path: '/explorar', query: next }
-})
-
-const clearSearchHref = computed(() => {
-  const next: Record<string, any> = { ...route.query }
-  delete next.q
-  return { path: '/explorar', query: next }
-})
-
-const clearSearchAndCatHref = computed(() => {
-  const next: Record<string, any> = { ...route.query }
-  delete next.q
-  delete next.cat
-  return { path: '/explorar', query: next }
-})
-
-function clearSearch() {
-  navigateTo(clearSearchHref.value)
-}
-
-const sort = computed<'new' | 'price_asc' | 'price_desc'>({
-  get() {
-    const v = route.query.sort
-    if (v === 'new' || v === 'price_asc' || v === 'price_desc') return v
-    return 'new'
-  },
-  set(v) {
-    const next = { ...route.query }
-    if (v === 'new') delete next.sort
-    else next.sort = v
-    navigateTo({ path: '/explorar', query: next })
-  },
 })
 
 const mapCatToCategoria: Record<string, Categoria> = {
@@ -186,15 +102,7 @@ const filteredItems = computed(() => {
 
   const arr = [...base]
 
-  if (sort.value === 'price_asc') arr.sort((a, b) => a.precioEur - b.precioEur)
-  else if (sort.value === 'price_desc') arr.sort((a, b) => b.precioEur - a.precioEur)
-
   return arr
-})
-
-const resultsText = computed(() => {
-  const n = filteredItems.value.length
-  return n === 1 ? '1 producto' : `${n} productos`
 })
 </script>
 
@@ -202,6 +110,12 @@ const resultsText = computed(() => {
 .rm-page {
   --card-max: 280px;
   --grid-gap: 28px;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.58), transparent 32%),
+    radial-gradient(circle at 88% 14%, rgba(255, 255, 255, 0.4), transparent 24%),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.05) 0 2px, rgba(15, 23, 42, 0.015) 2px 4px),
+    linear-gradient(180deg, #eef2f5 0%, #e9edf1 46%, #e5eaee 100%);
 }
 
 

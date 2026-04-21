@@ -72,7 +72,7 @@
                   <div v-if="dropdownOpen" class="absolute right-0 mt-2 w-44 bg-white border rounded-md shadow-lg py-1 z-50" role="menu" aria-label="User menu">
                     <NuxtLink to="/perfil" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem">Mi perfil</NuxtLink>
                     <NuxtLink to="/chat" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem">Mis mensajes</NuxtLink>
-                    <NuxtLink to="/mis-publicaciones" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem">Mis publicaciones</NuxtLink>
+                    <NuxtLink to="/perfil#mis-publicaciones" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem">Mis publicaciones</NuxtLink>
                     <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50" role="menuitem" @click="signOut">
                       Cerrar sesión
                     </button>
