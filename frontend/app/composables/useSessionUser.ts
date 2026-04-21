@@ -2,6 +2,10 @@ export type SessionUser = {
   id: string
   username: string
   email: string
+  avatarUrl?: string
+  location?: string
+  phone?: string
+  bio?: string
 }
 
 const STORAGE_KEY = 'closely:session-user'

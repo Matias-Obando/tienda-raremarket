@@ -113,7 +113,7 @@ const loginForm = ref({
 
 function getRedirectPath() {
   const redirect = route.query.redirect
-  return typeof redirect === 'string' && redirect.startsWith('/') ? redirect : '/perfil'
+  return typeof redirect === 'string' && redirect.startsWith('/') ? redirect : '/explorar'
 }
 
 async function submitRegister() {
