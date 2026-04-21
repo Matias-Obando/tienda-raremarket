@@ -26,7 +26,7 @@ public class Item {
     private String id;
 
     @Column(name = "seller_id", nullable = false)
-    private UUID sellerId;
+    private String sellerId;
 
     @Column(nullable = false)
     private String titulo;
@@ -124,11 +124,11 @@ public class Item {
         this.id = id;
     }
 
-    public UUID getSellerId() {
+    public String getSellerId() {
         return sellerId;
     }
 
-    public void setSellerId(UUID sellerId) {
+    public void setSellerId(String sellerId) {
         this.sellerId = sellerId;
     }
 

@@ -13,17 +13,24 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Stream;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Service
 public class ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
+    private final SupabaseStorageService supabaseStorageService;
 
-    public ItemService(ItemRepository itemRepository, UserRepository userRepository) {
+    public ItemService(
+            ItemRepository itemRepository,
+            UserRepository userRepository,
+            SupabaseStorageService supabaseStorageService
+    ) {
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
+        this.supabaseStorageService = supabaseStorageService;
     }
 
     @Transactional(readOnly = true)
@@ -34,7 +41,7 @@ public class ItemService {
             String estado,
             Double minPrice,
             Double maxPrice,
-            UUID sellerId,
+                String sellerId,
             String sort
     ) {
         if (minPrice != null && minPrice < 0) {
@@ -73,31 +80,31 @@ public class ItemService {
     }
 
     @Transactional
-    public ItemResponse createItem(ItemUpsertRequest request) {
-        if (request.getSellerId() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "sellerId is required");
-        }
-        ensureUserExists(request.getSellerId());
+    public ItemResponse createItem(String authenticatedUserId, ItemUpsertRequest request) {
+        ensureUserExists(authenticatedUserId);
 
         Item item = new Item();
+        item.setSellerId(authenticatedUserId);
         applyRequest(item, request, true);
         return ItemResponse.from(itemRepository.save(item));
     }
 
     @Transactional
-    public ItemResponse updateItem(String id, ItemUpsertRequest request) {
+    public ItemResponse updateItem(String id, String authenticatedUserId, ItemUpsertRequest request) {
         Item item = findItem(id);
-        UUID sellerId = request.getSellerId() == null ? item.getSellerId() : request.getSellerId();
-        ensureUserExists(sellerId);
-        item.setSellerId(sellerId);
+        ensureItemOwnership(item, authenticatedUserId);
         applyRequest(item, request, false);
         return ItemResponse.from(itemRepository.save(item));
     }
 
     @Transactional
-    public void deleteItem(String id) {
+    public void deleteItem(String id, String authenticatedUserId) {
         Item item = findItem(id);
+        ensureItemOwnership(item, authenticatedUserId);
+
+        List<String> itemImageUrls = collectItemImageUrls(item);
         itemRepository.delete(item);
+        supabaseStorageService.deleteItemImagesForOwner(authenticatedUserId, itemImageUrls);
     }
 
     private Item findItem(String id) {
@@ -105,8 +112,8 @@ public class ItemService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Item not found"));
     }
 
-    private void ensureUserExists(UUID userId) {
-        if (!userRepository.existsById(userId.toString())) {
+    private void ensureUserExists(String userId) {
+        if (!userRepository.existsById(userId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }
     }
@@ -141,10 +148,29 @@ public class ItemService {
 
         item.setImagen(mainImage);
         item.setImages(normalizedImages);
+    }
 
-        if (isCreate) {
-            item.setSellerId(request.getSellerId());
+    private void ensureItemOwnership(Item item, String authenticatedUserId) {
+        if (item.getSellerId() == null || !item.getSellerId().equals(authenticatedUserId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only modify your own items");
         }
+    }
+
+    private List<String> collectItemImageUrls(Item item) {
+        Set<String> urls = new LinkedHashSet<>();
+
+        if (item.getImagen() != null && !item.getImagen().isBlank()) {
+            urls.add(item.getImagen().trim());
+        }
+
+        if (item.getImages() != null) {
+            item.getImages().stream()
+                    .filter(url -> url != null && !url.isBlank())
+                    .map(String::trim)
+                    .forEach(urls::add);
+        }
+
+        return List.copyOf(urls);
     }
 
     private String requireText(String value, String fieldName) {
