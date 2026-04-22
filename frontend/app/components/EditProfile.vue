@@ -305,7 +305,7 @@ onBeforeUnmount(() => {
 
 .eyebrow {
   margin: 0 0 10px;
-  color: #0f766e;
+  color: #1fb981;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: 12px;
@@ -350,7 +350,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   background: linear-gradient(145deg, #dcfce7 0%, #ccfbf1 100%);
-  color: #0f766e;
+  color: #1fb981;
   font-size: 56px;
   font-weight: 800;
 }
@@ -363,7 +363,7 @@ onBeforeUnmount(() => {
   height: 46px;
   border: none;
   border-radius: 999px;
-  background: #0f766e;
+  background: #1fb981;
   color: #fff;
   display: inline-flex;
   align-items: center;
@@ -413,7 +413,7 @@ onBeforeUnmount(() => {
 .photo-action {
   border: 1px solid #99f6e4;
   background: #fff;
-  color: #0f766e;
+  color: #1fb981;
   border-radius: 999px;
   min-height: 40px;
   padding: 0 16px;
@@ -543,7 +543,7 @@ onBeforeUnmount(() => {
 }
 
 .save-btn {
-  background: #0f766e;
+  background: #1fb981;
   border: 1px solid transparent;
   color: #fff;
   display: inline-flex;

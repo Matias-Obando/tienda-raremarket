@@ -260,7 +260,7 @@ async function onSubmit() {
 <style scoped>
 .sell-page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #f8fafc 0%, #eef2f6 100%);
+  background: var(--rm-page-bg);
   padding: 24px 16px 42px;
 }
 
@@ -284,7 +284,7 @@ async function onSubmit() {
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #0f766e;
+  color: #1fb981;
   background: rgba(15, 118, 110, 0.12);
 }
 
@@ -340,7 +340,7 @@ async function onSubmit() {
 .preview-card__badge {
   font-size: 12px;
   font-weight: 700;
-  color: #0f766e;
+  color: #1fb981;
   background: rgba(15, 118, 110, 0.12);
   border-radius: 999px;
   padding: 6px 10px;
@@ -416,7 +416,7 @@ textarea:hover {
 input:focus,
 select:focus,
 textarea:focus {
-  border-color: #0f766e;
+  border-color: #1fb981;
   box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.16);
   background: #f8fffd;
 }
@@ -439,7 +439,7 @@ textarea {
 }
 
 .upload-drop:hover {
-  border-color: #0f766e;
+  border-color: #1fb981;
   background: #f2fbf9;
 }
 
@@ -467,7 +467,7 @@ textarea {
 .upload-count {
   margin: 8px 0 0;
   font-size: 0.86rem;
-  color: #0f766e;
+  color: #1fb981;
   font-weight: 600;
 }
 
@@ -517,7 +517,7 @@ textarea {
 }
 
 .btn-primary {
-  background: #0f766e;
+  background: #1fb981;
   color: #ffffff;
   box-shadow: 0 10px 24px rgba(15, 118, 110, 0.26);
 }

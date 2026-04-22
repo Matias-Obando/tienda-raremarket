@@ -7,11 +7,11 @@
           <div class="copy">© 2026 Closely. Todos los derechos reservados</div>
 
           <div class="social" aria-label="Redes sociales">
-            <a class="icon" href="#" aria-label="Instagram" title="Instagram">
+            <a class="icon" href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram">
               <img class="icon-img" src="/icons/instagram.svg" alt="Instagram" />
             </a>
 
-            <a class="icon" href="#" aria-label="Facebook" title="Facebook">
+            <a class="icon" href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook" title="Facebook">
               <img class="icon-img" src="/icons/facebook.svg" alt="Facebook" />
             </a>
           </div>
@@ -20,12 +20,18 @@
         <nav class="legal" aria-label="Enlaces legales">
           <div class="legal-title">Legal</div>
           <ul class="legal-list">
-            <li><a class="l" href="#">Aviso legal</a></li>
-            <li><a class="l" href="#">Términos Y Condiciones</a></li>
-            <li><a class="l" href="#">Política de privacidad</a></li>
-            <li><a class="l" href="#">Política de cookies</a></li>
-            <li><a class="l" href="#">Política de envío</a></li>
-            <li><a class="l" href="#">Políticas de devoluciones</a></li>
+            <li><NuxtLink class="l" to="/legal/aviso-legal">Aviso legal</NuxtLink></li>
+            <li><NuxtLink class="l" to="/legal/privacidad">Política de privacidad</NuxtLink></li>
+            <li><NuxtLink class="l" to="/legal/terminos-condiciones">Términos y Condiciones</NuxtLink></li>
+            <li><NuxtLink class="l" to="/legal/cookies">Política de cookies</NuxtLink></li>
+            <li><NuxtLink class="l" to="/legal/envios">Política de envío</NuxtLink></li>
+            <li><NuxtLink class="l" to="/legal/devoluciones">Políticas de devoluciones</NuxtLink></li>
+            <li><NuxtLink class="l" to="/legal/proteccion-comprador">Protección al comprador</NuxtLink></li>
+            <li><NuxtLink class="l" to="/legal/terminos-vendedores">Términos para vendedores</NuxtLink></li>
+            <li><NuxtLink class="l" to="/legal/moderacion">Política de moderación</NuxtLink></li>
+            <li><NuxtLink class="l" to="/legal/disputas">Resolución de disputas</NuxtLink></li>
+            <li><NuxtLink class="l" to="/legal/gdpr">Protección de datos</NuxtLink></li>
+            <li><NuxtLink class="l" to="/acerca-de">Acerca de nosotros</NuxtLink></li>
           </ul>
         </nav>
       </div>
@@ -60,7 +66,7 @@
 }
 
 .footer-top {
-  background: #27b79f; 
+  background: #1fb981; 
   color: #fff;
   border-bottom: 1px solid rgba(0,0,0,0.12);
 }
@@ -112,16 +118,23 @@
 .legal { text-align: left; }
 .legal-title {
   font-weight: 800;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   color: #fff;
+  font-size: 14px;
 }
-.legal-list { list-style: none; padding: 0; margin: 0; }
+.legal-list { 
+  list-style: none; 
+  padding: 0; 
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
+}
 .l {
-  display:block;
   color: rgba(255,255,255,0.95);
   text-decoration: none;
-  margin: 6px 0;
-  font-size: 14px;
+  font-size: 13px;
+  transition: color 0.2s ease;
 }
 .l:hover { text-decoration: underline; }
 

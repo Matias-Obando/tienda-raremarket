@@ -301,10 +301,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .profile-page {
   padding: 24px 16px 56px;
-  background:
-    radial-gradient(circle at 15% 8%, rgba(15, 118, 110, 0.1), transparent 28%),
-    radial-gradient(circle at 88% 2%, rgba(15, 23, 42, 0.08), transparent 24%),
-    linear-gradient(180deg, #f8fafc 0%, #eef2f6 100%);
+  background: var(--rm-page-bg);
 }
 
 .profile-card {
@@ -357,7 +354,7 @@ onBeforeUnmount(() => {
   border-radius: 999px;
   overflow: hidden;
   background: linear-gradient(145deg, #dcfce7 0%, #ccfbf1 100%);
-  color: #0f766e;
+  color: #1fb981;
   border: 1px solid #99f6e4;
   display: inline-flex;
   align-items: center;
@@ -391,7 +388,7 @@ onBeforeUnmount(() => {
 
 .eyebrow {
   margin: 0 0 8px;
-  color: #0f766e;
+  color: #1fb981;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: 12px;
@@ -415,7 +412,7 @@ onBeforeUnmount(() => {
 
 .profile-summary {
   margin: 0 0 8px;
-  color: #0f766e;
+  color: #1fb981;
   font-weight: 600;
 }
 
@@ -440,7 +437,7 @@ onBeforeUnmount(() => {
   border-radius: 999px;
   min-height: 44px;
   padding: 0 16px;
-  background: #0f766e;
+  background: #1fb981;
   color: #fff;
   border: 1px solid transparent;
   text-decoration: none;
@@ -456,7 +453,7 @@ onBeforeUnmount(() => {
 
 .profile-link--soft {
   background: #fff;
-  color: #0f766e;
+  color: #1fb981;
   border-color: #99f6e4;
 }
 
@@ -528,7 +525,7 @@ onBeforeUnmount(() => {
   padding: 0 8px;
   border-radius: 999px;
   border: 1px solid #a7f3d0;
-  color: #0f766e;
+  color: #1fb981;
   font-size: 0.69rem;
   font-weight: 700;
   text-transform: uppercase;
