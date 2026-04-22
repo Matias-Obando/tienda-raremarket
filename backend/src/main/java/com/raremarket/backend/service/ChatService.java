@@ -6,9 +6,11 @@ import com.raremarket.backend.dto.chat.MessageResponse;
 import com.raremarket.backend.dto.chat.SendMessageRequest;
 import com.raremarket.backend.model.Conversation;
 import com.raremarket.backend.model.Message;
+import com.raremarket.backend.model.OrderConversation;
 import com.raremarket.backend.model.User;
 import com.raremarket.backend.repository.ConversationRepository;
 import com.raremarket.backend.repository.MessageRepository;
+import com.raremarket.backend.repository.OrderConversationRepository;
 import com.raremarket.backend.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -28,15 +30,18 @@ public class ChatService {
     private final ConversationRepository conversationRepository;
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
+    private final OrderConversationRepository orderConversationRepository;
 
     public ChatService(
             ConversationRepository conversationRepository,
             MessageRepository messageRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            OrderConversationRepository orderConversationRepository
     ) {
         this.conversationRepository = conversationRepository;
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
+        this.orderConversationRepository = orderConversationRepository;
     }
 
     @Transactional
@@ -189,5 +194,60 @@ public class ChatService {
         response.setRead(message.isRead());
         response.setCreatedAt(message.getCreatedAt());
         return response;
+    }
+
+    /**
+     * Fase 3: Crea una conversación automática para una orden con trato en mano
+     * Añade un mensaje del sistema con detalles del pickup
+     */
+    @Transactional
+    public UUID createOrderConversation(String orderId, String itemId, UUID buyerId, UUID sellerId) {
+        // Validar que no sea el mismo usuario
+        if (Objects.equals(buyerId, sellerId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "buyerId and sellerId must be different");
+        }
+
+        // Verificar que la conversación de esta orden no exista
+        if (orderConversationRepository.findByOrderId(orderId).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Conversation already exists for this order");
+        }
+
+        // Crear conversación de orden
+        Conversation conversation = new Conversation();
+        conversation.setItemId(itemId);
+        conversation.setBuyerId(buyerId);
+        conversation.setSellerId(sellerId);
+        Conversation savedConversation = conversationRepository.save(conversation);
+
+        // Vincular orden a conversación
+        OrderConversation orderConversation = new OrderConversation();
+        orderConversation.setOrderId(orderId);
+        orderConversation.setConversationId(savedConversation.getId());
+        orderConversationRepository.save(orderConversation);
+
+        // Crear mensaje del sistema con detalles del trato en mano
+        String systemMessage = formatOrderPickupMessage();
+        Message message = new Message();
+        message.setConversationId(savedConversation.getId());
+        message.setSenderId(buyerId); // El comprador inicia el mensaje (representa el sistema)
+        message.setContent(systemMessage);
+        message.setRead(false);
+        messageRepository.save(message);
+
+        return savedConversation.getId();
+    }
+
+    /**
+     * Busca la conversación vinculada a una orden
+     */
+    @Transactional(readOnly = true)
+    public UUID getConversationIdForOrder(String orderId) {
+        return orderConversationRepository.findByOrderId(orderId)
+                .map(OrderConversation::getConversationId)
+                .orElse(null);
+    }
+
+    private String formatOrderPickupMessage() {
+        return "🔔 Nuevo trato en mano\n\nEl comprador quiere comprar este artículo en persona. Responde aquí para coordinar la entrega y acepta el pedido desde tu perfil cuando lo tengas claro.";
     }
 }

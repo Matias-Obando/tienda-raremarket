@@ -55,6 +55,7 @@ public class ItemService {
         }
 
         List<Specification<Item>> specs = Stream.of(
+            (root, ignoredQuery, cb) -> cb.isTrue(root.get("available")),
             searchSpecification(query),
             equalsIgnoreCase("categoria", categoria),
             equalsIgnoreCase("talla", talla),

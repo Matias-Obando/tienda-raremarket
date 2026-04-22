@@ -175,9 +175,9 @@ const errorMessage = ref('')
 const selectedConversationId = ref('')
 const selectedSellerId = ref('')
 const draftMessage = ref('')
-
 const itemId = computed(() => typeof route.query.itemId === 'string' ? route.query.itemId : '')
 const itemTitle = computed(() => typeof route.query.itemTitle === 'string' ? route.query.itemTitle : '')
+const conversationIdFromQuery = computed(() => typeof route.query.conversationId === 'string' ? route.query.conversationId : '')
 
 const demoConversations = ref<Conversation[]>([
   {
@@ -263,6 +263,11 @@ const activeMessages = computed(() => {
 const orderedMessages = computed(() =>
   [...activeMessages.value].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
 )
+
+function isPickupConversation(conversation: Conversation) {
+  const lastMessage = conversation.lastMessage ?? ''
+  return conversation.unreadCount > 0 && lastMessage.includes('Nuevo trato en mano')
+}
 
 function parseApiError(error: any, fallback: string) {
   return error?.data?.message || error?.data || fallback
@@ -469,6 +474,15 @@ async function loadData() {
 
   await loadUsers()
   await loadConversations()
+  
+  // Si viene un conversationId en query, seleccionarlo directamente
+  if (conversationIdFromQuery.value) {
+    selectedConversationId.value = conversationIdFromQuery.value
+    await loadMessages(selectedConversationId.value)
+    await router.replace({ path: '/chat', query: {} })
+    return
+  }
+  
   if (!selectedConversationId.value && conversations.value.length) {
     selectedConversationId.value = conversations.value[0].id
     await loadMessages(selectedConversationId.value)
@@ -699,6 +713,25 @@ watch(demoMode, async (enabled) => {
   font-weight: 600;
 }
 
+.order-alert {
+  margin: 0 24px 12px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  color: #14532d;
+}
+
+.order-alert strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.order-alert p {
+  margin: 0;
+  line-height: 1.45;
+}
+
 .chat-empty,
 .sidebar-empty {
   padding: 20px 8px;
@@ -781,6 +814,10 @@ watch(demoMode, async (enabled) => {
 
   .messages-panel {
     padding: 8px 14px 14px;
+  }
+
+  .order-alert {
+    margin: 0 14px 12px;
   }
 
   .message-bubble {

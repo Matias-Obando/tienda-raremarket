@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class UserService {
@@ -42,6 +43,11 @@ public class UserService {
 
         if (user.getPassword() == null || user.getPassword().isBlank()) {
             return false;
+        }
+
+        // Generar UUID si no tiene ID
+        if (user.getId() == null || user.getId().isBlank()) {
+            user.setId(UUID.randomUUID().toString());
         }
 
         String encoded = passwordEncoder.encode(user.getPassword());
