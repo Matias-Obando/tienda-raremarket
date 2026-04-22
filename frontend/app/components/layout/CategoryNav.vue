@@ -79,23 +79,9 @@ function isActive(key: string) {
   position: relative;
   z-index: 40;
   background: #fff;
-  border-bottom: 1px solid var(--rm-border);
+  border-bottom: 1px solid #d1d5db;
   box-sizing: border-box;
   overflow: visible;
-}
-
-
-.rm-catnav::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  transform: translateY(1px);
-  height: 1px;
-  background: var(--rm-border, #e5e7eb);
-  pointer-events: none;
-  z-index: 61;
 }
 
 

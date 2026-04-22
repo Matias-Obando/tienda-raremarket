@@ -123,6 +123,12 @@ onBeforeUnmount(() => {
   border-radius: 12px;
   overflow: hidden;
   box-shadow: var(--rm-shadow);
+  transition: transform 0.24s ease, box-shadow 0.24s ease;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.12);
 }
 
 

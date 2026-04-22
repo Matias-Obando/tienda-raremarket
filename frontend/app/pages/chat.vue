@@ -560,7 +560,7 @@ watch(demoMode, async (enabled) => {
 
 .eyebrow {
   margin: 0 0 6px;
-  color: #0f766e;
+  color: #1fb981;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: 12px;
@@ -629,7 +629,7 @@ watch(demoMode, async (enabled) => {
   min-width: 26px;
   height: 26px;
   border-radius: 999px;
-  background: #0f766e;
+  background: #1fb981;
   color: #fff;
   display: inline-flex;
   align-items: center;
@@ -695,7 +695,7 @@ watch(demoMode, async (enabled) => {
 
 .message-state {
   margin-left: 8px;
-  color: #0f766e;
+  color: #1fb981;
   font-weight: 600;
 }
 
@@ -726,7 +726,7 @@ watch(demoMode, async (enabled) => {
 }
 
 .primary-btn {
-  background: #0f766e;
+  background: #1fb981;
   color: #fff;
   border: none;
 }

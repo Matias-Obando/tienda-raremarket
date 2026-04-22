@@ -1,10 +1,10 @@
 <template>
-  <header class="sticky top-0 z-[90] bg-white border-b border-gray-100 pt-0 pb-0 shadow-sm">
+  <header class="sticky top-0 z-[90] bg-white border-b border-gray-200 pt-0 pb-0 shadow-none">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 md:py-3">
       <div class="flex items-center justify-between gap-4">
         <div class="flex items-center gap-4 flex-1 min-w-0">
           <NuxtLink to="/" class="flex items-center gap-3 shrink-0">
-            <img :src="logo" alt="Closely" class="h-10 md:h-12 w-auto rounded-md" />
+            <img :src="logo" alt="Closely" class="h-18 md:h-24 w-auto rounded-md" />
           </NuxtLink>
 
           <div class="hidden md:flex flex-1 px-2">
@@ -22,7 +22,7 @@
                   v-model="query"
                   type="search"
                   placeholder="Busca artículos"
-                  class="w-full bg-slate-100 rounded-full py-3 pl-12 pr-4 text-sm text-slate-700 placeholder-slate-500 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-200 focus:bg-white focus:border-teal-300"
+                  class="w-full bg-slate-100 rounded-full py-3 pl-12 pr-4 text-sm text-slate-700 placeholder-slate-500 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:bg-white focus:border-emerald-300"
                 />
               </div>
             </form>
@@ -32,18 +32,18 @@
         <div class="flex items-center gap-3 shrink-0">
           <div class="hidden md:flex items-center gap-3">
             <template v-if="!user">
-              <div class="inline-flex items-center rounded-full border border-teal-300 text-teal-600 overflow-hidden">
-                <NuxtLink :to="{ path: '/auth', query: { mode: 'register' } }" class="px-4 py-2 text-sm font-medium bg-white hover:bg-teal-50 focus:outline-none">
+              <div class="inline-flex items-center rounded-full border border-emerald-300 text-emerald-600 overflow-hidden">
+                <NuxtLink :to="{ path: '/auth', query: { mode: 'register' } }" class="px-4 py-2 text-sm font-medium bg-white hover:bg-emerald-50 focus:outline-none">
                   Regístrate
                 </NuxtLink>
-                <span class="px-2 text-sm text-teal-400 select-none" aria-hidden="true">|</span>
-                <NuxtLink :to="{ path: '/auth', query: { mode: 'login' } }" class="px-4 py-2 text-sm font-medium bg-white hover:bg-teal-50 focus:outline-none">
+                <span class="px-2 text-sm text-emerald-400 select-none" aria-hidden="true">|</span>
+                <NuxtLink :to="{ path: '/auth', query: { mode: 'login' } }" class="px-4 py-2 text-sm font-medium bg-white hover:bg-emerald-50 focus:outline-none">
                   Inicia sesión
                 </NuxtLink>
               </div>
             </template>
 
-            <NuxtLink to="/vender" class="ml-1 bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-full text-sm font-semibold shadow-sm transition-colors">
+            <NuxtLink to="/vender" class="ml-1 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-full text-sm font-semibold shadow-sm transition-colors">
               Vender ahora
             </NuxtLink>
 
@@ -95,7 +95,7 @@
               </svg>
             </NuxtLink>
 
-            <button class="bg-teal-600 text-white px-3 py-2 rounded-full text-sm" @click="handleSell">Vender</button>
+            <button class="bg-emerald-600 text-white px-3 py-2 rounded-full text-sm" @click="handleSell">Vender</button>
 
             <button class="p-2 rounded-md ml-1 focus:outline-none" aria-label="Abrir menú" @click="toggleMobile">
               <svg v-if="!mobileOpen" class="h-6 w-6 text-gray-700" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -118,7 +118,7 @@
         <aside class="absolute right-0 top-0 bottom-0 w-full sm:w-80 bg-white p-4 overflow-auto">
           <div class="flex items-center justify-between mb-4">
             <NuxtLink to="/" class="flex items-center gap-3">
-              <img :src="logo" alt="Closely" class="h-10 w-auto" />
+              <img :src="logo" alt="Closely" class="h-16 w-auto" />
             </NuxtLink>
             <button class="p-2 rounded-md" aria-label="Cerrar" @click="toggleMobile">
               <svg class="h-6 w-6 text-gray-700" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -132,10 +132,10 @@
           </div>
 
           <div class="space-y-3 mb-4">
-            <NuxtLink v-if="!user" :to="{ path: '/auth', query: { mode: 'register' } }" class="block w-full py-3 rounded-full border text-teal-600 text-center">
+            <NuxtLink v-if="!user" :to="{ path: '/auth', query: { mode: 'register' } }" class="block w-full py-3 rounded-full border text-emerald-600 text-center">
               Regístrate
             </NuxtLink>
-            <NuxtLink v-if="!user" :to="{ path: '/auth', query: { mode: 'login' } }" class="block w-full py-3 rounded-full bg-teal-600 text-white text-center">
+            <NuxtLink v-if="!user" :to="{ path: '/auth', query: { mode: 'login' } }" class="block w-full py-3 rounded-full bg-emerald-600 text-white text-center">
               Inicia sesión
             </NuxtLink>
             <NuxtLink v-if="user" to="/favoritos" class="block w-full py-3 rounded-full border text-gray-700 text-center">
@@ -144,7 +144,7 @@
             <NuxtLink v-if="user" to="/chat" class="block w-full py-3 rounded-full border text-gray-700 text-center">
               Mis mensajes
             </NuxtLink>
-            <button class="w-full py-3 rounded-full bg-teal-600 text-white" @click="handleSell">Vender ahora</button>
+            <button class="w-full py-3 rounded-full bg-emerald-600 text-white" @click="handleSell">Vender ahora</button>
             <button v-if="user" class="w-full py-3 rounded-full border text-red-600" @click="signOut">Cerrar sesión</button>
           </div>
 
@@ -154,7 +154,7 @@
                 v-for="link in navLinks"
                 :key="`mobile-${link.to}`"
                 :to="link.to"
-                class="text-left py-2 px-1 text-sm text-gray-700 hover:text-teal-600"
+                class="text-left py-2 px-1 text-sm text-gray-700 hover:text-emerald-600"
                 @click="mobileOpen = false"
               >
                 {{ link.label }}
@@ -164,7 +164,7 @@
 
           <div class="border-t pt-3">
             <div class="flex flex-col gap-2">
-              <button v-for="(c, i) in categories" :key="'mob-' + i" class="text-left py-2 text-sm text-gray-700 hover:text-teal-600" @click="$emit('select-category', c.key)">
+              <button v-for="(c, i) in categories" :key="'mob-' + i" class="text-left py-2 text-sm text-gray-700 hover:text-emerald-600" @click="$emit('select-category', c.key)">
                 {{ c.label }}
               </button>
             </div>
@@ -180,7 +180,7 @@
           <div class="bg-white rounded-xl p-4">
             <div class="flex items-center gap-3">
               <input v-model="query" @keyup.enter="onSearchMobile" placeholder="Busca artículos" class="w-full rounded-full py-3 pl-4 pr-4 bg-gray-50 border" />
-              <button class="ml-2 bg-teal-600 text-white px-4 py-2 rounded-full" @click="onSearchMobile">Buscar</button>
+              <button class="ml-2 bg-emerald-600 text-white px-4 py-2 rounded-full" @click="onSearchMobile">Buscar</button>
             </div>
           </div>
         </div>
@@ -193,7 +193,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import logoAsset from '~/assets/photos/closely-logo.png'
+import logoAsset from '~/assets/photos/closely.png'
 import CategoryNav from '~/components/layout/CategoryNav.vue'
 
 const { sessionUser, loadSessionUser, clearSessionUser, storageEventName } = useSessionUser()
@@ -378,7 +378,7 @@ header img {
   justify-content: center;
   background: linear-gradient(180deg, #ebfffb 0%, #d9faf2 100%);
   border: 1px solid #8ce8d8;
-  color: #0f766e;
+  color: #1fb981;
   font-weight: 700;
   box-shadow: 0 6px 16px rgba(15, 118, 110, 0.12);
 }
@@ -453,6 +453,6 @@ header img {
 
 .nav-link.active {
   background: #dff8f2;
-  color: #0f766e;
+  color: #1fb981;
 }
 </style>

@@ -16,7 +16,7 @@
       <div class="auth-panel">
         <div class="auth-brand">
           <NuxtLink to="/" class="auth-brand__logo" aria-label="Ir al inicio">
-            <img :src="authLogo" alt="Closely" />
+            <img :src="authLogo" alt="Closely" class="h-32 w-auto" />
           </NuxtLink>
           <NuxtLink to="/explorar" class="auth-brand__link">Volver a explorar</NuxtLink>
         </div>
@@ -82,7 +82,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import logoAsset from '~/assets/photos/closely-logo.png'
+import logoAsset from '~/assets/photos/closely.png'
 
 const route = useRoute()
 const router = useRouter()
@@ -189,7 +189,7 @@ async function submitLogin() {
 .auth-page {
   min-height: 100vh;
   padding: clamp(14px, 2.4vw, 28px);
-  background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+  background: var(--rm-page-bg);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 }
 
@@ -302,7 +302,7 @@ async function submitLogin() {
 }
 
 .auth-brand__link:hover {
-  color: #0f766e;
+  color: #1fb981;
 }
 
 .auth-panel__header {
@@ -353,7 +353,7 @@ async function submitLogin() {
 }
 
 .split-auth-switch button.active {
-  background: #0f766e;
+  background: #1fb981;
   color: #fff;
   box-shadow: 0 6px 16px rgba(15, 118, 110, 0.22);
 }
@@ -399,7 +399,7 @@ async function submitLogin() {
 }
 
 .split-form input:focus {
-  border-color: #0f766e;
+  border-color: #1fb981;
   background: #ffffff;
   box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.16);
 }
@@ -411,7 +411,7 @@ async function submitLogin() {
 .split-btn-primary {
   width: 100%;
   min-height: 48px;
-  background: #0f766e;
+  background: #1fb981;
   color: #fff;
   border: none;
   border-radius: 999px;

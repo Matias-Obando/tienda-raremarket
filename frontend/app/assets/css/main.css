@@ -4,9 +4,10 @@
 
 
 :root {
-  --rm-primary: #2fbf9b;
-  --rm-primary-hover: #27a685;
-  --rm-accent: #bfead9;
+  --rm-primary: #1fb981;
+  --rm-primary-hover: #17a371;
+  --rm-accent: #a7f3d0;
+  --rm-page-bg: linear-gradient(180deg, #f8fafc 0%, #eef2f6 100%);
 
   --rm-bg: #ffffff;
   --rm-text: #111111;
@@ -24,7 +25,7 @@ body,
 #__nuxt {
   margin: 0;
   padding: 0;
-  background: var(--rm-bg);
+  background: var(--rm-page-bg);
   color: var(--rm-text);
   overflow-x: hidden;
 }
@@ -106,24 +107,13 @@ img { max-width: 100%; display: block; }
 
 html, body {
   min-height: 100%;
-  background-color: #ededed;
-  background-image: url('data:image/svg+xml;utf8,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><filter id="noise" x="0" y="0"><feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="5" stitchTiles="stitch"/></filter><rect width="100" height="100" filter="url(%23noise)" opacity="0.18"/></svg>');
+  background: var(--rm-page-bg);
 }
 
 html,
 body,
 #__nuxt {
   overflow-x: hidden;
-}
-
-
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background: rgba(255,255,255,0.42);
-  pointer-events: none;
-  z-index: 0;
 }
 
 

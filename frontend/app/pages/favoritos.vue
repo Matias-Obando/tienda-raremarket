@@ -88,10 +88,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .favorites-page {
   padding: 24px 16px 56px;
-  background:
-    radial-gradient(circle at 15% 8%, rgba(15, 118, 110, 0.1), transparent 28%),
-    radial-gradient(circle at 88% 2%, rgba(15, 23, 42, 0.08), transparent 24%),
-    linear-gradient(180deg, #f8fafc 0%, #eef2f6 100%);
+  background: var(--rm-page-bg);
 }
 
 .favorites-shell {
@@ -118,7 +115,7 @@ onBeforeUnmount(() => {
 
 .eyebrow {
   margin: 0 0 8px;
-  color: #0f766e;
+  color: #1fb981;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: 12px;
@@ -154,7 +151,7 @@ h1 {
   border-radius: 999px;
   min-height: 44px;
   padding: 0 16px;
-  background: #0f766e;
+  background: #1fb981;
   color: #fff;
   border: 1px solid transparent;
   text-decoration: none;
@@ -170,7 +167,7 @@ h1 {
 
 .favorites-link--soft {
   background: #fff;
-  color: #0f766e;
+  color: #1fb981;
   border-color: #99f6e4;
 }
 

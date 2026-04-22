@@ -1,8 +1,6 @@
 <template>
   <div class="rm-page">
     <div class="rm-container page">
-    <a class="back" href="#" @click.prevent="goBack">← Volver al catalogo</a>
-
     <div v-if="loading" class="notfound">Cargando producto...</div>
 
     <div v-else-if="!item" class="notfound">No se encontró el producto.</div>
@@ -56,7 +54,6 @@
       </div>
 
       <div class="rightCol product-panel product-panel--info">
-        <p class="eyebrow">Detalles del articulo</p>
         <h1 class="title">{{ item.titulo }}</h1>
 
         <div class="priceWrap">
@@ -78,6 +75,35 @@
         </div>
 
         <div class="meta small">Publicado {{ item.creadoHace }}</div>
+
+        <div class="seller-card" role="group" aria-label="Vendedor del articulo">
+          <div class="seller-main">
+            <div class="seller-avatar" aria-hidden="true">
+              <img v-if="sellerAvatar" :src="sellerAvatar" :alt="`Avatar de ${sellerDisplayName}`" class="seller-avatar__img" />
+              <span v-else>{{ sellerInitial }}</span>
+            </div>
+
+            <div class="seller-copy">
+              <p class="seller-name">{{ sellerDisplayName }}</p>
+              <p class="seller-reputation">
+                <span class="seller-stars" aria-hidden="true">★★★★★</span>
+                <span>{{ sellerReviews }}</span>
+              </p>
+            </div>
+          </div>
+
+          <button
+            class="seller-open"
+            type="button"
+            :disabled="loadingSeller || !item?.sellerId"
+            :title="`Ver perfil de ${sellerDisplayName}`"
+            @click="goToSellerProfile"
+          >
+            <svg class="seller-open__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path d="M7.5 4.5L12.5 10L7.5 15.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -108,6 +134,40 @@ const id = computed(() => String(route.params.id))
 const item = ref<Item | null>(null)
 const loading = ref(false)
 
+type SellerPreview = {
+  id: string
+  username: string
+  avatarUrl?: string
+}
+
+const seller = ref<SellerPreview | null>(null)
+const loadingSeller = ref(false)
+
+const sellerDisplayName = computed(() => seller.value?.username?.trim() || 'Vendedor Closely')
+const sellerAvatar = computed(() => seller.value?.avatarUrl || '')
+const sellerInitial = computed(() => sellerDisplayName.value.charAt(0).toUpperCase())
+const sellerReviews = computed(() => {
+  const seedBase = item.value?.sellerId ?? item.value?.id ?? '0'
+  const seed = Array.from(seedBase).reduce((acc, ch) => acc + ch.charCodeAt(0), 0)
+  return 35 + (seed % 170)
+})
+
+async function loadSellerInfo(sellerId?: string) {
+  seller.value = null
+  if (!sellerId) return
+
+  loadingSeller.value = true
+  try {
+    const config = useRuntimeConfig()
+    const users = await $fetch<SellerPreview[]>(`${config.public.API_BASE_URL}/users`)
+    seller.value = users.find((u) => String(u.id) === String(sellerId)) ?? null
+  } catch (e) {
+    console.error('No se pudo cargar el vendedor del articulo:', e)
+  } finally {
+    loadingSeller.value = false
+  }
+}
+
 async function loadItem() {
   loading.value = true
   try {
@@ -116,6 +176,8 @@ async function loadItem() {
     if (store.items.length === 0) {
       await store.fetchAll()
     }
+
+    await loadSellerInfo(item.value?.sellerId)
   } finally {
     loading.value = false
   }
@@ -199,6 +261,11 @@ function openContact() {
   })
 }
 
+function goToSellerProfile() {
+  if (!item.value?.sellerId) return
+  navigateTo(`/perfil/${encodeURIComponent(item.value.sellerId)}`)
+}
+
 const LS_KEY = 'closely:favorites'
 const isFav = ref(false)
 function readFavorites(): string[] {
@@ -234,11 +301,7 @@ onMounted(async () => {
 
 .rm-page {
   min-height: 100vh;
-  background:
-    radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.58), transparent 32%),
-    radial-gradient(circle at 88% 14%, rgba(255, 255, 255, 0.4), transparent 24%),
-    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.05) 0 2px, rgba(15, 23, 42, 0.015) 2px 4px),
-    linear-gradient(180deg, #eef2f5 0%, #e9edf1 46%, #e5eaee 100%);
+  background: var(--rm-page-bg);
 }
 
 .rm-container {
@@ -251,23 +314,13 @@ onMounted(async () => {
 
 .page { padding: 20px 0 60px; }
 
-.back {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: #334155;
-  text-decoration: none;
-  font-weight: 600;
-  margin-bottom: 12px;
-}
-
 .product-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 22px;
+  gap: 18px;
 }
 @media (min-width: 900px) {
-  .product-grid { grid-template-columns: 60% 40%; align-items: start; }
+  .product-grid { grid-template-columns: 56% 44%; align-items: start; }
 }
 
 .product-panel {
@@ -280,8 +333,8 @@ onMounted(async () => {
 .leftCol {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 14px;
+  gap: 12px;
+  padding: 12px;
 }
 
 .media {
@@ -289,9 +342,9 @@ onMounted(async () => {
   border-radius: 12px;
   overflow: hidden;
   background: var(--rm-soft);
-  height: 540px;
+  height: 440px;
 }
-@media (min-width: 1200px) { .media { height: 560px; } }
+@media (min-width: 1200px) { .media { height: 470px; } }
 
 .img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
@@ -340,7 +393,7 @@ onMounted(async () => {
 }
 .thumb {
   flex: 1 1 0;
-  height: 126px;
+  height: 96px;
   border-radius: 8px;
   overflow: hidden;
   border: 1px solid var(--rm-border);
@@ -360,32 +413,25 @@ onMounted(async () => {
 }
 
 .rightCol {
-  padding: 24px;
-}
-
-.eyebrow {
-  margin: 0;
-  color: #0f766e;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-size: 12px;
-  font-weight: 800;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
 }
 
 .title {
-  margin: 8px 0 10px;
-  font-size: 48px;
+  margin: 8px 0 12px;
+  font-size: clamp(2rem, 3.2vw, 3rem);
   font-weight: 800;
-  line-height: 0.95;
-  letter-spacing: -0.04em;
+  line-height: 1.03;
+  letter-spacing: -0.03em;
   color: var(--rm-text);
 }
 
-@media (max-width: 1200px) { .title { font-size: 42px; line-height: 1; } }
-@media (max-width: 960px) { .title { font-size: 34px; } }
+@media (max-width: 1200px) { .title { font-size: clamp(1.9rem, 3vw, 2.6rem); } }
+@media (max-width: 960px) { .title { font-size: 1.9rem; } }
 
 .priceWrap { margin-bottom: 10px; }
-.price { font-weight: 900; font-size: 34px; color: #0f172a; }
+.price { font-weight: 800; font-size: clamp(1.9rem, 2.2vw, 2.4rem); color: #0f172a; }
 .chips-real { display:flex; gap:8px; margin-bottom: 16px; flex-wrap:wrap; }
 .chip-real {
   padding: 6px 10px;
@@ -398,37 +444,137 @@ onMounted(async () => {
 }
 
 .desc {
-  margin: 0 0 20px;
+  margin: 0 0 16px;
   color: #334155;
-  font-size: 1.08rem;
-  line-height: 1.6;
+  font-size: 1rem;
+  line-height: 1.55;
+  max-width: 52ch;
 }
 
 .actions { display:flex; gap:10px; align-items:center; margin-bottom:12px; flex-wrap: wrap; }
 
 .rm-btn {
-  min-height: 46px;
-  padding: 0 18px;
+  min-height: 44px;
+  padding: 0 16px;
   border-radius: 999px;
   border: 1px solid transparent;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   font-weight: 700;
   cursor: pointer;
 }
 
 .rm-btn--primary {
-  background: #0f766e;
+  background: #1fb981;
   color: #fff;
   box-shadow: 0 10px 24px rgba(15, 118, 110, 0.24);
 }
 
 .rm-btn--secondary {
   background: #ffffff;
-  color: #0f766e;
+  color: #1fb981;
   border-color: #99f6e4;
 }
 
 .small { font-size: 12px; color: #9aa0a6; margin-top:8px; }
+
+.seller-card {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid #dce3eb;
+  border-radius: 14px;
+  background: #ffffff;
+  padding: 12px 14px;
+}
+
+.seller-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.seller-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  background: #2f6f22;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.55rem;
+  font-weight: 700;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.seller-avatar__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.seller-copy {
+  min-width: 0;
+}
+
+.seller-name {
+  margin: 0;
+  font-size: 1.03rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.seller-reputation {
+  margin: 4px 0 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #5b6472;
+  font-size: 1.02rem;
+}
+
+.seller-stars {
+  color: #f59e0b;
+  letter-spacing: 0.02em;
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.seller-open {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid #d2dae4;
+  background: #ffffff;
+  color: #5b6472;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.seller-open__icon {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.seller-open:hover {
+  border-color: #1fb981;
+  color: #1fb981;
+}
+
+.seller-open:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .separator { border: 0; border-top: 1px solid var(--rm-border); margin: 28px 0; }
 .related { margin-top: 18px; }
 .relatedTitle {
@@ -444,14 +590,18 @@ onMounted(async () => {
 .notfound { padding: 16px; border: 1px dashed var(--rm-border); border-radius:8px; }
 
 @media (max-width: 899px) {
-  .media { height: 360px; }
-  .thumb { height: 96px; }
+  .media { height: 320px; }
+  .thumb { height: 84px; }
   .rm-container {
     padding-left: 14px;
     padding-right: 14px;
   }
   .rightCol {
-    padding: 18px;
+    padding: 16px;
+  }
+  .seller-card {
+    margin-top: 14px;
   }
 }
 </style>
+

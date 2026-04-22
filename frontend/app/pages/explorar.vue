@@ -111,11 +111,7 @@ const filteredItems = computed(() => {
   --card-max: 280px;
   --grid-gap: 28px;
   min-height: 100vh;
-  background:
-    radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.58), transparent 32%),
-    radial-gradient(circle at 88% 14%, rgba(255, 255, 255, 0.4), transparent 24%),
-    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.05) 0 2px, rgba(15, 23, 42, 0.015) 2px 4px),
-    linear-gradient(180deg, #eef2f5 0%, #e9edf1 46%, #e5eaee 100%);
+  background: var(--rm-page-bg);
 }
 
 
@@ -173,7 +169,7 @@ const filteredItems = computed(() => {
   padding: 8px 12px;
   border-radius: 999px;
   background: rgba(13, 148, 136, 0.1);
-  color: #0f766e;
+  color: #1fb981;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.03em;
@@ -220,7 +216,7 @@ const filteredItems = computed(() => {
 }
 
 .promo-btn--primary {
-  background: #0f766e;
+  background: #1fb981;
   color: #fff;
   box-shadow: 0 12px 30px rgba(15, 118, 110, 0.25);
 }
