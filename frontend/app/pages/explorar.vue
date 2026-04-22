@@ -51,7 +51,7 @@ const promoHeroImage = '/bg/bg.png'
 
 
 onMounted(async () => {
-  if (store.items.length === 0) await store.fetchAll()
+  await store.fetchAll()
 })
 
 const cat = computed(() => {

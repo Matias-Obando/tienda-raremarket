@@ -63,6 +63,9 @@ public class Item {
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 
+    @Column(nullable = false)
+    private boolean available = true;
+
     @PrePersist
     public void onCreate() {
         OffsetDateTime now = OffsetDateTime.now();
@@ -218,5 +221,13 @@ public class Item {
 
     public void setUpdatedAt(OffsetDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public boolean isAvailable() {
+        return available;
+    }
+
+    public void setAvailable(boolean available) {
+        this.available = available;
     }
 }

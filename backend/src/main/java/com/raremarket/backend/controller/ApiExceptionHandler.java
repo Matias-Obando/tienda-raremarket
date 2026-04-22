@@ -123,6 +123,16 @@ public class ApiExceptionHandler {
             case "minPrice cannot be greater than maxPrice" -> "El precio minimo no puede ser mayor que el maximo.";
             case "precioEur cannot be negative" -> "El precio no puede ser negativo.";
             case "imagen is required" -> "Debes indicar una imagen principal.";
+            case "Item seller not found" -> "No se pudo identificar el vendedor del articulo.";
+            case "You cannot buy your own item" -> "No puedes comprar tu propio articulo.";
+            case "Item already sold" -> "Este articulo ya se vendio y no se puede comprar de nuevo.";
+            case "Invalid card number" -> "El numero de tarjeta no es valido.";
+            case "deliveryMethod is required" -> "Debes elegir el metodo de entrega.";
+            case "deliveryMethod must be shipping" -> "El metodo de entrega debe ser envio a domicilio.";
+            case "Order not found" -> "Pedido no encontrado.";
+            case "You are not part of this order" -> "No tienes permisos sobre este pedido.";
+            case "Invalid order status transition" -> "No se puede aplicar ese cambio de estado al pedido.";
+            case "status is required" -> "Debes indicar el nuevo estado del pedido.";
             default -> {
                 if (normalized.toLowerCase(Locale.ROOT).endsWith(" is required")) {
                     String field = normalized.substring(0, normalized.length() - " is required".length());

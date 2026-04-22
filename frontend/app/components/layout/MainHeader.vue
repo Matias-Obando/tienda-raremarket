@@ -70,9 +70,9 @@
                 </button>
                 <transition name="fade">
                   <div v-if="dropdownOpen" class="absolute right-0 mt-2 w-44 bg-white border rounded-md shadow-lg py-1 z-50" role="menu" aria-label="User menu">
-                    <NuxtLink to="/perfil" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem">Mi perfil</NuxtLink>
-                    <NuxtLink to="/chat" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem">Mis mensajes</NuxtLink>
-                    <NuxtLink to="/perfil#mis-publicaciones" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem">Mis publicaciones</NuxtLink>
+                    <NuxtLink to="/perfil" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem" @click="closeDropdown">Mi perfil</NuxtLink>
+                    <NuxtLink to="/chat" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem" @click="closeDropdown">Mis mensajes</NuxtLink>
+                    <NuxtLink to="/perfil#mis-publicaciones" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem" @click="closeDropdown">Mis publicaciones</NuxtLink>
                     <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50" role="menuitem" @click="signOut">
                       Cerrar sesión
                     </button>
@@ -241,6 +241,10 @@ function toggleDropdown() {
   dropdownOpen.value = !dropdownOpen.value
 }
 
+function closeDropdown() {
+  dropdownOpen.value = false
+}
+
 function toggleMobile() {
   mobileOpen.value = !mobileOpen.value
 }
@@ -276,6 +280,12 @@ function onOutsideClick(e: MouseEvent) {
   }
 }
 
+function onKeyDown(e: KeyboardEvent) {
+  if (e.key === 'Escape') {
+    closeDropdown()
+  }
+}
+
 function syncSession() {
   loadSessionUser()
 }
@@ -300,6 +310,7 @@ onMounted(() => {
   const q = route.query.q
   query.value = typeof q === 'string' ? q : ''
   document.addEventListener('click', onOutsideClick)
+  document.addEventListener('keydown', onKeyDown)
   window.addEventListener(storageEventName, syncSession)
   window.addEventListener('storage', syncSession)
   window.addEventListener('closely:favs:updated', syncFavorites)
@@ -313,8 +324,16 @@ watch(
   }
 )
 
+watch(
+  () => route.fullPath,
+  () => {
+    closeDropdown()
+  }
+)
+
 onBeforeUnmount(() => {
   document.removeEventListener('click', onOutsideClick)
+  document.removeEventListener('keydown', onKeyDown)
   window.removeEventListener(storageEventName, syncSession)
   window.removeEventListener('storage', syncSession)
   window.removeEventListener('closely:favs:updated', syncFavorites)

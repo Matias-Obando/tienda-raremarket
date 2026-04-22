@@ -46,6 +46,67 @@
         </div>
       </article>
 
+      <article class="profile-card">
+        <div class="section-head">
+          <h2>Mis pedidos</h2>
+          <span class="section-note">Gestiona compras y ventas simuladas</span>
+        </div>
+
+        <div class="order-tabs">
+          <button
+            type="button"
+            class="order-tab"
+            :class="{ active: ordersRole === 'buyer' }"
+            @click="ordersRole = 'buyer'; loadOrders()"
+          >Compras</button>
+          <button
+            type="button"
+            class="order-tab"
+            :class="{ active: ordersRole === 'seller' }"
+            @click="ordersRole = 'seller'; loadOrders()"
+          >Ventas</button>
+        </div>
+
+        <div v-if="loadingOrders" class="empty">Cargando pedidos...</div>
+        <div v-else-if="!orders.length" class="empty">Todavia no tienes pedidos en esta vista.</div>
+
+        <div v-else class="orders-list">
+          <article v-for="order in orders" :key="order.id" class="order-card">
+            <div class="order-top">
+              <div>
+                <p class="order-title">{{ order.itemTitle }}</p>
+                <p class="order-meta">{{ order.amountEur }} EUR</p>
+              </div>
+              <span class="order-status">{{ prettyStatus(order.status) }}</span>
+            </div>
+
+            <div class="order-detail">
+              <img :src="order.itemImage" :alt="order.itemTitle" class="order-image" />
+              <div>
+                <p v-if="order.deliveryMethod === 'shipping'" class="order-sub">
+                  Envio a: {{ order.shippingFullName }} · {{ order.shippingCity }}
+                </p>
+                <p v-if="order.paymentBrand === 'EFECTIVO'" class="order-sub">Pago: En efectivo</p>
+                <p v-else class="order-sub">Pago simulado: {{ order.paymentBrand }} ****{{ order.paymentLast4 }}</p>
+              </div>
+            </div>
+
+            <div class="order-actions">
+              <button
+                v-for="action in orderActions(order)"
+                :key="action.to"
+                type="button"
+                class="profile-link profile-link--soft order-action-btn"
+                :disabled="updatingOrderId === order.id"
+                @click="updateOrderStatus(order.id, action.to)"
+              >
+                {{ updatingOrderId === order.id ? 'Actualizando...' : action.label }}
+              </button>
+            </div>
+          </article>
+        </div>
+      </article>
+
       <article id="mis-publicaciones" class="profile-card">
         <div class="section-head">
           <h2>Mis publicaciones</h2>
@@ -130,14 +191,47 @@ const route = useRoute()
 const uiMessages = useUiMessages()
 const sessionReady = ref(false)
 const loadingPublished = ref(false)
+const loadingOrders = ref(false)
 const conversationsCount = ref(0)
 const publishedItems = ref<Item[]>([])
+const ordersRole = ref<'buyer' | 'seller'>('buyer')
+const orders = ref<OrderSummary[]>([])
+const updatingOrderId = ref<string | null>(null)
 const deletingItemId = ref<string | null>(null)
 const deleteModal = reactive({
   open: false,
   itemId: '',
   itemTitle: ''
 })
+
+type InboxConversation = {
+  id: string
+  itemId: string
+  lastMessage?: string
+  unreadCount: number
+}
+
+type OrderSummary = {
+  id: string
+  itemId: string
+  buyerId: string
+  sellerId: string
+  itemTitle: string
+  itemImage: string
+  amountEur: number
+  deliveryMethod: 'shipping'
+  shippingFullName?: string
+  shippingCity?: string
+  paymentBrand: string
+  paymentLast4: string
+  status: string
+  createdAt: string
+}
+
+type OrderAction = {
+  label: string
+  to: string
+}
 
 const demoUser: SessionUser = {
   id: 'demo-user',
@@ -215,10 +309,112 @@ async function loadPublishedItems() {
   }
 }
 
+function prettyStatus(status: string) {
+  const map: Record<string, string> = {
+    PENDIENTE_ACEPTACION: 'Pendiente de aceptacion',
+    ACEPTADO: 'Aceptado',
+    RECHAZADO: 'Rechazado',
+    PREPARANDO_ENVIO: 'Preparando envio',
+    ENVIADO: 'Enviado',
+    QUEDADA_ACORDADA: 'Quedada acordada',
+    ENTREGADO: 'Vendido',
+    COMPLETADO: 'Completado',
+    CANCELADO: 'Cancelado'
+  }
+  return map[status] ?? status
+}
+
+function orderActions(order: OrderSummary): OrderAction[] {
+  if (ordersRole.value === 'seller') {
+    if (order.status === 'PENDIENTE_ACEPTACION') {
+      return [
+        { label: 'Aceptar', to: 'ACEPTADO' },
+        { label: 'Rechazar', to: 'RECHAZADO' }
+      ]
+    }
+    if (order.status === 'ACEPTADO' && order.deliveryMethod === 'shipping') {
+      return [
+        { label: 'Preparar envio', to: 'PREPARANDO_ENVIO' },
+        { label: 'Marcar enviado', to: 'ENVIADO' }
+      ]
+    }
+    if (order.status === 'PREPARANDO_ENVIO') {
+      return [{ label: 'Marcar enviado', to: 'ENVIADO' }]
+    }
+    return []
+  }
+
+  if (order.status === 'PENDIENTE_ACEPTACION') {
+    return [{ label: 'Cancelar pedido', to: 'CANCELADO' }]
+  }
+  if (order.status === 'ENVIADO' || order.status === 'ENTREGADO') {
+    return [{ label: 'Confirmar completado', to: 'COMPLETADO' }]
+  }
+  return []
+}
+
+async function loadOrders() {
+  if (!profileUser.value || isDemoMode.value) {
+    orders.value = []
+    return
+  }
+
+  const token = profileUser.value.token
+  if (!token) {
+    orders.value = []
+    return
+  }
+
+  loadingOrders.value = true
+  try {
+    const config = useRuntimeConfig()
+    orders.value = await $fetch<OrderSummary[]>(`${config.public.API_BASE_URL}/orders`, {
+      params: { role: ordersRole.value },
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+  } catch (error: any) {
+    orders.value = []
+    uiMessages.error(error?.data?.message || 'No se pudieron cargar los pedidos.')
+  } finally {
+    loadingOrders.value = false
+  }
+}
+
+async function updateOrderStatus(orderId: string, nextStatus: string) {
+  if (!profileUser.value?.token) {
+    uiMessages.error('Necesitas iniciar sesion para actualizar pedidos.')
+    return
+  }
+
+  updatingOrderId.value = orderId
+  try {
+    const config = useRuntimeConfig()
+    await $fetch(`${config.public.API_BASE_URL}/orders/${orderId}/status`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${profileUser.value.token}`
+      },
+      body: {
+        status: nextStatus
+      }
+    })
+
+    await loadOrders()
+    uiMessages.success('Estado del pedido actualizado.')
+  } catch (error: any) {
+    uiMessages.error(error?.data?.message || 'No se pudo actualizar el pedido.')
+  } finally {
+    updatingOrderId.value = null
+  }
+}
+
 async function refreshProfileData() {
   await Promise.all([
     loadPublishedItems(),
-    loadConversationsCount()
+    loadConversationsCount(),
+    loadOrders()
   ])
 }
 
@@ -483,6 +679,106 @@ onBeforeUnmount(() => {
   font-size: 13px;
 }
 
+.order-tabs {
+  display: inline-flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.order-tab {
+  min-height: 34px;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0 12px;
+  cursor: pointer;
+}
+
+.order-tab.active {
+  border-color: #1fb981;
+  background: #ecfdf5;
+  color: #0f766e;
+}
+
+.orders-list {
+  display: grid;
+  gap: 10px;
+}
+
+.order-card {
+  border: 1px solid #dbe4ee;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  padding: 12px;
+}
+
+.order-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.order-title {
+  margin: 0;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.order-meta {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 0.82rem;
+}
+
+.order-status {
+  border-radius: 999px;
+  border: 1px solid #99f6e4;
+  color: #0f766e;
+  background: #f0fdfa;
+  padding: 4px 10px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.order-detail {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.order-image {
+  width: 62px;
+  height: 62px;
+  border-radius: 10px;
+  border: 1px solid #dbe4ee;
+  object-fit: cover;
+  background: #fff;
+}
+
+.order-sub {
+  margin: 0 0 4px;
+  color: #475569;
+  font-size: 0.83rem;
+}
+
+.order-actions {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.order-action-btn {
+  min-height: 34px;
+  font-size: 0.74rem;
+}
+
 .quick-links {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -732,6 +1028,11 @@ onBeforeUnmount(() => {
   .favorites-grid,
   .published-grid {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .order-top {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 
