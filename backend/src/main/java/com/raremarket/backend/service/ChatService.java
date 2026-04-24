@@ -12,6 +12,8 @@ import com.raremarket.backend.repository.ConversationRepository;
 import com.raremarket.backend.repository.MessageRepository;
 import com.raremarket.backend.repository.OrderConversationRepository;
 import com.raremarket.backend.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +30,8 @@ import java.util.UUID;
 
 @Service
 public class ChatService {
+    private static final Logger LOG = LoggerFactory.getLogger(ChatService.class);
+
     private final ConversationRepository conversationRepository;
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
@@ -109,6 +113,22 @@ public class ChatService {
     public int markConversationAsRead(UUID conversationId, UUID userId) {
         getAuthorizedConversation(conversationId, userId);
         return messageRepository.markConversationAsRead(conversationId, userId.toString());
+    }
+
+    @Transactional
+    public void deleteConversation(UUID conversationId, UUID userId) {
+        getAuthorizedConversation(conversationId, userId);
+
+        // En algunos entornos legacy la tabla/vinculo de order_conversations puede no estar desplegada.
+        // No bloqueamos el borrado del chat por ese cleanup auxiliar.
+        try {
+            orderConversationRepository.deleteByConversationIdIn(List.of(conversationId));
+        } catch (RuntimeException ex) {
+            LOG.warn("Skipping order_conversations cleanup for conversation {}: {}", conversationId, ex.getMessage());
+        }
+
+        messageRepository.deleteByConversationId(conversationId);
+        conversationRepository.deleteById(conversationId);
     }
 
     private void validateConversationRequest(CreateConversationRequest request) {

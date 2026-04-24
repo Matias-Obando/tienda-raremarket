@@ -2,66 +2,53 @@
   <div class="chat-page">
     <div class="chat-shell" :class="{ 'chat-shell--mobile-conversation': isMobileConversationOpen }">
       <aside v-show="!isMobileConversationOpen" class="chat-sidebar">
-        <div class="sidebar-top">
-          <div class="sidebar-heading">
-            <p class="eyebrow">Mensajes</p>
-            <h1>Bandeja</h1>
-            <p class="sidebar-sub">Gestiona tus conversaciones de compra y venta</p>
-          </div>
-          <div class="sidebar-actions">
-            <button class="ghost-btn" type="button" @click="loadData">Actualizar</button>
-          </div>
+        <div class="sidebar-heading">
+          <p class="eyebrow">Mensajes</p>
+          <h1>Bandeja</h1>
+          <p class="sidebar-sub">Gestiona tus conversaciones de compra y venta</p>
         </div>
 
-        <div class="sidebar-stats">
-          <span>{{ activeConversations.length }} conversaciones</span>
+        <div v-if="loadingConversations" class="sidebar-empty">
+          Cargando conversaciones...
         </div>
-
-        <label class="search-box">
-          <span class="search-box__icon" aria-hidden="true">
-            <svg viewBox="0 0 20 20" fill="none">
-              <path d="M8.5 14.5A6 6 0 1 1 8.5 2.5a6 6 0 0 1 0 12Z" stroke="currentColor" stroke-width="1.6" />
-              <path d="M13 13l4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-            </svg>
-          </span>
-          <input v-model="conversationSearch" type="search" placeholder="Buscar conversaciones" />
-        </label>
-
-        <div v-if="loadingConversations" class="sidebar-empty">Cargando conversaciones...</div>
-        <div v-else-if="!activeConversations.length" class="sidebar-empty">
-          Aún no tienes conversaciones. Abre un chat desde un producto para empezar.
+        <div v-else-if="!filteredConversations.length" class="sidebar-empty">
+          Aún no tienes conversaciones. Empieza enviando un mensaje a un vendedor.
         </div>
-
-        <button
-          v-for="conversation in filteredConversations"
-          :key="conversation.id"
-          type="button"
-          class="conversation-row"
-          :class="{ active: conversation.id === selectedConversationId }"
-          @click="selectConversation(conversation.id)"
-        >
-          <div class="row-main">
-            <span class="row-avatar" aria-hidden="true">{{ getInitial(conversation.counterpartName) }}</span>
-            <div class="row-copy">
-              <div class="row-copy__head">
-                <strong>{{ conversation.counterpartName }}</strong>
-                <span class="row-time">{{ formatConversationStatus(conversation) }}</span>
+        <div v-else class="conversations-list">
+          <button
+            v-for="conversation in filteredConversations"
+            :key="conversation.id"
+            class="conversation-row"
+            :class="{ active: selectedConversationId === conversation.id }"
+            @click="selectConversation(conversation.id)"
+          >
+            <div class="row-main">
+              <div class="row-avatar" aria-hidden="true">{{ getInitial(conversation.counterpartName) }}</div>
+              <div class="row-content">
+                <p class="row-title">{{ conversation.counterpartName }}</p>
+                <p class="row-preview">{{ conversation.lastMessage || 'Sin mensajes aún' }}</p>
               </div>
-              <div class="row-sub">Item {{ conversation.itemId }}</div>
+              <div v-if="conversation.unreadCount > 0" class="pill pill--unread">
+                {{ conversation.unreadCount }}
+              </div>
             </div>
-            <span v-if="conversation.unreadCount" class="pill pill--unread">{{ conversation.unreadCount }}</span>
-            <span v-else-if="isConversationRecent(conversation)" class="pill pill--live">Activo</span>
-          </div>
-          <div class="row-preview">
-            <span v-if="conversation.unreadCount > 0" class="row-preview__flag">Nuevo</span>
-            {{ conversation.lastMessage || 'Sin mensajes aún' }}
-          </div>
-          <div class="row-footer">
-            <span>{{ conversation.unreadCount > 0 ? 'Sin leer' : 'Leído' }}</span>
-            <span class="row-dot" aria-hidden="true"></span>
-            <span>{{ formatConversationStatus(conversation) }}</span>
-          </div>
-        </button>
+            <div class="row-footer">
+              <span>{{ conversation.unreadCount > 0 ? 'Sin leer' : 'Leído' }}</span>
+              <span class="row-dot" aria-hidden="true"></span>
+              <span>{{ formatConversationStatus(conversation) }}</span>
+              <button
+                class="row-delete"
+                type="button"
+                title="Borrar chat"
+                aria-label="Borrar chat"
+                :disabled="deletingConversationId === conversation.id"
+                @click.stop="deleteConversation(conversation.id)"
+              >
+                ×
+              </button>
+            </div>
+          </button>
+        </div>
       </aside>
 
       <section v-show="!isMobileLayout || !!selectedConversationId" class="chat-main">
@@ -79,7 +66,6 @@
         <div v-else-if="!selectedConversation" class="chat-empty">
           <p class="chat-empty-title">Selecciona una conversación</p>
           <p>Elige una conversación de la izquierda para leer y responder mensajes.</p>
-          <p v-if="itemId">También puedes abrir un chat nuevo usando el bloque lateral.</p>
         </div>
 
         <template v-else>
@@ -95,8 +81,6 @@
             <div class="header-meta">
               <span class="header-badge header-badge--live"></span>
               Activo ahora
-              <span class="header-divider"></span>
-              Item {{ selectedConversation.itemId }}
             </div>
           </header>
 
@@ -108,18 +92,6 @@
           >
             Volver a bandeja
           </button>
-
-          <section class="chat-context">
-            <div class="chat-context__copy">
-              <p class="chat-context__label">Anuncio relacionado</p>
-              <p class="chat-context__title">{{ itemTitle || `Producto ${selectedConversation.itemId}` }}</p>
-              <p class="chat-context__desc">Habla, acuerda condiciones y sigue la compra desde aquí.</p>
-            </div>
-            <div class="chat-context__meta">
-              <span class="chat-context__badge">Compra segura</span>
-              <span class="chat-context__badge chat-context__badge--soft">Envio disponible</span>
-            </div>
-          </section>
 
           <div class="messages-panel">
             <div v-if="loadingMessages" class="chat-empty">Cargando mensajes...</div>
@@ -218,6 +190,7 @@ const config = useRuntimeConfig()
 const route = useRoute()
 const router = useRouter()
 const { sessionUser, loadSessionUser, storageEventName } = useSessionUser()
+const { refreshUnreadChatCount } = useUnreadChatCount()
 const uiMessages = useUiMessages()
 
 const sessionReady = ref(false)
@@ -232,7 +205,7 @@ const isMobileLayout = ref(false)
 const errorMessage = ref('')
 const selectedConversationId = ref('')
 const draftMessage = ref('')
-const conversationSearch = ref('')
+const deletingConversationId = ref('')
 const itemId = computed(() => typeof route.query.itemId === 'string' ? route.query.itemId : '')
 const itemTitle = computed(() => typeof route.query.itemTitle === 'string' ? route.query.itemTitle : '')
 const sellerIdFromQuery = computed(() => typeof route.query.sellerId === 'string' ? route.query.sellerId : '')
@@ -252,20 +225,7 @@ const orderedMessages = computed(() =>
   [...activeMessages.value].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
 )
 
-const filteredConversations = computed(() => {
-  const query = conversationSearch.value.trim().toLowerCase()
-  if (!query) return activeConversations.value
-
-  return activeConversations.value.filter((conversation) => {
-    const haystack = [
-      conversation.counterpartName,
-      conversation.itemId,
-      conversation.lastMessage ?? ''
-    ].join(' ').toLowerCase()
-
-    return haystack.includes(query)
-  })
-})
+const filteredConversations = computed(() => activeConversations.value)
 
 const isMobileConversationOpen = computed(() => isMobileLayout.value && !!selectedConversationId.value)
 
@@ -407,6 +367,7 @@ async function loadConversations() {
     }
   } finally {
     loadingConversations.value = false
+    void refreshUnreadChatCount()
   }
 }
 
@@ -452,6 +413,7 @@ async function selectConversation(conversationId: string) {
       params: { userId: sessionUser.value.id }
     })
     await loadConversations()
+    void refreshUnreadChatCount()
   }
 }
 
@@ -485,7 +447,8 @@ async function openConversationFromProduct() {
       }
     })
 
-    await loadConversations()
+  await loadConversations()
+  void refreshUnreadChatCount()
     selectedConversationId.value = conversation.id
     await loadMessages(conversation.id)
     await router.replace({ path: '/chat', query: {} })
@@ -526,6 +489,7 @@ async function sendMessage() {
     draftMessage.value = ''
     await loadMessages(selectedConversationId.value)
     await loadConversations()
+    void refreshUnreadChatCount()
   } catch (error: any) {
     errorMessage.value = parseApiError(error, 'No se pudo enviar el mensaje.')
     uiMessages.error(errorMessage.value)
@@ -534,14 +498,63 @@ async function sendMessage() {
   }
 }
 
+async function deleteConversation(conversationId: string) {
+  if (!canUseRealChat.value) {
+    errorMessage.value = 'Inicia sesion para borrar el chat.'
+    return
+  }
+
+  const confirmationMessage = 'Esta accion eliminara este chat y todos sus mensajes. ¿Quieres continuar?'
+  if (!window.confirm(confirmationMessage)) {
+    return
+  }
+
+  const headers = getAuthHeaders()
+  if (!headers) {
+    errorMessage.value = 'Sesion invalida. Vuelve a iniciar sesion.'
+    return
+  }
+
+  deletingConversationId.value = conversationId
+  errorMessage.value = ''
+
+  try {
+    await $fetch(`${config.public.API_BASE_URL}/chat/conversations/${conversationId}`, {
+      method: 'DELETE',
+      headers,
+      params: { userId: sessionUser.value.id }
+    })
+  } catch (error: any) {
+    errorMessage.value = parseApiError(error, 'No se pudo borrar el chat.')
+    uiMessages.error(errorMessage.value)
+    return
+  } finally {
+    deletingConversationId.value = ''
+  }
+
+  const wasSelected = selectedConversationId.value === conversationId
+  conversations.value = conversations.value.filter((conversation) => conversation.id !== conversationId)
+  if (wasSelected) {
+    selectedConversationId.value = ''
+    draftMessage.value = ''
+    messages.value = []
+  }
+
+  void loadConversations()
+  void refreshUnreadChatCount()
+  uiMessages.success('Chat borrado correctamente.')
+}
+
 async function loadData() {
   if (itemId.value && sellerIdFromQuery.value) {
     await openConversationFromProduct()
     await loadConversations()
+    void refreshUnreadChatCount()
     return
   }
 
   await loadConversations()
+  void refreshUnreadChatCount()
   
   // Si viene un conversationId en query, seleccionarlo directamente
   if (conversationIdFromQuery.value) {
@@ -663,7 +676,7 @@ watch(orderedMessages, async () => {
 }
 
 .search-box input {
-  width: 100%;
+  cursor: pointer;
   border: 0;
   background: transparent;
   padding: 0;
@@ -673,6 +686,33 @@ watch(orderedMessages, async () => {
 
 .search-box input:focus {
   outline: none;
+}
+.row-delete {
+  margin-left: auto;
+  width: 26px;
+  height: 26px;
+  border: 1px solid #fecaca;
+  border-radius: 999px;
+  background: #fff1f2;
+  color: #dc2626;
+  font-size: 1.05rem;
+  line-height: 1;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+.row-delete:hover {
+  background: #ffe4e6;
+  border-color: #fda4af;
+  transform: translateY(-1px);
+}
+.row-delete:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .sidebar-top,
@@ -791,6 +831,8 @@ watch(orderedMessages, async () => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  line-height: 1;
+  text-align: center;
   flex-shrink: 0;
   background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%);
   color: #065f46;
@@ -966,6 +1008,8 @@ watch(orderedMessages, async () => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  line-height: 1;
+  text-align: center;
   background: linear-gradient(180deg, #dcfce7 0%, #bbf7d0 100%);
   color: #065f46;
   font-weight: 800;
@@ -1244,6 +1288,53 @@ watch(orderedMessages, async () => {
   margin: 0;
   color: #64748b;
   font-size: 12px;
+}
+
+.conversations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.row-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.row-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  text-align: center;
+  background: linear-gradient(180deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #065f46;
+  font-weight: 800;
+  border: 1px solid #86efac;
+  flex-shrink: 0;
+}
+
+.row-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.row-title {
+  margin: 0;
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @media (max-width: 960px) {
