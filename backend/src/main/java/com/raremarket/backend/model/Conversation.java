@@ -22,10 +22,10 @@ public class Conversation {
     private String itemId;
 
     @Column(name = "buyer_id", nullable = false)
-    private UUID buyerId;
+    private String buyerId;
 
     @Column(name = "seller_id", nullable = false)
-    private UUID sellerId;
+    private String sellerId;
 
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
@@ -60,19 +60,19 @@ public class Conversation {
         this.itemId = itemId;
     }
 
-    public UUID getBuyerId() {
+    public String getBuyerId() {
         return buyerId;
     }
 
-    public void setBuyerId(UUID buyerId) {
+    public void setBuyerId(String buyerId) {
         this.buyerId = buyerId;
     }
 
-    public UUID getSellerId() {
+    public String getSellerId() {
         return sellerId;
     }
 
-    public void setSellerId(UUID sellerId) {
+    public void setSellerId(String sellerId) {
         this.sellerId = sellerId;
     }
 

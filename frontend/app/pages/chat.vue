@@ -1,44 +1,39 @@
 <template>
   <div class="chat-page">
-    <div class="chat-shell">
-      <aside class="chat-sidebar">
+    <div class="chat-shell" :class="{ 'chat-shell--mobile-conversation': isMobileConversationOpen }">
+      <aside v-show="!isMobileConversationOpen" class="chat-sidebar">
         <div class="sidebar-top">
-          <div>
+          <div class="sidebar-heading">
             <p class="eyebrow">Mensajes</p>
-            <h1>Tu bandeja</h1>
+            <h1>Bandeja</h1>
+            <p class="sidebar-sub">Gestiona tus conversaciones de compra y venta</p>
           </div>
           <div class="sidebar-actions">
-            <button class="ghost-btn" type="button" @click="demoMode = !demoMode">
-              {{ demoMode ? 'Modo real' : 'Chat simulado' }}
-            </button>
             <button class="ghost-btn" type="button" @click="loadData">Actualizar</button>
           </div>
         </div>
 
-        <div v-if="itemId" class="start-card">
-          <p class="start-label">Nuevo chat sobre</p>
-          <p class="start-title">{{ itemTitle || `Producto ${itemId}` }}</p>
-          <label class="field">
-            <span>Hablar con</span>
-            <select v-model="selectedSellerId">
-              <option value="">Selecciona un usuario</option>
-              <option v-for="user in recipientOptions" :key="user.id" :value="user.id">
-                {{ user.username }} · {{ user.email }}
-              </option>
-            </select>
-          </label>
-          <button class="primary-btn" type="button" :disabled="!selectedSellerId || startingConversation" @click="startConversation">
-            {{ startingConversation ? 'Abriendo...' : 'Abrir conversación' }}
-          </button>
+        <div class="sidebar-stats">
+          <span>{{ activeConversations.length }} conversaciones</span>
         </div>
 
-        <div v-if="!demoMode && loadingConversations" class="sidebar-empty">Cargando conversaciones...</div>
+        <label class="search-box">
+          <span class="search-box__icon" aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none">
+              <path d="M8.5 14.5A6 6 0 1 1 8.5 2.5a6 6 0 0 1 0 12Z" stroke="currentColor" stroke-width="1.6" />
+              <path d="M13 13l4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+            </svg>
+          </span>
+          <input v-model="conversationSearch" type="search" placeholder="Buscar conversaciones" />
+        </label>
+
+        <div v-if="loadingConversations" class="sidebar-empty">Cargando conversaciones...</div>
         <div v-else-if="!activeConversations.length" class="sidebar-empty">
-          Aún no tienes conversaciones. Registra dos usuarios y abre un chat desde un producto o desde aquí.
+          Aún no tienes conversaciones. Abre un chat desde un producto para empezar.
         </div>
 
         <button
-          v-for="conversation in activeConversations"
+          v-for="conversation in filteredConversations"
           :key="conversation.id"
           type="button"
           class="conversation-row"
@@ -46,45 +41,96 @@
           @click="selectConversation(conversation.id)"
         >
           <div class="row-main">
-            <strong>{{ conversation.counterpartName }}</strong>
-            <span v-if="conversation.unreadCount" class="pill">{{ conversation.unreadCount }}</span>
+            <span class="row-avatar" aria-hidden="true">{{ getInitial(conversation.counterpartName) }}</span>
+            <div class="row-copy">
+              <div class="row-copy__head">
+                <strong>{{ conversation.counterpartName }}</strong>
+                <span class="row-time">{{ formatConversationStatus(conversation) }}</span>
+              </div>
+              <div class="row-sub">Item {{ conversation.itemId }}</div>
+            </div>
+            <span v-if="conversation.unreadCount" class="pill pill--unread">{{ conversation.unreadCount }}</span>
+            <span v-else-if="isConversationRecent(conversation)" class="pill pill--live">Activo</span>
           </div>
-          <div class="row-sub">Item {{ conversation.itemId }}</div>
-          <div class="row-preview">{{ conversation.lastMessage || 'Sin mensajes aún' }}</div>
+          <div class="row-preview">
+            <span v-if="conversation.unreadCount > 0" class="row-preview__flag">Nuevo</span>
+            {{ conversation.lastMessage || 'Sin mensajes aún' }}
+          </div>
+          <div class="row-footer">
+            <span>{{ conversation.unreadCount > 0 ? 'Sin leer' : 'Leído' }}</span>
+            <span class="row-dot" aria-hidden="true"></span>
+            <span>{{ formatConversationStatus(conversation) }}</span>
+          </div>
         </button>
       </aside>
 
-      <section class="chat-main">
-        <div v-if="!demoMode && !sessionReady" class="chat-empty">
+      <section v-show="!isMobileLayout || !!selectedConversationId" class="chat-main">
+        <div v-if="!sessionReady" class="chat-empty">
           Cargando tu sesión...
         </div>
 
-        <div v-else-if="!demoMode && !sessionUser" class="chat-empty">
+        <div v-else-if="!canUseRealChat" class="chat-empty">
           <p>Necesitas iniciar sesión para usar el chat.</p>
           <NuxtLink class="primary-btn link-btn" :to="{ path: '/auth', query: { mode: 'login', redirect: '/chat' } }">
             Ir a login
           </NuxtLink>
-          <button class="ghost-btn" type="button" @click="demoMode = true">Probar chat simulado</button>
         </div>
 
         <div v-else-if="!selectedConversation" class="chat-empty">
-          <p>Selecciona una conversación para ver mensajes.</p>
+          <p class="chat-empty-title">Selecciona una conversación</p>
+          <p>Elige una conversación de la izquierda para leer y responder mensajes.</p>
           <p v-if="itemId">También puedes abrir un chat nuevo usando el bloque lateral.</p>
         </div>
 
         <template v-else>
           <header class="chat-header">
-            <div>
-              <p class="eyebrow">Conversación</p>
-              <h2>{{ selectedConversation.counterpartName }}</h2>
+            <div class="chat-header-main">
+              <span class="header-avatar" aria-hidden="true">{{ getInitial(selectedConversation.counterpartName) }}</span>
+              <div>
+                <p class="eyebrow">Conversación</p>
+                <h2>{{ selectedConversation.counterpartName }}</h2>
+                <p class="header-sub">Disponible para responder</p>
+              </div>
             </div>
-            <div class="header-meta">Item {{ selectedConversation.itemId }}</div>
+            <div class="header-meta">
+              <span class="header-badge header-badge--live"></span>
+              Activo ahora
+              <span class="header-divider"></span>
+              Item {{ selectedConversation.itemId }}
+            </div>
           </header>
+
+          <button
+            v-if="isMobileConversationOpen"
+            class="mobile-back-btn"
+            type="button"
+            @click="closeConversation"
+          >
+            Volver a bandeja
+          </button>
+
+          <section class="chat-context">
+            <div class="chat-context__copy">
+              <p class="chat-context__label">Anuncio relacionado</p>
+              <p class="chat-context__title">{{ itemTitle || `Producto ${selectedConversation.itemId}` }}</p>
+              <p class="chat-context__desc">Habla, acuerda condiciones y sigue la compra desde aquí.</p>
+            </div>
+            <div class="chat-context__meta">
+              <span class="chat-context__badge">Compra segura</span>
+              <span class="chat-context__badge chat-context__badge--soft">Envio disponible</span>
+            </div>
+          </section>
 
           <div class="messages-panel">
             <div v-if="loadingMessages" class="chat-empty">Cargando mensajes...</div>
             <div v-else-if="!messages.length" class="chat-empty">
               Todavía no hay mensajes. Escribe el primero.
+            </div>
+
+            <div v-if="isTypingDemo" class="typing-bubble">
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
             </div>
 
             <article
@@ -104,19 +150,31 @@
           </div>
 
           <form class="composer" @submit.prevent="sendMessage">
-            <textarea
-              v-model="draftMessage"
-              rows="3"
-              maxlength="1000"
-              placeholder="Escribe tu mensaje"
-              @keydown.enter.exact.prevent="sendMessage"
-            />
+            <div class="composer-topbar">
+              <span class="composer-hint">Mensaje privado</span>
+              <span class="composer-hint composer-hint--muted">Enter para enviar</span>
+            </div>
+            <div class="composer-box">
+              <button class="composer-attach" type="button" title="Adjuntar archivo" @click="notifyAttachmentSoon">
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <path d="M7.5 10.5l5.5-5.5a3 3 0 1 1 4.24 4.24l-7.4 7.4a5 5 0 0 1-7.07-7.07l8.3-8.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </button>
+              <textarea
+                v-model="draftMessage"
+                rows="3"
+                maxlength="1000"
+                placeholder="Escribe tu mensaje..."
+                @keydown.enter.exact.prevent="sendMessage"
+              />
+              <button class="composer-send" type="submit" :disabled="sendingMessage || !draftMessage.trim()">
+                {{ sendingMessage ? 'Enviando...' : 'Enviar' }}
+              </button>
+            </div>
             <div class="composer-actions">
               <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
               <p v-else class="counter-text">{{ draftMessage.trim().length }}/1000</p>
-              <button class="primary-btn" type="submit" :disabled="sendingMessage || !draftMessage.trim()">
-                {{ sendingMessage ? 'Enviando...' : 'Enviar' }}
-              </button>
+              <span class="composer-chip">Privado y cifrado</span>
             </div>
           </form>
         </template>
@@ -141,6 +199,7 @@ type Conversation = {
   counterpartName: string
   unreadCount: number
   lastMessage?: string
+  updatedAt?: string
 }
 
 type Message = {
@@ -162,111 +221,57 @@ const { sessionUser, loadSessionUser, storageEventName } = useSessionUser()
 const uiMessages = useUiMessages()
 
 const sessionReady = ref(false)
-const demoMode = ref(false)
-const users = ref<ChatUser[]>([])
 const conversations = ref<Conversation[]>([])
 const messages = ref<Message[]>([])
 const messageRows = ref<HTMLElement[] | null>(null)
 const loadingConversations = ref(false)
 const loadingMessages = ref(false)
-const startingConversation = ref(false)
 const sendingMessage = ref(false)
+const isTypingDemo = ref(false)
+const isMobileLayout = ref(false)
 const errorMessage = ref('')
 const selectedConversationId = ref('')
-const selectedSellerId = ref('')
 const draftMessage = ref('')
+const conversationSearch = ref('')
 const itemId = computed(() => typeof route.query.itemId === 'string' ? route.query.itemId : '')
 const itemTitle = computed(() => typeof route.query.itemTitle === 'string' ? route.query.itemTitle : '')
+const sellerIdFromQuery = computed(() => typeof route.query.sellerId === 'string' ? route.query.sellerId : '')
+const sellerNameFromQuery = computed(() => typeof route.query.sellerName === 'string' ? route.query.sellerName : '')
 const conversationIdFromQuery = computed(() => typeof route.query.conversationId === 'string' ? route.query.conversationId : '')
-
-const demoConversations = ref<Conversation[]>([
-  {
-    id: 'demo-conv-1',
-    itemId: 'demo-item-1',
-    counterpartId: 'demo-seller-1',
-    counterpartName: 'Laura Vintage',
-    unreadCount: 1,
-    lastMessage: 'Si, sigue disponible.'
-  },
-  {
-    id: 'demo-conv-2',
-    itemId: 'demo-item-2',
-    counterpartId: 'demo-seller-2',
-    counterpartName: 'Alex Closet',
-    unreadCount: 0,
-    lastMessage: 'Te puedo hacer envio hoy.'
-  }
-])
-
-const demoMessages = ref<MessageMap>({
-  'demo-conv-1': [
-    {
-      id: 'demo-msg-1',
-      conversationId: 'demo-conv-1',
-      senderId: 'demo-seller-1',
-      senderName: 'Laura Vintage',
-      content: 'Hola! Te interesa la chaqueta?',
-      isRead: true,
-      createdAt: new Date(Date.now() - 1000 * 60 * 16).toISOString()
-    },
-    {
-      id: 'demo-msg-2',
-      conversationId: 'demo-conv-1',
-      senderId: 'guest-user',
-      senderName: 'Tu',
-      content: 'Si, sigue disponible?',
-      isRead: true,
-      createdAt: new Date(Date.now() - 1000 * 60 * 13).toISOString()
-    },
-    {
-      id: 'demo-msg-3',
-      conversationId: 'demo-conv-1',
-      senderId: 'demo-seller-1',
-      senderName: 'Laura Vintage',
-      content: 'Si, sigue disponible.',
-      isRead: false,
-      createdAt: new Date(Date.now() - 1000 * 60 * 9).toISOString()
-    }
-  ],
-  'demo-conv-2': [
-    {
-      id: 'demo-msg-4',
-      conversationId: 'demo-conv-2',
-      senderId: 'demo-seller-2',
-      senderName: 'Alex Closet',
-      content: 'Te puedo hacer envio hoy.',
-      isRead: true,
-      createdAt: new Date(Date.now() - 1000 * 60 * 35).toISOString()
-    }
-  ]
-})
-
-const recipientOptions = computed(() =>
-  users.value.filter((user) => user.id !== sessionUser.value?.id)
-)
+const canUseRealChat = computed(() => Boolean(sessionUser.value?.id && sessionUser.value?.token))
 
 const selectedConversation = computed(() =>
   activeConversations.value.find((conversation) => conversation.id === selectedConversationId.value) ?? null
 )
 
-const activeConversations = computed(() =>
-  demoMode.value ? demoConversations.value : conversations.value
-)
+const activeConversations = computed(() => conversations.value)
 
-const activeMessages = computed(() => {
-  if (demoMode.value) {
-    return demoMessages.value[selectedConversationId.value] ?? []
-  }
-  return messages.value
-})
+const activeMessages = computed(() => messages.value)
 
 const orderedMessages = computed(() =>
   [...activeMessages.value].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
 )
 
-function isPickupConversation(conversation: Conversation) {
-  const lastMessage = conversation.lastMessage ?? ''
-  return conversation.unreadCount > 0 && lastMessage.includes('Nuevo trato en mano')
+const filteredConversations = computed(() => {
+  const query = conversationSearch.value.trim().toLowerCase()
+  if (!query) return activeConversations.value
+
+  return activeConversations.value.filter((conversation) => {
+    const haystack = [
+      conversation.counterpartName,
+      conversation.itemId,
+      conversation.lastMessage ?? ''
+    ].join(' ').toLowerCase()
+
+    return haystack.includes(query)
+  })
+})
+
+const isMobileConversationOpen = computed(() => isMobileLayout.value && !!selectedConversationId.value)
+
+function getInitial(name?: string) {
+  const normalized = (name ?? '').trim()
+  return normalized ? normalized.charAt(0).toUpperCase() : '?'
 }
 
 function parseApiError(error: any, fallback: string) {
@@ -298,90 +303,196 @@ function formatDate(value?: string) {
   }).format(new Date(value))
 }
 
-async function loadUsers() {
-  users.value = await $fetch<ChatUser[]>(`${config.public.API_BASE_URL}/users`)
+function formatRelativeDate(value?: string) {
+  if (!value) return 'Ahora'
+
+  const diffMs = Date.now() - new Date(value).getTime()
+  const diffMinutes = Math.max(1, Math.round(diffMs / 60000))
+
+  if (diffMinutes < 60) {
+    return diffMinutes === 1 ? 'Hace 1 min' : `Hace ${diffMinutes} min`
+  }
+
+  const diffHours = Math.round(diffMinutes / 60)
+  if (diffHours < 24) {
+    return diffHours === 1 ? 'Hace 1 h' : `Hace ${diffHours} h`
+  }
+
+  const diffDays = Math.round(diffHours / 24)
+  return diffDays === 1 ? 'Hace 1 día' : `Hace ${diffDays} días`
+}
+
+function isConversationRecent(conversation: Conversation) {
+  if (!conversation.updatedAt) {
+    return false
+  }
+
+  const diffMinutes = Math.max(1, Math.round((Date.now() - new Date(conversation.updatedAt).getTime()) / 60000))
+  return diffMinutes <= 20
+}
+
+function formatConversationStatus(conversation: Conversation) {
+  return isConversationRecent(conversation) ? 'Activo ahora' : formatRelativeDate(conversation.updatedAt)
+}
+
+function notifyAttachmentSoon() {
+  uiMessages.info('Adjuntar archivos estara disponible en una siguiente fase.')
+}
+
+function getAuthHeaders() {
+  const token = sessionUser.value?.token
+  if (!token) {
+    return null
+  }
+
+  return {
+    Authorization: `Bearer ${token}`
+  }
+}
+
+function syncLayout() {
+  if (!process.client) {
+    return
+  }
+
+  isMobileLayout.value = window.innerWidth <= 960
+}
+
+function closeConversation() {
+  selectedConversationId.value = ''
+}
+
+function getConversationContext() {
+  const sellerId = sellerIdFromQuery.value
+  if (!itemId.value || !sellerId || !sessionUser.value?.id) {
+    return null
+  }
+
+  return {
+    itemId: itemId.value,
+    buyerId: sessionUser.value.id,
+    sellerId,
+    itemLabel: itemTitle.value || `Producto ${itemId.value}`,
+    sellerLabel: sellerNameFromQuery.value || 'Vendedor'
+  }
 }
 
 async function loadConversations() {
-  if (!sessionUser.value) {
+  if (!canUseRealChat.value) {
+    conversations.value = []
+    return
+  }
+
+  const headers = getAuthHeaders()
+  if (!headers) {
     conversations.value = []
     return
   }
 
   loadingConversations.value = true
   try {
-    conversations.value = await $fetch<Conversation[]>(`${config.public.API_BASE_URL}/chat/conversations`, {
+    const loadedConversations = await $fetch<Conversation[]>(`${config.public.API_BASE_URL}/chat/conversations`, {
+      headers,
       params: { userId: sessionUser.value.id }
     })
+    conversations.value = [...loadedConversations].sort((a, b) => {
+      const aTime = new Date(a.updatedAt ?? 0).getTime()
+      const bTime = new Date(b.updatedAt ?? 0).getTime()
+      return bTime - aTime
+    })
+  } catch (error: any) {
+    conversations.value = []
+    if (error?.statusCode === 401 || error?.statusCode === 403) {
+      errorMessage.value = 'Tu sesión ha caducado. Vuelve a iniciar sesión para usar el chat real.'
+    }
   } finally {
     loadingConversations.value = false
   }
 }
 
 async function loadMessages(conversationId: string) {
-  if (!sessionUser.value) {
+  if (!canUseRealChat.value) {
+    return
+  }
+
+  const headers = getAuthHeaders()
+  if (!headers) {
     return
   }
 
   loadingMessages.value = true
   try {
     messages.value = await $fetch<Message[]>(`${config.public.API_BASE_URL}/chat/conversations/${conversationId}/messages`, {
+      headers,
       params: { userId: sessionUser.value.id }
     })
     await scrollToBottom()
+  } catch (error: any) {
+    messages.value = []
+    if (error?.statusCode === 401 || error?.statusCode === 403) {
+      errorMessage.value = 'Tu sesión ha caducado. Vuelve a iniciar sesión para leer y escribir mensajes.'
+    }
   } finally {
     loadingMessages.value = false
   }
 }
 
 async function selectConversation(conversationId: string) {
-  if (demoMode.value) {
-    selectedConversationId.value = conversationId
-    demoConversations.value = demoConversations.value.map((conversation) =>
-      conversation.id === conversationId ? { ...conversation, unreadCount: 0 } : conversation
-    )
-    await scrollToBottom()
-    return
-  }
-
   selectedConversationId.value = conversationId
   await loadMessages(conversationId)
-  if (sessionUser.value) {
+  if (canUseRealChat.value) {
+    const headers = getAuthHeaders()
+    if (!headers) {
+      return
+    }
+
     await $fetch(`${config.public.API_BASE_URL}/chat/conversations/${conversationId}/read`, {
       method: 'PATCH',
+      headers,
       params: { userId: sessionUser.value.id }
     })
     await loadConversations()
   }
 }
 
-async function startConversation() {
-  if (!sessionUser.value || !itemId.value || !selectedSellerId.value) {
+async function openConversationFromProduct() {
+  const context = getConversationContext()
+  if (!context) {
+    return
+  }
+
+  if (String(context.buyerId) === String(context.sellerId)) {
+    errorMessage.value = 'Este artículo es tuyo. Inicia sesión con la cuenta compradora para abrir el chat real.'
+    uiMessages.error(errorMessage.value)
+    return
+  }
+
+  const headers = getAuthHeaders()
+  if (!headers) {
+    errorMessage.value = 'Sesion invalida. Vuelve a iniciar sesion.'
     return
   }
 
   errorMessage.value = ''
-  startingConversation.value = true
   try {
     const conversation = await $fetch<Conversation>(`${config.public.API_BASE_URL}/chat/conversations`, {
       method: 'POST',
+      headers,
       body: {
-        itemId: itemId.value,
-        buyerId: sessionUser.value.id,
-        sellerId: selectedSellerId.value
+        itemId: context.itemId,
+        buyerId: context.buyerId,
+        sellerId: context.sellerId
       }
     })
 
     await loadConversations()
-    await router.replace({ path: '/chat', query: {} })
     selectedConversationId.value = conversation.id
     await loadMessages(conversation.id)
-    uiMessages.success('Conversacion iniciada correctamente.')
+    await router.replace({ path: '/chat', query: {} })
+    uiMessages.success(`Chat abierto con ${context.sellerLabel}.`)
   } catch (error: any) {
     errorMessage.value = parseApiError(error, 'No se pudo abrir la conversacion.')
     uiMessages.error(errorMessage.value)
-  } finally {
-    startingConversation.value = false
   }
 }
 
@@ -390,56 +501,14 @@ async function sendMessage() {
     return
   }
 
-  if (demoMode.value) {
-    const content = draftMessage.value.trim()
-    const conversationId = selectedConversationId.value
-    const timestamp = new Date().toISOString()
-    const currentConversation = demoConversations.value.find((conversation) => conversation.id === conversationId)
-
-    const outgoing: Message = {
-      id: `demo-local-${Date.now()}`,
-      conversationId,
-      senderId: sessionUser.value?.id ?? 'guest-user',
-      senderName: sessionUser.value?.username ?? 'Tu',
-      content,
-      isRead: false,
-      createdAt: timestamp
-    }
-
-    demoMessages.value[conversationId] = [...(demoMessages.value[conversationId] ?? []), outgoing]
-    draftMessage.value = ''
-    demoConversations.value = demoConversations.value.map((conversation) =>
-      conversation.id === conversationId ? { ...conversation, lastMessage: content } : conversation
-    )
-    await scrollToBottom()
-
-    if (process.client && currentConversation) {
-      window.setTimeout(async () => {
-        const replyContent = 'Perfecto, si quieres lo cerramos hoy mismo.'
-        const incoming: Message = {
-          id: `demo-reply-${Date.now()}`,
-          conversationId,
-          senderId: currentConversation.counterpartId,
-          senderName: currentConversation.counterpartName,
-          content: replyContent,
-          isRead: false,
-          createdAt: new Date().toISOString()
-        }
-
-        demoMessages.value[conversationId] = [...(demoMessages.value[conversationId] ?? []), incoming]
-        demoConversations.value = demoConversations.value.map((conversation) =>
-          conversation.id === conversationId
-            ? { ...conversation, lastMessage: replyContent, unreadCount: conversation.unreadCount + 1 }
-            : conversation
-        )
-        await scrollToBottom()
-      }, 850)
-    }
-
+  if (!canUseRealChat.value) {
+    errorMessage.value = 'Inicia sesion para enviar mensajes reales.'
     return
   }
 
-  if (!sessionUser.value) {
+  const headers = getAuthHeaders()
+  if (!headers) {
+    errorMessage.value = 'Sesion invalida. Vuelve a iniciar sesion.'
     return
   }
 
@@ -448,6 +517,7 @@ async function sendMessage() {
   try {
     await $fetch(`${config.public.API_BASE_URL}/chat/conversations/${selectedConversationId.value}/messages`, {
       method: 'POST',
+      headers,
       body: {
         senderId: sessionUser.value.id,
         content: draftMessage.value.trim()
@@ -465,14 +535,12 @@ async function sendMessage() {
 }
 
 async function loadData() {
-  if (demoMode.value) {
-    if (!selectedConversationId.value && demoConversations.value.length) {
-      selectedConversationId.value = demoConversations.value[0].id
-    }
+  if (itemId.value && sellerIdFromQuery.value) {
+    await openConversationFromProduct()
+    await loadConversations()
     return
   }
 
-  await loadUsers()
   await loadConversations()
   
   // Si viene un conversationId en query, seleccionarlo directamente
@@ -493,6 +561,9 @@ onMounted(async () => {
   loadSessionUser()
   sessionReady.value = true
 
+  syncLayout()
+  window.addEventListener('resize', syncLayout)
+
   window.addEventListener(storageEventName, syncSession)
   window.addEventListener('storage', syncSession)
 
@@ -500,6 +571,7 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
+  window.removeEventListener('resize', syncLayout)
   window.removeEventListener(storageEventName, syncSession)
   window.removeEventListener('storage', syncSession)
 })
@@ -507,24 +579,14 @@ onBeforeUnmount(() => {
 watch(orderedMessages, async () => {
   await scrollToBottom()
 })
-
-watch(demoMode, async (enabled) => {
-  selectedConversationId.value = ''
-  messages.value = []
-
-  if (enabled) {
-    uiMessages.info('Modo chat simulado activado.')
-  } else {
-    uiMessages.info('Modo chat real activado.')
-  }
-
-  await loadData()
-})
 </script>
 
 <style scoped>
 .chat-page {
   padding: 18px 16px 48px;
+  background:
+    radial-gradient(1200px 420px at 0% 0%, rgba(31, 185, 129, 0.08), transparent 65%),
+    radial-gradient(900px 360px at 100% 100%, rgba(15, 23, 42, 0.06), transparent 70%);
 }
 
 .chat-shell {
@@ -554,6 +616,63 @@ watch(demoMode, async (enabled) => {
   top: calc(var(--catnav-top, 72px) + var(--catnav-height, 56px) + 12px);
   max-height: calc(100vh - (var(--catnav-top, 72px) + var(--catnav-height, 56px) + 28px));
   overflow: auto;
+}
+
+.sidebar-heading h1 {
+  font-size: 1.55rem;
+}
+
+.sidebar-sub {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.sidebar-stats {
+  border: 1px dashed #bfdbfe;
+  background: #f8fbff;
+  border-radius: 12px;
+  padding: 8px 12px;
+  color: #475569;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #dbe4ee;
+  border-radius: 14px;
+  background: #f8fafc;
+  padding: 0 12px;
+  min-height: 46px;
+}
+
+.search-box__icon {
+  width: 18px;
+  height: 18px;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.search-box__icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.search-box input {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  min-height: 42px;
+  font-size: 0.95rem;
+}
+
+.search-box input:focus {
+  outline: none;
 }
 
 .sidebar-top,
@@ -626,7 +745,7 @@ watch(demoMode, async (enabled) => {
   border: 1px solid var(--rm-border);
   background: #fff;
   border-radius: 16px;
-  padding: 14px;
+  padding: 12px;
   text-align: left;
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
@@ -640,8 +759,8 @@ watch(demoMode, async (enabled) => {
 }
 
 .pill {
-  min-width: 26px;
-  height: 26px;
+  min-width: 24px;
+  height: 24px;
   border-radius: 999px;
   background: #1fb981;
   color: #fff;
@@ -652,10 +771,116 @@ watch(demoMode, async (enabled) => {
   font-weight: 700;
 }
 
+.pill--unread {
+  background: #1fb981;
+  color: #fff;
+}
+
+.pill--live {
+  min-width: auto;
+  padding: 0 10px;
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.row-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%);
+  color: #065f46;
+  font-weight: 800;
+  font-size: 0.9rem;
+  border: 1px solid #a7f3d0;
+}
+
+.row-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.row-copy__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.row-copy strong {
+  display: block;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.row-time {
+  color: #94a3b8;
+  font-size: 0.76rem;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.row-sub {
+  margin-top: 2px;
+  font-size: 0.78rem;
+}
+
+.row-preview {
+  margin-top: 8px;
+  font-size: 0.88rem;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.row-preview__flag {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.row-footer {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #94a3b8;
+  font-size: 0.74rem;
+}
+
+.row-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: #cbd5e1;
+}
+
 .chat-main {
   min-height: min(760px, calc(100vh - (var(--catnav-top, 72px) + var(--catnav-height, 56px) + 28px)));
   display: flex;
   flex-direction: column;
+}
+
+.chat-empty-title {
+  margin: 0 0 6px;
+  font-size: 1.18rem;
+  font-weight: 800;
+  color: #0f172a;
 }
 
 .chat-header,
@@ -663,14 +888,114 @@ watch(demoMode, async (enabled) => {
   padding: 20px 24px;
 }
 
+.chat-context {
+  margin: 0 24px 14px;
+  border: 1px solid #dbe4ee;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.chat-context__label {
+  margin: 0 0 4px;
+  color: #64748b;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.chat-context__title {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.chat-context__desc {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 0.88rem;
+}
+
+.chat-context__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chat-context__badge {
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.chat-context__badge--soft {
+  background: #e0f2fe;
+  color: #075985;
+}
+
 .messages-panel {
   flex: 1;
-  padding: 8px 24px 24px;
+  padding: 0 24px 24px;
   display: flex;
   flex-direction: column;
   gap: 12px;
   overflow: auto;
   background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(248,250,252,0.66) 100%);
+}
+
+.chat-header-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #065f46;
+  font-weight: 800;
+  border: 1px solid #86efac;
+}
+
+.header-sub {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 0.86rem;
+}
+
+.header-badge {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  display: inline-block;
+  background: #cbd5e1;
+}
+
+.header-badge--live {
+  background: #22c55e;
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.14);
+}
+
+.header-divider {
+  width: 1px;
+  height: 14px;
+  background: #dbe4ee;
+  display: inline-block;
 }
 
 .message-bubble {
@@ -679,12 +1004,67 @@ watch(demoMode, async (enabled) => {
   border-radius: 18px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
+  position: relative;
 }
 
 .message-bubble.own {
   margin-left: auto;
   background: #dff8f2;
   border-color: #bcebdd;
+}
+
+.message-bubble.own::after {
+  content: '';
+  position: absolute;
+  right: -6px;
+  top: 16px;
+  width: 12px;
+  height: 12px;
+  background: #dff8f2;
+  transform: rotate(45deg);
+  border-right: 1px solid #bcebdd;
+  border-top: 1px solid #bcebdd;
+}
+
+.message-bubble:not(.own)::after {
+  content: '';
+  position: absolute;
+  left: -6px;
+  top: 16px;
+  width: 12px;
+  height: 12px;
+  background: #f8fafc;
+  transform: rotate(45deg);
+  border-left: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.typing-bubble {
+  width: fit-content;
+  max-width: 75%;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.typing-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #94a3b8;
+  animation: typingPulse 1s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.12s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0.24s;
 }
 
 .message-author,
@@ -744,9 +1124,89 @@ watch(demoMode, async (enabled) => {
   border-top: 1px solid var(--rm-border);
 }
 
+.composer-topbar {
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #64748b;
+  font-size: 0.82rem;
+}
+
+.composer-hint--muted {
+  color: #94a3b8;
+}
+
 .composer textarea {
   resize: vertical;
   min-height: 96px;
+}
+
+.composer-box {
+  display: grid;
+  grid-template-columns: 44px 1fr 116px;
+  gap: 10px;
+  align-items: end;
+}
+
+.composer-attach,
+.composer-send {
+  min-height: 44px;
+  border-radius: 14px;
+  border: 1px solid #dbe4ee;
+  background: #ffffff;
+  color: #0f172a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.composer-attach svg {
+  width: 18px;
+  height: 18px;
+}
+
+.composer-send {
+  background: linear-gradient(135deg, #1fb981 0%, #10b981 100%);
+  color: #ffffff;
+  font-weight: 800;
+  border: 0;
+}
+
+.composer-send:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.composer-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 4px 10px;
+  background: #eefbf7;
+  color: #0f766e;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+@keyframes typingPulse {
+  0%, 80%, 100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: translateY(-3px);
+    opacity: 1;
+  }
+}
+
+.composer textarea:focus {
+  outline: none;
+  border-color: #34d399;
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.16);
 }
 
 .primary-btn,
@@ -788,23 +1248,36 @@ watch(demoMode, async (enabled) => {
 
 @media (max-width: 960px) {
   .chat-page {
-    margin-top: 10px;
-    padding-left: 10px;
-    padding-right: 10px;
+    margin-top: 0;
+    padding: 0;
+    min-height: 100dvh;
   }
 
   .chat-shell {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 0;
+    min-height: 100dvh;
+  }
+
+  .chat-shell--mobile-conversation {
+    min-height: 100dvh;
   }
 
   .chat-sidebar {
     position: static;
     max-height: none;
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    border-top: 0;
   }
 
   .chat-main {
-    min-height: 62vh;
+    min-height: 100dvh;
+    height: 100dvh;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: hidden;
   }
 
   .chat-header,
@@ -812,8 +1285,55 @@ watch(demoMode, async (enabled) => {
     padding: 14px;
   }
 
+  .chat-header {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--rm-border);
+  }
+
+  .chat-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .header-meta {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .sidebar-actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .composer-topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
   .messages-panel {
-    padding: 8px 14px 14px;
+    padding: 0 14px 14px;
+    min-height: 0;
+  }
+
+  .chat-context {
+    margin: 0 14px 12px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .composer-box {
+    grid-template-columns: 44px 1fr;
+  }
+
+  .composer-send {
+    grid-column: 1 / -1;
+    width: 100%;
   }
 
   .order-alert {
@@ -822,6 +1342,35 @@ watch(demoMode, async (enabled) => {
 
   .message-bubble {
     max-width: 90%;
+  }
+
+  .mobile-back-btn {
+    margin: 0 14px 12px;
+    width: calc(100% - 28px);
+    border: 1px solid #cbd5e1;
+    border-radius: 14px;
+    background: #f8fafc;
+    color: #0f172a;
+    font-weight: 700;
+    padding: 11px 14px;
+  }
+
+  .composer {
+    position: sticky;
+    bottom: 0;
+    z-index: 3;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(10px);
+    padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .chat-context {
+    margin: 0 14px 12px;
+    padding: 12px 14px;
+  }
+
+  .chat-shell--mobile-conversation .chat-sidebar {
+    display: none;
   }
 }
 </style>

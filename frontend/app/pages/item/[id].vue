@@ -128,9 +128,24 @@
             <div class="checkout-head">
               <div>
                 <h3>Confirmar compra</h3>
-                <p class="checkout-subtitle">Estilo RareMarket: rapido, claro y sin pasos innecesarios.</p>
               </div>
-              <button class="checkout-close" :disabled="checkoutLoading" @click="closeCheckout">×</button>
+              <button class="checkout-close" :disabled="checkoutLoading" @click="closeCheckout" aria-label="Cerrar checkout">
+                <svg class="checkout-close__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <path d="M5 5L15 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                  <path d="M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                </svg>
+              </button>
+            </div>
+
+            <div class="checkout-steps" aria-label="Pasos de checkout">
+              <div class="checkout-step" :class="{ 'checkout-step--active': checkoutStep === 1 }">
+                <span class="checkout-step__num">1</span>
+                <span>Envio y direccion</span>
+              </div>
+              <div class="checkout-step" :class="{ 'checkout-step--active': checkoutStep === 2 }">
+                <span class="checkout-step__num">2</span>
+                <span>Pago</span>
+              </div>
             </div>
 
             <form class="checkout-form" @submit.prevent="submitCheckout">
@@ -146,7 +161,7 @@
                 </div>
               </section>
 
-              <section class="checkout-block">
+              <section v-if="checkoutStep === 1" class="checkout-block">
                 <p class="checkout-label">Tipo de entrega</p>
                 <label class="checkout-option checkout-option--active">
                   <span class="checkout-option__main">A domicilio</span>
@@ -155,26 +170,70 @@
                 </label>
               </section>
 
-              <section class="checkout-block">
-                <p class="checkout-label">Direccion de envio</p>
+              <section v-if="checkoutStep === 1" class="checkout-block">
+                <p class="checkout-label">Direccion de envio <span class="field-required">*</span></p>
                 <div class="checkout-grid">
-                  <input v-model="checkoutForm.shippingFullName" class="checkout-input" :disabled="checkoutLoading" placeholder="Nombre completo" required />
-                  <input v-model="checkoutForm.shippingPhone" class="checkout-input" :disabled="checkoutLoading" placeholder="Telefono" required />
-                  <input v-model="checkoutForm.shippingAddressLine1" class="checkout-input checkout-input--full" :disabled="checkoutLoading" placeholder="Calle y numero" required />
-                  <input v-model="checkoutForm.shippingCity" class="checkout-input" :disabled="checkoutLoading" placeholder="Ciudad" required />
-                  <input v-model="checkoutForm.shippingPostalCode" class="checkout-input" :disabled="checkoutLoading" placeholder="Codigo postal" required />
-                  <input v-model="checkoutForm.shippingCountry" class="checkout-input checkout-input--full" :disabled="checkoutLoading" placeholder="Pais" required />
+                  <input v-model="checkoutForm.shippingFullName" class="checkout-input" :disabled="checkoutLoading" placeholder="Nombre completo *" required />
+                  <input v-model="checkoutForm.shippingPhone" class="checkout-input" :disabled="checkoutLoading" placeholder="Telefono *" required />
+                  <input v-model="checkoutForm.shippingAddressLine1" class="checkout-input checkout-input--full" :disabled="checkoutLoading" placeholder="Calle y numero *" required />
+                  <input v-model="checkoutForm.shippingCity" class="checkout-input" :disabled="checkoutLoading" placeholder="Ciudad *" required />
+                  <input v-model="checkoutForm.shippingPostalCode" class="checkout-input" :disabled="checkoutLoading" placeholder="Codigo postal *" required />
+                  <input v-model="checkoutForm.shippingCountry" class="checkout-input checkout-input--full" :disabled="checkoutLoading" placeholder="Pais *" required />
                 </div>
+                <p class="checkout-help">Los campos con * son obligatorios.</p>
               </section>
 
-              <section class="checkout-block">
-                <p class="checkout-label">Pago simulado</p>
-                <div class="checkout-grid">
-                  <input v-model="checkoutForm.cardNumber" class="checkout-input checkout-input--full" :disabled="checkoutLoading" placeholder="Numero de tarjeta" required />
-                  <input v-model="checkoutForm.cardHolder" class="checkout-input checkout-input--full" :disabled="checkoutLoading" placeholder="Titular" required />
-                  <input v-model="checkoutForm.cardExpiry" class="checkout-input" :disabled="checkoutLoading" placeholder="MM/AA" required />
-                  <input v-model="checkoutForm.cardCvv" class="checkout-input" :disabled="checkoutLoading" placeholder="CVV" required />
+              <section v-if="checkoutStep === 2" class="checkout-block">
+                <p class="checkout-label">Metodo de pago <span class="field-required">*</span></p>
+
+                <div class="payment-methods" aria-label="Opciones de pago">
+                  <button type="button" class="payment-method payment-method--active" aria-pressed="true">
+                    <span class="payment-method__top">
+                      <span class="payment-method__name">Tarjeta</span>
+                      <span class="payment-method__status payment-method__status--active">Activa</span>
+                    </span>
+                    <span class="payment-method__logos">
+                      <span class="logo-chip logo-chip--visa" aria-label="Visa">
+                        <FontAwesomeIcon :icon="faCcVisa" />
+                      </span>
+                      <span class="logo-chip logo-chip--mc" aria-label="Mastercard">
+                        <FontAwesomeIcon :icon="faCcMastercard" />
+                      </span>
+                    </span>
+                  </button>
+
+                  <button type="button" class="payment-method" disabled>
+                    <span class="payment-method__top">
+                      <span class="payment-method__name">PayPal</span>
+                      <span class="payment-method__status">Proximamente</span>
+                    </span>
+                    <span class="payment-method__logos">
+                      <span class="logo-chip logo-chip--paypal" aria-label="PayPal">
+                        <FontAwesomeIcon :icon="faPaypal" />
+                      </span>
+                    </span>
+                  </button>
+
+                  <button type="button" class="payment-method" disabled>
+                    <span class="payment-method__top">
+                      <span class="payment-method__name">Apple Pay</span>
+                      <span class="payment-method__status">Proximamente</span>
+                    </span>
+                    <span class="payment-method__logos">
+                      <span class="logo-chip logo-chip--apple" aria-label="Apple Pay">
+                        <FontAwesomeIcon :icon="faApplePay" />
+                      </span>
+                    </span>
+                  </button>
                 </div>
+
+                <div class="checkout-grid payment-grid">
+                  <input v-model="checkoutForm.cardNumber" class="checkout-input checkout-input--full" :disabled="checkoutLoading" placeholder="Numero de tarjeta *" required />
+                  <input v-model="checkoutForm.cardHolder" class="checkout-input checkout-input--full" :disabled="checkoutLoading" placeholder="Titular *" required />
+                  <input v-model="checkoutForm.cardExpiry" class="checkout-input" :disabled="checkoutLoading" placeholder="MM/AA *" required />
+                  <input v-model="checkoutForm.cardCvv" class="checkout-input" :disabled="checkoutLoading" placeholder="CVV *" required />
+                </div>
+                <p class="checkout-help checkout-help--secure">Pago seguro cifrado. PayPal y Apple Pay estaran disponibles proximamente.</p>
               </section>
 
               <p v-if="checkoutError" class="checkout-msg checkout-msg--error">{{ checkoutError }}</p>
@@ -188,16 +247,23 @@
                   type="button"
                   class="checkout-mobile-total__pay"
                   :disabled="checkoutLoading"
-                  @click="submitCheckout"
+                  @click="handlePrimaryAction"
                 >
-                  {{ checkoutLoading ? 'Procesando...' : 'Pagar ahora' }}
+                  {{ checkoutLoading ? 'Procesando...' : (checkoutStep === 1 ? 'Siguiente' : 'Pagar ahora') }}
                 </button>
               </div>
 
               <div class="checkout-actions checkout-actions--mobile">
-                <button type="button" class="rm-btn rm-btn--secondary" :disabled="checkoutLoading" @click="closeCheckout">Cancelar</button>
-                <button type="submit" class="rm-btn rm-btn--primary" :disabled="checkoutLoading">
-                  {{ checkoutLoading ? 'Procesando...' : `Pagar ${formatMoney(totalPrice)}` }}
+                <button
+                  type="button"
+                  class="rm-btn rm-btn--secondary"
+                  :disabled="checkoutLoading"
+                  @click="checkoutStep === 1 ? closeCheckout() : prevCheckoutStep()"
+                >
+                  {{ checkoutStep === 1 ? 'Cancelar' : 'Atras' }}
+                </button>
+                <button type="button" class="rm-btn rm-btn--primary" :disabled="checkoutLoading" @click="handlePrimaryAction">
+                  {{ checkoutLoading ? 'Procesando...' : (checkoutStep === 1 ? 'Siguiente' : `Pagar ${formatMoney(totalPrice)}`) }}
                 </button>
               </div>
             </form>
@@ -228,12 +294,12 @@
               type="button"
               class="summary-pay"
               :disabled="checkoutLoading"
-              @click="submitCheckout"
+              @click="handlePrimaryAction"
             >
-              {{ checkoutLoading ? 'Procesando...' : `Pagar ${formatMoney(totalPrice)}` }}
+              {{ checkoutLoading ? 'Procesando...' : (checkoutStep === 1 ? 'Siguiente: Pago' : `Pagar ${formatMoney(totalPrice)}`) }}
             </button>
 
-            <p class="summary-note">Tus datos de pago se usan solo en esta simulacion.</p>
+            <p class="summary-note">{{ checkoutStep === 1 ? 'Completa envio y direccion para pasar al pago.' : 'Tus datos de pago se usan solo en esta simulacion.' }}</p>
           </aside>
         </div>
       </div>
@@ -244,6 +310,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, onBeforeUnmount, computed, watch } from 'vue'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { faCcVisa, faCcMastercard, faPaypal, faApplePay } from '@fortawesome/free-brands-svg-icons'
 import ItemCard from '~/components/ItemCard.vue'
 import type { Item } from '~/stores/items'
 import { useItemsStore } from '~/stores/useItemsStore'
@@ -362,6 +430,7 @@ function goBack() {
 }
 
 const checkoutOpen = ref(false)
+const checkoutStep = ref<1 | 2>(1)
 const checkoutLoading = ref(false)
 const checkoutError = ref('')
 const checkoutSuccess = ref('')
@@ -409,6 +478,7 @@ function openCheckout() {
   loadSessionUser()
   checkoutError.value = ''
   checkoutSuccess.value = ''
+  checkoutStep.value = 1
 
   if (!item.value) return
 
@@ -436,6 +506,57 @@ function closeCheckout() {
   checkoutOpen.value = false
 }
 
+function validateStepOne() {
+  const requiredFields = [
+    checkoutForm.shippingFullName,
+    checkoutForm.shippingPhone,
+    checkoutForm.shippingAddressLine1,
+    checkoutForm.shippingCity,
+    checkoutForm.shippingPostalCode,
+    checkoutForm.shippingCountry
+  ]
+
+  const isValid = requiredFields.every((value) => value.trim().length > 0)
+  if (!isValid) {
+    checkoutError.value = 'Completa los datos de envio para continuar al pago.'
+  }
+  return isValid
+}
+
+function validateStepTwo() {
+  const requiredFields = [
+    checkoutForm.cardNumber,
+    checkoutForm.cardHolder,
+    checkoutForm.cardExpiry,
+    checkoutForm.cardCvv
+  ]
+
+  const isValid = requiredFields.every((value) => value.trim().length > 0)
+  if (!isValid) {
+    checkoutError.value = 'Completa los datos de pago para confirmar la compra.'
+  }
+  return isValid
+}
+
+function nextCheckoutStep() {
+  checkoutError.value = ''
+  if (!validateStepOne()) return
+  checkoutStep.value = 2
+}
+
+function prevCheckoutStep() {
+  checkoutError.value = ''
+  checkoutStep.value = 1
+}
+
+function handlePrimaryAction() {
+  if (checkoutStep.value === 1) {
+    nextCheckoutStep()
+    return
+  }
+  void submitCheckout()
+}
+
 watch(checkoutOpen, (open) => {
   if (typeof document === 'undefined') return
   document.body.classList.toggle('rm-lock-scroll', open)
@@ -443,6 +564,11 @@ watch(checkoutOpen, (open) => {
 
 async function submitCheckout() {
   if (!item.value) return
+
+  checkoutError.value = ''
+  if (!validateStepOne() || !validateStepTwo()) {
+    return
+  }
 
   loadSessionUser()
   if (!sessionUser.value?.token) {
@@ -518,7 +644,9 @@ function openContact() {
     path: '/chat',
     query: {
       itemId: item.value.id,
-      itemTitle: item.value.titulo
+      itemTitle: item.value.titulo,
+      sellerId: item.value.sellerId,
+      sellerName: sellerDisplayName.value
     }
   })
 }
@@ -940,17 +1068,81 @@ border-radius:8px; }
   .checkout-close {
     border: 1px solid #d1d5db;
     background: #ffffff;
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
     border-radius: 999px;
     cursor: pointer;
-    font-size: 1.2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #1f2937;
+    transition: border-color .16s ease, background-color .16s ease, color .16s ease;
+  }
+
+  .checkout-close:hover {
+    border-color: #9ca3af;
+    background: #f8fafc;
+  }
+
+  .checkout-close:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .checkout-close__icon {
+    width: 16px;
+    height: 16px;
+    display: block;
   }
   
   .checkout-subtitle {
     margin: 6px 0 0;
     color: #475569;
     font-size: 0.95rem;
+  }
+
+  .checkout-steps {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .checkout-step {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #dbe4ee;
+    border-radius: 999px;
+    padding: 8px 10px;
+    color: #64748b;
+    background: #f8fafc;
+    font-size: 0.86rem;
+    font-weight: 600;
+  }
+
+  .checkout-step--active {
+    color: #065f46;
+    border-color: #99f6e4;
+    background: #ecfdf5;
+  }
+
+  .checkout-step__num {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #e2e8f0;
+    color: #0f172a;
+    font-weight: 800;
+    font-size: 0.78rem;
+  }
+
+  .checkout-step--active .checkout-step__num {
+    background: #10b981;
+    color: #ffffff;
   }
   
   .checkout-form {
@@ -977,6 +1169,29 @@ border-radius:8px; }
     font-weight: 700;
     color: #0f172a;
     font-size: 0.95rem;
+  }
+
+  .field-required {
+    color: #dc2626;
+    font-weight: 800;
+  }
+
+  .checkout-help {
+    margin: 8px 0 0;
+    color: #64748b;
+    font-size: 0.82rem;
+  }
+
+  .checkout-help--secure {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .checkout-help--secure::before {
+    content: "\1F512";
+    font-size: 0.9rem;
+    line-height: 1;
   }
 
   .checkout-product {
@@ -1089,6 +1304,122 @@ border-radius:8px; }
   .checkout-input--full {
     grid-column: 1 / -1;
   }
+
+  .payment-methods {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .payment-method {
+    border: 1px solid #dbe4ee;
+    background: #ffffff;
+    border-radius: 12px;
+    min-height: 72px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 6px;
+    color: #334155;
+    transition: border-color .18s ease, box-shadow .18s ease;
+  }
+
+  .payment-method--active {
+    border-color: #10b981;
+    background: linear-gradient(180deg, #ecfdf5 0%, #e8faf3 100%);
+    box-shadow: 0 8px 18px rgba(16, 185, 129, 0.12);
+  }
+
+  .payment-method:disabled {
+    opacity: 0.72;
+    background: #f8fafc;
+    cursor: not-allowed;
+  }
+
+  .payment-method__name {
+    font-size: 0.92rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .payment-method__top {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .payment-method__status {
+    border-radius: 999px;
+    border: 1px solid #dbe4ee;
+    background: #ffffff;
+    color: #64748b;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    line-height: 1;
+  }
+
+  .payment-method__status--active {
+    border-color: #34d399;
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .payment-method__logos {
+    display: inline-flex;
+    gap: 6px;
+  }
+
+  .logo-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 24px;
+    border-radius: 999px;
+    padding: 0 10px;
+    font-size: 0.92rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    border: 1px solid transparent;
+  }
+
+  .logo-chip :deep(svg) {
+    width: auto;
+    height: 0.92rem;
+  }
+
+  .logo-chip--visa {
+    background: linear-gradient(180deg, #e0ecff 0%, #dbeafe 100%);
+    color: #1d4ed8;
+    border-color: #bfdbfe;
+  }
+
+  .logo-chip--mc {
+    background: linear-gradient(180deg, #fff1f2 0%, #ffe4e6 100%);
+    color: #be123c;
+    border-color: #fecdd3;
+  }
+
+  .logo-chip--paypal {
+    background: linear-gradient(180deg, #e0f2fe 0%, #cffafe 100%);
+    color: #0369a1;
+    border-color: #bae6fd;
+  }
+
+  .logo-chip--apple {
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    color: #0f172a;
+    border-color: #cbd5e1;
+  }
+
+  .payment-grid {
+    margin-top: 2px;
+  }
   
   .checkout-actions {
     margin-top: 4px;
@@ -1185,6 +1516,9 @@ border-radius:8px; }
     .checkout-grid {
       grid-template-columns: 1fr;
     }
+    .payment-methods {
+      grid-template-columns: 1fr;
+    }
     .checkout-shell {
       grid-template-columns: 1fr;
       max-height: calc(100vh - 20px);
@@ -1198,6 +1532,9 @@ border-radius:8px; }
       max-height: calc(100vh - 74px);
       border-radius: 16px;
       padding: 14px 14px calc(94px + env(safe-area-inset-bottom));
+    }
+    .checkout-steps {
+      grid-template-columns: 1fr;
     }
     .checkout-summary {
       position: static;
