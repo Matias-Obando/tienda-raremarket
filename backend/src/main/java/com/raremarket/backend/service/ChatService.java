@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -47,14 +48,16 @@ public class ChatService {
     @Transactional
     public ConversationResponse createOrGetConversation(CreateConversationRequest request) {
         validateConversationRequest(request);
+        String buyerId = request.getBuyerId().toString();
+        String sellerId = request.getSellerId().toString();
 
         Conversation conversation = conversationRepository
-                .findByItemIdAndBuyerIdAndSellerId(request.getItemId().trim(), request.getBuyerId(), request.getSellerId())
+            .findByItemIdAndBuyerIdAndSellerId(request.getItemId().trim(), buyerId, sellerId)
                 .orElseGet(() -> {
                     Conversation newConversation = new Conversation();
                     newConversation.setItemId(request.getItemId().trim());
-                    newConversation.setBuyerId(request.getBuyerId());
-                    newConversation.setSellerId(request.getSellerId());
+                    newConversation.setBuyerId(buyerId);
+                    newConversation.setSellerId(sellerId);
                     return conversationRepository.save(newConversation);
                 });
 
@@ -64,7 +67,8 @@ public class ChatService {
     @Transactional(readOnly = true)
     public List<ConversationResponse> listConversations(UUID userId) {
         ensureUserExists(userId);
-        return conversationRepository.findByBuyerIdOrSellerIdOrderByUpdatedAtDesc(userId, userId).stream()
+        String userIdValue = userId.toString();
+        return conversationRepository.findByBuyerIdOrSellerIdOrderByUpdatedAtDesc(userIdValue, userIdValue).stream()
                 .map(conversation -> toConversationResponse(conversation, userId))
                 .toList();
     }
@@ -72,10 +76,10 @@ public class ChatService {
     @Transactional(readOnly = true)
     public List<MessageResponse> listMessages(UUID conversationId, UUID userId) {
         Conversation conversation = getAuthorizedConversation(conversationId, userId);
-        Map<UUID, User> usersById = loadUsers(List.of(conversation.getBuyerId(), conversation.getSellerId()));
+        Map<String, User> usersById = loadUsers(List.of(conversation.getBuyerId(), conversation.getSellerId()));
 
-        return messageRepository.findByConversationIdOrderByCreatedAtAsc(conversationId).stream()
-                .map(message -> toMessageResponse(message, usersById))
+        return messageRepository.findMessagesRawByConversationId(conversationId.toString()).stream()
+            .map(row -> toMessageResponse(row, usersById))
                 .toList();
     }
 
@@ -92,19 +96,19 @@ public class ChatService {
         Conversation conversation = getAuthorizedConversation(conversationId, request.getSenderId());
         Message message = new Message();
         message.setConversationId(conversation.getId());
-        message.setSenderId(request.getSenderId());
+        message.setSenderId(request.getSenderId().toString());
         message.setContent(content);
         message.setRead(false);
 
         Message savedMessage = messageRepository.save(message);
-        Map<UUID, User> usersById = loadUsers(List.of(conversation.getBuyerId(), conversation.getSellerId()));
+        Map<String, User> usersById = loadUsers(List.of(conversation.getBuyerId(), conversation.getSellerId()));
         return toMessageResponse(savedMessage, usersById);
     }
 
     @Transactional
     public int markConversationAsRead(UUID conversationId, UUID userId) {
         getAuthorizedConversation(conversationId, userId);
-        return messageRepository.markConversationAsRead(conversationId, userId);
+        return messageRepository.markConversationAsRead(conversationId, userId.toString());
     }
 
     private void validateConversationRequest(CreateConversationRequest request) {
@@ -127,7 +131,8 @@ public class ChatService {
         Conversation conversation = conversationRepository.findById(conversationId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Conversation not found"));
 
-        boolean isParticipant = userId.equals(conversation.getBuyerId()) || userId.equals(conversation.getSellerId());
+        String userIdValue = userId.toString();
+        boolean isParticipant = userIdValue.equals(conversation.getBuyerId()) || userIdValue.equals(conversation.getSellerId());
         if (!isParticipant) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not part of this conversation");
         }
@@ -140,50 +145,78 @@ public class ChatService {
         }
     }
 
-    private Map<UUID, User> loadUsers(Collection<UUID> ids) {
-        List<String> userIds = ids.stream().map(UUID::toString).toList();
+    private Map<String, User> loadUsers(Collection<String> ids) {
+        List<String> userIds = ids.stream().filter(id -> id != null && !id.isBlank()).map(String::trim).toList();
         Map<UUID, User> usersById = new HashMap<>();
 
         for (User user : userRepository.findAllById(userIds)) {
-            try {
-                usersById.put(UUID.fromString(user.getId()), user);
-            } catch (IllegalArgumentException ignored) {
-                // Ignora ids legacy no-UUID para no romper el flujo de chat.
+            UUID parsedId = parseUserId(user.getId());
+            if (parsedId != null) {
+                usersById.put(parsedId, user);
             }
         }
 
-        return usersById;
+        Map<String, User> usersByStringId = new HashMap<>();
+        for (Map.Entry<UUID, User> entry : usersById.entrySet()) {
+            usersByStringId.put(entry.getKey().toString(), entry.getValue());
+        }
+
+        return usersByStringId;
+    }
+
+    private UUID parseUserId(String userId) {
+        if (userId == null || userId.isBlank()) {
+            return null;
+        }
+
+        try {
+            return UUID.fromString(userId.trim());
+        } catch (RuntimeException ignored) {
+            return null;
+        }
     }
 
     private ConversationResponse toConversationResponse(Conversation conversation, UUID currentUserId) {
-        Map<UUID, User> usersById = loadUsers(List.of(conversation.getBuyerId(), conversation.getSellerId()));
-        User buyer = usersById.get(conversation.getBuyerId());
-        User seller = usersById.get(conversation.getSellerId());
-        User counterpart = currentUserId.equals(conversation.getBuyerId()) ? seller : buyer;
-        UUID counterpartId = currentUserId.equals(conversation.getBuyerId()) ? conversation.getSellerId() : conversation.getBuyerId();
-        Optional<Message> lastMessage = messageRepository.findTopByConversationIdOrderByCreatedAtDesc(conversation.getId());
-
         ConversationResponse response = new ConversationResponse();
         response.setId(conversation.getId());
         response.setItemId(conversation.getItemId());
-        response.setBuyerId(conversation.getBuyerId());
-        response.setBuyerName(buyer != null ? buyer.getUsername() : "Usuario");
-        response.setSellerId(conversation.getSellerId());
-        response.setSellerName(seller != null ? seller.getUsername() : "Usuario");
-        response.setCounterpartId(counterpartId);
-        response.setCounterpartName(counterpart != null ? counterpart.getUsername() : "Usuario");
-        response.setUnreadCount(messageRepository.countByConversationIdAndSenderIdNotAndIsReadFalse(conversation.getId(), currentUserId));
+        response.setBuyerId(parseUserId(conversation.getBuyerId()));
+        response.setSellerId(parseUserId(conversation.getSellerId()));
         response.setUpdatedAt(conversation.getUpdatedAt());
 
-        lastMessage.ifPresent(message -> {
-            response.setLastMessage(message.getContent());
-            response.setLastMessageAt(message.getCreatedAt());
-        });
+        try {
+            Map<String, User> usersById = loadUsers(List.of(conversation.getBuyerId(), conversation.getSellerId()));
+            UUID buyerId = parseUserId(conversation.getBuyerId());
+            UUID sellerId = parseUserId(conversation.getSellerId());
+            boolean currentUserIsBuyer = currentUserId.toString().equals(conversation.getBuyerId());
+            User buyer = buyerId != null ? usersById.get(buyerId.toString()) : null;
+            User seller = sellerId != null ? usersById.get(sellerId.toString()) : null;
+            User counterpart = currentUserIsBuyer ? seller : buyer;
+            UUID counterpartId = currentUserIsBuyer ? sellerId : buyerId;
+            Optional<Message> lastMessage = messageRepository.findTopByConversationIdOrderByCreatedAtDesc(conversation.getId());
+
+            response.setBuyerName(buyer != null ? buyer.getUsername() : "Usuario");
+            response.setSellerName(seller != null ? seller.getUsername() : "Usuario");
+            response.setCounterpartId(counterpartId);
+            response.setCounterpartName(counterpart != null ? counterpart.getUsername() : "Usuario");
+            response.setUnreadCount(messageRepository.countByConversationIdAndSenderIdNotAndIsReadFalse(conversation.getId(), currentUserId.toString()));
+
+            lastMessage.ifPresent(message -> {
+                response.setLastMessage(message.getContent());
+                response.setLastMessageAt(message.getCreatedAt());
+            });
+        } catch (RuntimeException ignored) {
+            response.setBuyerName("Usuario");
+            response.setSellerName("Usuario");
+            response.setCounterpartId(currentUserId.toString().equals(conversation.getBuyerId()) ? parseUserId(conversation.getSellerId()) : parseUserId(conversation.getBuyerId()));
+            response.setCounterpartName("Usuario");
+            response.setUnreadCount(0);
+        }
 
         return response;
     }
 
-    private MessageResponse toMessageResponse(Message message, Map<UUID, User> usersById) {
+    private MessageResponse toMessageResponse(Message message, Map<String, User> usersById) {
         MessageResponse response = new MessageResponse();
         response.setId(message.getId());
         response.setConversationId(message.getConversationId());
@@ -194,6 +227,42 @@ public class ChatService {
         response.setRead(message.isRead());
         response.setCreatedAt(message.getCreatedAt());
         return response;
+    }
+
+    private MessageResponse toMessageResponse(Object[] row, Map<String, User> usersById) {
+        MessageResponse response = new MessageResponse();
+
+        String messageId = row[0] != null ? row[0].toString() : null;
+        String conversationIdText = row[1] != null ? row[1].toString() : null;
+        String senderIdText = row[2] != null ? row[2].toString() : null;
+
+        response.setId(messageId);
+        response.setConversationId(parseUserId(conversationIdText));
+        response.setSenderId(senderIdText);
+        User sender = usersById.get(senderIdText);
+        response.setSenderName(sender != null ? sender.getUsername() : "Usuario");
+        response.setContent(row[3] != null ? row[3].toString() : null);
+        response.setRead(parseBoolean(row[4]));
+        response.setCreatedAt(parseOffsetDateTime(row[5]));
+        return response;
+    }
+
+    private boolean parseBoolean(Object value) {
+        if (value == null) {
+            return false;
+        }
+        if (value instanceof Boolean boolValue) {
+            return boolValue;
+        }
+        String normalized = value.toString().trim().toLowerCase();
+        return "true".equals(normalized) || "t".equals(normalized) || "1".equals(normalized);
+    }
+
+    private OffsetDateTime parseOffsetDateTime(Object value) {
+        if (value instanceof OffsetDateTime offsetDateTime) {
+            return offsetDateTime;
+        }
+        return null;
     }
 
     /**
@@ -215,8 +284,8 @@ public class ChatService {
         // Crear conversación de orden
         Conversation conversation = new Conversation();
         conversation.setItemId(itemId);
-        conversation.setBuyerId(buyerId);
-        conversation.setSellerId(sellerId);
+        conversation.setBuyerId(buyerId.toString());
+        conversation.setSellerId(sellerId.toString());
         Conversation savedConversation = conversationRepository.save(conversation);
 
         // Vincular orden a conversación
@@ -229,7 +298,7 @@ public class ChatService {
         String systemMessage = formatOrderPickupMessage();
         Message message = new Message();
         message.setConversationId(savedConversation.getId());
-        message.setSenderId(buyerId); // El comprador inicia el mensaje (representa el sistema)
+        message.setSenderId(buyerId.toString()); // El comprador inicia el mensaje (representa el sistema)
         message.setContent(systemMessage);
         message.setRead(false);
         messageRepository.save(message);

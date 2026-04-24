@@ -4,19 +4,19 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public class MessageResponse {
-    private UUID id;
+    private String id;
     private UUID conversationId;
-    private UUID senderId;
+    private String senderId;
     private String senderName;
     private String content;
     private boolean isRead;
     private OffsetDateTime createdAt;
 
-    public UUID getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(UUID id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -28,11 +28,11 @@ public class MessageResponse {
         this.conversationId = conversationId;
     }
 
-    public UUID getSenderId() {
+    public String getSenderId() {
         return senderId;
     }
 
-    public void setSenderId(UUID senderId) {
+    public void setSenderId(String senderId) {
         this.senderId = senderId;
     }
 
