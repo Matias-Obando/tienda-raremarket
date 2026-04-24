@@ -634,7 +634,7 @@ function openContact() {
       path: '/auth',
       query: {
         mode: 'login',
-        redirect: `/chat?itemId=${encodeURIComponent(item.value.id)}&itemTitle=${encodeURIComponent(item.value.titulo)}`
+        redirect: `/chat?itemId=${encodeURIComponent(item.value.id)}&itemTitle=${encodeURIComponent(item.value.titulo)}&sellerId=${encodeURIComponent(item.value.sellerId)}&sellerName=${encodeURIComponent(sellerDisplayName.value)}`
       }
     })
     return

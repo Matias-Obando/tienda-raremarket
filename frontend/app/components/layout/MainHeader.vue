@@ -55,10 +55,16 @@
                 <span v-if="favoriteCount > 0" class="action-pill-count">{{ favoriteCount }}</span>
               </NuxtLink>
 
-              <NuxtLink to="/chat" class="action-pill" aria-label="Mensajes" title="Mensajes">
+              <NuxtLink
+                to="/chat"
+                class="action-pill"
+                :aria-label="unreadChatCount > 0 ? `Mensajes, ${unreadChatCount} sin leer` : 'Mensajes'"
+                title="Mensajes"
+              >
                 <svg class="h-5 w-5 text-gray-700" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
                 </svg>
+                <span v-if="unreadChatCount > 0" class="action-pill-count">{{ unreadChatCount > 99 ? '99+' : unreadChatCount }}</span>
               </NuxtLink>
 
               <div class="relative" ref="avatarRef">
@@ -89,10 +95,16 @@
               </svg>
             </button>
 
-            <NuxtLink v-if="user" to="/chat" class="p-2 rounded-full hover:bg-gray-100" aria-label="Mensajes">
+            <NuxtLink
+              v-if="user"
+              to="/chat"
+              class="p-2 rounded-full hover:bg-gray-100 relative"
+              :aria-label="unreadChatCount > 0 ? `Mensajes, ${unreadChatCount} sin leer` : 'Mensajes'"
+            >
               <svg class="h-6 w-6 text-gray-700" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
               </svg>
+              <span v-if="unreadChatCount > 0" class="action-pill-count">{{ unreadChatCount > 99 ? '99+' : unreadChatCount }}</span>
             </NuxtLink>
 
             <button class="bg-emerald-600 text-white px-3 py-2 rounded-full text-sm" @click="handleSell">Vender</button>
@@ -197,6 +209,7 @@ import logoAsset from '~/assets/photos/closely.png'
 import CategoryNav from '~/components/layout/CategoryNav.vue'
 
 const { sessionUser, loadSessionUser, clearSessionUser, storageEventName } = useSessionUser()
+const { unreadChatCount, refreshUnreadChatCount, startUnreadChatPolling, stopUnreadChatPolling } = useUnreadChatCount()
 const route = useRoute()
 
 const emit = defineEmits<{
@@ -288,6 +301,7 @@ function onKeyDown(e: KeyboardEvent) {
 
 function syncSession() {
   loadSessionUser()
+  void refreshUnreadChatCount()
 }
 
 function syncFavorites() {
@@ -307,6 +321,8 @@ function syncFavorites() {
 onMounted(() => {
   loadSessionUser()
   syncFavorites()
+  void refreshUnreadChatCount()
+  startUnreadChatPolling()
   const q = route.query.q
   query.value = typeof q === 'string' ? q : ''
   document.addEventListener('click', onOutsideClick)
@@ -338,6 +354,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('storage', syncSession)
   window.removeEventListener('closely:favs:updated', syncFavorites)
   window.removeEventListener('storage', syncFavorites)
+  stopUnreadChatPolling()
 })
 
 const categories = [
