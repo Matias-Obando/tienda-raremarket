@@ -108,6 +108,14 @@
             </svg>
           </button>
         </div>
+
+        <NuxtLink
+          v-if="isOwnItem"
+          :to="{ path: '/vender', query: { edit: item.id } }"
+          class="edit-publication-btn"
+        >
+          Editar publicación
+        </NuxtLink>
       </div>
     </div>
 
@@ -881,6 +889,31 @@ flex-wrap: wrap; }
     background: #ffffff;
     color: #1fb981;
     border-color: #99f6e4;
+  }
+  
+  .edit-publication-btn {
+    display: block;
+    width: 100%;
+    min-height: 36px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid #d2dae4;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    background: #f8fafc;
+    color: #5b6472;
+    text-decoration: none;
+    text-align: center;
+    line-height: 36px;
+    transition: all 0.2s ease;
+    margin-top: 12px;
+  }
+  
+  .edit-publication-btn:hover {
+    border-color: #1fb981;
+    background: #f0fdf9;
+    color: #1fb981;
   }
   
   .small { font-size: 12px; color: #9aa0a6; margin-top:8px; }
