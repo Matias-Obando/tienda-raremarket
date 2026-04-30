@@ -60,11 +60,12 @@
           <div class="price">{{ item.precioEur }} €</div>
         </div>
 
-        <div class="chips-real">
-          <span class="chip-real">{{ item.categoria }}</span>
-          <span class="chip-real">{{ item.marca }}</span>
-          <span class="chip-real">Talla {{ item.talla }}</span>
-          <span class="chip-real">{{ item.estado }}</span>
+        <div class="item-meta-line">
+          <span v-if="item.marca">{{ item.marca }}</span>
+          <span v-if="item.marca && item.talla" class="meta-sep">·</span>
+          <span v-if="item.talla">Talla {{ item.talla }}</span>
+          <span v-if="(item.marca || item.talla) && item.estado" class="meta-sep">·</span>
+          <span v-if="item.estado">{{ item.estado }}</span>
         </div>
 
         <p class="desc">{{ item.descripcion }}</p>
@@ -493,17 +494,7 @@ function openCheckout() {
     return
   }
 
-  if (isOwnItem.value) {
-    checkoutError.value = 'No puedes comprar tu propio articulo.'
-    return
-  }
-
   checkoutOpen.value = true
-}
-
-function closeCheckout() {
-  if (checkoutLoading.value) return
-  checkoutOpen.value = false
 }
 
 function validateStepOne() {
@@ -723,22 +714,22 @@ onBeforeUnmount(() => {
   }
   
   .product-panel {
-    border: 1px solid #dbe4ee;
-    border-radius: 20px;
-    background: linear-gradient(180deg, #ffffff 0%, #f8fbfe 100%);
-    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 24px;
+    background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
   }
   
   .leftCol {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding: 12px;
+    gap: 14px;
+    padding: 14px;
   }
   
   .media {
     position: relative;
-    border-radius: 12px;
+    border-radius: 18px;
     overflow: hidden;
     background: var(--rm-soft);
     height: 440px;
@@ -814,45 +805,55 @@ onBeforeUnmount(() => {
   .rightCol {
     display: flex;
     flex-direction: column;
-    padding: 20px;
+    padding: 24px 24px 22px;
   }
   
   .title {
-    margin: 8px 0 12px;
-    font-size: clamp(2rem, 3.2vw, 3rem);
+    margin: 4px 0 10px;
+    font-size: clamp(2rem, 3vw, 2.85rem);
     font-weight: 800;
-    line-height: 1.03;
-    letter-spacing: -0.03em;
-    color: var(--rm-text);
+    line-height: 1.02;
+    letter-spacing: -0.04em;
+    color: #0f172a;
   }
   
   @media (max-width: 1200px) { .title { font-size: clamp(1.9rem, 3vw, 2.6rem); 
 } }
   @media (max-width: 960px) { .title { font-size: 1.9rem; } }
   
-  .priceWrap { margin-bottom: 10px; }
-  .price { font-weight: 800; font-size: clamp(1.9rem, 2.2vw, 2.4rem); color: 
-#0f172a; }
-  .chips-real { display:flex; gap:8px; margin-bottom: 16px; flex-wrap:wrap; }
-  .chip-real {
-    padding: 6px 10px;
-    border-radius: 999px;
-    border: 1px solid var(--rm-border);
-    background: #f8fafc;
-    color: var(--rm-text);
+  .priceWrap { margin-bottom: 12px; }
+  .price {
+    font-weight: 850;
+    font-size: clamp(1.9rem, 2.1vw, 2.35rem);
+    color: #0f172a;
+    letter-spacing: -0.03em;
+  }
+  .item-meta-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 18px;
+    color: #64748b;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
+  }
+  .item-meta-line span {
+    line-height: 1.2;
+  }
+  .meta-sep {
+    color: #cbd5e1;
   }
   
   .desc {
-    margin: 0 0 16px;
+    margin: 0 0 18px;
     color: #334155;
-    font-size: 1rem;
-    line-height: 1.55;
-    max-width: 52ch;
+    font-size: 0.98rem;
+    line-height: 1.65;
+    max-width: 56ch;
   }
   
-  .actions { display:flex; gap:10px; align-items:center; margin-bottom:12px; 
+  .actions { display:flex; gap:10px; align-items:center; margin-bottom:14px; 
 flex-wrap: wrap; }
   
   .rm-btn {
@@ -890,10 +891,11 @@ flex-wrap: wrap; }
     align-items: center;
     justify-content: space-between;
     gap: 14px;
-    border: 1px solid #dce3eb;
-    border-radius: 14px;
-    background: #ffffff;
-    padding: 12px 14px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(8px);
+    padding: 14px 16px;
   }
   
   .seller-main {
@@ -907,7 +909,7 @@ flex-wrap: wrap; }
     width: 52px;
     height: 52px;
     border-radius: 999px;
-    background: #2f6f22;
+    background: linear-gradient(135deg, #1fb981, #0f766e);
     color: #ffffff;
     display: inline-flex;
     align-items: center;
@@ -930,7 +932,7 @@ flex-wrap: wrap; }
   
   .seller-name {
     margin: 0;
-    font-size: 1.03rem;
+    font-size: 0.98rem;
     font-weight: 700;
     color: #0f172a;
     line-height: 1.2;
@@ -942,7 +944,7 @@ flex-wrap: wrap; }
     align-items: center;
     gap: 6px;
     color: #5b6472;
-    font-size: 1.02rem;
+    font-size: 0.9rem;
   }
   
   .seller-stars {
@@ -953,11 +955,11 @@ flex-wrap: wrap; }
   }
   
   .seller-open {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     border-radius: 999px;
     border: 1px solid #d2dae4;
-    background: #ffffff;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
     color: #5b6472;
     display: inline-flex;
     align-items: center;

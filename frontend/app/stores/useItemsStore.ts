@@ -16,6 +16,7 @@ type CreateItemRequest = {
   descripcion: string
   precioEur: number
   categoria: string
+  subcategoria?: string
   marca: string
   talla: string
   estado: string

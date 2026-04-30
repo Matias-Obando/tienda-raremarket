@@ -15,11 +15,12 @@
         <div class="sell-card__price">{{ item.precioEur ? item.precioEur + ' €' : '—' }}</div>
       </div>
       <div class="sell-card__meta">
-        <span v-if="item.marca">{{ item.marca }}</span>
-        <span v-if="item.marca && item.talla" class="dot">·</span>
-        <span v-if="item.talla">{{ item.talla }}</span>
-        <span v-if="(item.marca || item.talla) && item.categoria" class="dot">·</span>
-        <span v-if="item.categoria">{{ item.categoria }}</span>
+        <span v-if="item.marca" class="meta-pill meta-pill--brand">{{ item.marca }}</span>
+        <span v-if="item.talla" class="meta-pill meta-pill--size">Talla {{ item.talla }}</span>
+      </div>
+      <div class="sell-card__meta sell-card__meta--category">
+        <span v-if="item.categoria" class="meta-pill meta-pill--category">{{ item.categoria }}</span>
+        <span v-if="item.subcategoria" class="meta-pill meta-pill--subcategory">{{ item.subcategoria }}</span>
       </div>
       <p class="sell-card__desc">
         {{ item.descripcion ? truncate(item.descripcion, 140) : 'Descripción breve del producto...' }}
@@ -169,8 +170,29 @@ function truncate(s: string, n = 140) {
   align-items:center;
   flex-wrap:wrap;
 }
+.sell-card__meta--category {
+  margin-top: -2px;
+}
 
-.dot { opacity:.6; }
+.meta-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #334155;
+  border: 0;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+}
+.meta-pill--brand,
+.meta-pill--size,
+.meta-pill--category,
+.meta-pill--subcategory {
+  color: #475569;
+}
 
 .sell-card__desc {
   margin: 0;

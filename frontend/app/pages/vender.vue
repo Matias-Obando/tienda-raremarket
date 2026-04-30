@@ -38,20 +38,32 @@
                 <label class="field">
                   <span class="label">Categoría*</span>
                   <select v-model="form.categoria" required>
-                    <option value="" disabled selected>Selecciona una categoría</option>
-                    <option value="Camisetas">Camisetas</option>
-                    <option value="Abrigos">Abrigos</option>
-                    <option value="Chaquetas">Chaquetas</option>
-                    <option value="Jerséis & Sudaderas">Jerséis & Sudaderas</option>
-                    <option value="Vestidos">Vestidos</option>
-                    <option value="Camisas & Camisetas">Camisas & Camisetas</option>
-                    <option value="Pantalones">Pantalones</option>
-                    <option value="Vaqueros">Vaqueros</option>
-                    <option value="Calzado">Calzado</option>
-                    <option value="Bolsos">Bolsos</option>
-                    <option value="Otros">Otros</option>
+                    <option value="" disabled>Selecciona una categoría</option>
+                    <option
+                      v-for="category in categoryOptions"
+                      :key="category.key"
+                      :value="category.key"
+                    >
+                      {{ category.label }}
+                    </option>
                   </select>
                 </label>
+                <label class="field">
+                  <span class="label">Subcategoría</span>
+                  <select v-model="form.subcategoria" :disabled="!form.categoria">
+                    <option value="">Sin subcategoría</option>
+                    <option
+                      v-for="subcategory in availableSubcategories"
+                      :key="subcategory"
+                      :value="subcategory"
+                    >
+                      {{ subcategory }}
+                    </option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="grid two">
                 <label class="field">
                   <span class="label">Marca</span>
                   <input type="text" v-model="form.marca" placeholder="Ej: Zara, Nike, Mango" />
@@ -119,9 +131,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive } from 'vue'
+import { computed, reactive, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import SellPreviewCard from '~/components/SellPreviewCard.vue'
+import { CATEGORY_KEY_TO_LABEL, CATEGORY_TREE, getSubcategoriesByKey } from '~/constants/categories'
 
 const maxImages = 3
 const uiMessages = useUiMessages()
@@ -137,6 +150,7 @@ const form = reactive({
   titulo: '',
   precioEur: 0,
   categoria: '',
+  subcategoria: '',
   marca: '',
   talla: '',
   estado: 'Usado',
@@ -144,6 +158,20 @@ const form = reactive({
   imagenes: [] as string[]
 })
 const selectedFiles = reactive<File[]>([])
+const categoryOptions = CATEGORY_TREE
+const availableSubcategories = computed(() => getSubcategoriesByKey(form.categoria))
+
+watch(() => form.categoria, (nextCategory) => {
+  if (!nextCategory) {
+    form.subcategoria = ''
+    return
+  }
+
+  const validSubcategories = getSubcategoriesByKey(nextCategory)
+  if (!validSubcategories.includes(form.subcategoria)) {
+    form.subcategoria = ''
+  }
+})
 
 function onImagesChange(e: Event) {
   const files = (e.target as HTMLInputElement)?.files
@@ -173,6 +201,7 @@ function resetForm() {
   form.titulo = ''
   form.precioEur = 0
   form.categoria = ''
+  form.subcategoria = ''
   form.marca = ''
   form.talla = ''
   form.estado = 'Usado'
@@ -225,7 +254,8 @@ async function onSubmit() {
       titulo: form.titulo.trim(),
       descripcion: form.descripcion.trim(),
       precioEur: form.precioEur,
-      categoria: form.categoria,
+      categoria: CATEGORY_KEY_TO_LABEL[form.categoria] ?? form.categoria,
+      subcategoria: form.subcategoria.trim() || undefined,
       marca: form.marca.trim(),
       talla: form.talla.trim(),
       estado: form.estado,

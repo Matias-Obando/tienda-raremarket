@@ -39,6 +39,7 @@ public class ItemController {
     public List<ItemResponse> getAllItems(
             @RequestParam(required = false) String query,
             @RequestParam(required = false) String categoria,
+            @RequestParam(required = false) String subcategoria,
             @RequestParam(required = false) String talla,
             @RequestParam(required = false) String estado,
             @RequestParam(required = false) Double minPrice,
@@ -46,7 +47,7 @@ public class ItemController {
             @RequestParam(required = false) String sellerId,
             @RequestParam(required = false) String sort
     ) {
-        return itemService.listItems(query, categoria, talla, estado, minPrice, maxPrice, sellerId, sort);
+        return itemService.listItems(query, categoria, subcategoria, talla, estado, minPrice, maxPrice, sellerId, sort);
     }
 
     @GetMapping("/{id}")

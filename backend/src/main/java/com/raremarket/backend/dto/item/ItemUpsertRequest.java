@@ -26,6 +26,9 @@ public class ItemUpsertRequest {
     @Size(max = 80)
     private String categoria;
 
+    @Size(max = 80)
+    private String subcategoria;
+
     @NotBlank
     @Size(max = 80)
     private String marca;
@@ -85,6 +88,14 @@ public class ItemUpsertRequest {
 
     public void setCategoria(String categoria) {
         this.categoria = categoria;
+    }
+
+    public String getSubcategoria() {
+        return subcategoria;
+    }
+
+    public void setSubcategoria(String subcategoria) {
+        this.subcategoria = subcategoria;
     }
 
     public String getMarca() {
