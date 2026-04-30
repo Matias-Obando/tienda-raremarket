@@ -2,143 +2,130 @@
   <div class="sell-page">
     <div class="sell-shell">
       <header class="sell-header">
-        <p class="sell-kicker">Closely Studio</p>
-        <h1 class="sell-title">Publica tu artículo</h1>
-        <p class="sell-sub">Prepara un anuncio claro, añade buenas fotos y publica cuando esté listo para destacar.</p>
+        <h1 class="sell-title">{{ isEditMode ? 'Editar artículo' : 'Publica tu artículo' }}</h1>
+        <p class="sell-sub">{{ isEditMode ? 'Ajusta los datos y guarda los cambios de tu publicación.' : 'Rellena los datos, sube fotos y publica tu artículo en pocos pasos.' }}</p>
       </header>
 
-      <div class="sell-layout">
-        <aside class="preview-column">
-          <div class="preview-card">
-            <div class="preview-card__head">
-              <h2>Así se verá tu anuncio</h2>
-              <span class="preview-card__badge">Vista en directo</span>
-            </div>
-            <SellPreviewCard :item="form" :imagenes="form.imagenes" />
-          </div>
-        </aside>
-
-        <main class="form-column">
-          <form @submit.prevent="onSubmit" class="sell-form">
-            <section class="form-block">
-              <h3>1. Lo esencial</h3>
-              <p class="block-note">Define lo básico para que los compradores encuentren tu prenda rápido.</p>
-              <div class="grid two">
-                <label class="field">
-                  <span class="label">Título*</span>
-                  <input type="text" v-model="form.titulo" placeholder="Ej: Chaqueta vaquera oversize" />
-                </label>
-                <label class="field">
-                  <span class="label">Precio final (€)*</span>
-                  <input type="number" v-model.number="form.precioEur" min="0" placeholder="0" />
-                </label>
-              </div>
-
-              <div class="grid two">
-                <label class="field">
-                  <span class="label">Categoría*</span>
-                  <select v-model="form.categoria" required>
-                    <option value="" disabled>Selecciona una categoría</option>
-                    <option
-                      v-for="category in categoryOptions"
-                      :key="category.key"
-                      :value="category.key"
-                    >
-                      {{ category.label }}
-                    </option>
-                  </select>
-                </label>
-                <label class="field">
-                  <span class="label">Subcategoría</span>
-                  <select v-model="form.subcategoria" :disabled="!form.categoria">
-                    <option value="">Sin subcategoría</option>
-                    <option
-                      v-for="subcategory in availableSubcategories"
-                      :key="subcategory"
-                      :value="subcategory"
-                    >
-                      {{ subcategory }}
-                    </option>
-                  </select>
-                </label>
-              </div>
-
-              <div class="grid two">
-                <label class="field">
-                  <span class="label">Marca</span>
-                  <input type="text" v-model="form.marca" placeholder="Ej: Zara, Nike, Mango" />
-                </label>
-              </div>
-
-              <div class="grid two">
-                <label class="field">
-                  <span class="label">Talla</span>
-                  <input type="text" v-model="form.talla" placeholder="Ej: M / 42 / Única" />
-                </label>
-                <label class="field">
-                  <span class="label">Estado*</span>
-                  <select v-model="form.estado">
-                    <option value="Usado">Usado</option>
-                    <option value="Como nuevo">Como nuevo</option>
-                    <option value="Nuevo">Nuevo</option>
-                  </select>
-                </label>
-              </div>
-            </section>
-
-            <section class="form-block">
-              <h3>2. Cuéntanos más</h3>
-              <p class="block-note">Cuanto más preciso seas, más confianza generará tu anuncio.</p>
+      <main class="form-column">
+        <form @submit.prevent="onSubmit" class="sell-form">
+          <section class="form-block">
+            <h3>1. Lo esencial</h3>
+            <p class="block-note">Define lo básico para que los compradores encuentren tu prenda rápido.</p>
+            <div class="grid two">
               <label class="field">
-                <span class="label">Descripción*</span>
-                <textarea v-model="form.descripcion" rows="4" placeholder="Cuenta el estado real, medidas, detalles y cualquier defecto para vender antes."></textarea>
+                <span class="label">Título*</span>
+                <input type="text" v-model="form.titulo" placeholder="Ej: Chaqueta vaquera oversize" />
               </label>
-            </section>
-
-            <section class="form-block">
-              <h3>3. Añade tus fotos</h3>
-              <p class="block-note">Muestra frontal, trasera y detalle para mejorar la conversión.</p>
-              <label class="upload-drop">
-                <input class="file-input" type="file" accept="image/*" multiple @change="onImagesChange" />
-                <span class="upload-title">Arrastra tus fotos o haz clic para seleccionarlas</span>
-                <span class="upload-sub">Sube hasta {{ maxImages }} imágenes en JPG, PNG o WEBP. La primera será la portada.</span>
+              <label class="field">
+                <span class="label">Precio final (€)*</span>
+                <input type="number" v-model.number="form.precioEur" min="0" placeholder="0" />
               </label>
-
-              <div class="preview-thumbs" v-if="form.imagenes.length">
-                <img v-for="(img, i) in form.imagenes" :key="i" :src="img" class="thumb" />
-              </div>
-              <p v-if="form.imagenes.length" class="upload-count">{{ form.imagenes.length }} / {{ maxImages }} fotos cargadas</p>
-            </section>
-
-            <div class="form-actions">
-              <p class="action-note">Podrás editar tu anuncio después de publicarlo.</p>
-              <button type="button" class="btn btn-ghost" @click="resetForm">Empezar de cero</button>
-              <button type="submit" class="btn btn-primary" :disabled="!isFormReady">Publicar en Closely</button>
             </div>
 
-            <section v-if="submitError.message" class="submit-error-panel" aria-live="polite">
-              <p class="submit-error-panel__title">No se pudo publicar el articulo</p>
-              <p class="submit-error-panel__message">{{ submitError.message }}</p>
-              <ul v-if="submitError.details.length" class="submit-error-panel__list">
-                <li v-for="detail in submitError.details" :key="detail">{{ detail }}</li>
-              </ul>
-            </section>
-          </form>
-        </main>
-      </div>
+            <div class="grid two">
+              <label class="field">
+                <span class="label">Categoría*</span>
+                <select v-model="form.categoria" required>
+                  <option value="" disabled>Selecciona una categoría</option>
+                  <option
+                    v-for="category in categoryOptions"
+                    :key="category.key"
+                    :value="category.key"
+                  >
+                    {{ category.label }}
+                  </option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="label">Subcategoría</span>
+                <select v-model="form.subcategoria" :disabled="!form.categoria">
+                  <option value="">Sin subcategoría</option>
+                  <option
+                    v-for="subcategory in availableSubcategories"
+                    :key="subcategory"
+                    :value="subcategory"
+                  >
+                    {{ subcategory }}
+                  </option>
+                </select>
+              </label>
+            </div>
+
+            <div class="grid two">
+              <label class="field">
+                <span class="label">Marca</span>
+                <input type="text" v-model="form.marca" placeholder="Ej: Zara, Nike, Mango" />
+              </label>
+            </div>
+
+            <div class="grid two">
+              <label class="field">
+                <span class="label">Talla</span>
+                <input type="text" v-model="form.talla" placeholder="Ej: M / 42 / Única" />
+              </label>
+              <label class="field">
+                <span class="label">Estado*</span>
+                <select v-model="form.estado">
+                  <option value="Usado">Usado</option>
+                  <option value="Como nuevo">Como nuevo</option>
+                  <option value="Nuevo">Nuevo</option>
+                </select>
+              </label>
+            </div>
+          </section>
+
+          <section class="form-block">
+            <h3>2. Cuéntanos más</h3>
+            <p class="block-note">Cuanto más preciso seas, más confianza generará tu anuncio.</p>
+            <label class="field">
+              <span class="label">Descripción*</span>
+              <textarea v-model="form.descripcion" rows="4" placeholder="Cuenta el estado real, medidas, detalles y cualquier defecto para vender antes."></textarea>
+            </label>
+          </section>
+
+          <section class="form-block">
+            <h3>3. Añade tus fotos</h3>
+            <p class="block-note">Muestra frontal, trasera y detalle para mejorar la conversión.</p>
+            <label class="upload-drop">
+              <input class="file-input" type="file" accept="image/*" multiple @change="onImagesChange" />
+              <span class="upload-title">Arrastra tus fotos o haz clic para seleccionarlas</span>
+              <span class="upload-sub">Sube hasta {{ maxImages }} imágenes en JPG, PNG o WEBP. La primera será la portada.</span>
+            </label>
+
+            <div class="preview-thumbs" v-if="form.imagenes.length">
+              <img v-for="(img, i) in form.imagenes" :key="i" :src="img" class="thumb" />
+            </div>
+            <p v-if="form.imagenes.length" class="upload-count">{{ form.imagenes.length }} / {{ maxImages }} fotos cargadas</p>
+          </section>
+
+          <div class="form-actions">
+            <p class="action-note">{{ isEditMode ? 'Los cambios se guardarán sobre tu publicación actual.' : 'Podrás editar tu anuncio después de publicarlo.' }}</p>
+              <button type="button" class="btn btn-ghost" @click="resetForm">{{ isEditMode ? 'Restablecer' : 'Vaciar' }}</button>
+              <button type="submit" class="btn btn-primary" :disabled="!isFormReady">{{ isEditMode ? 'Guardar cambios' : 'Publicar artículo' }}</button>
+          </div>
+
+          <section v-if="submitError.message" class="submit-error-panel" aria-live="polite">
+            <p class="submit-error-panel__title">{{ isEditMode ? 'No se pudo actualizar el articulo' : 'No se pudo publicar el articulo' }}</p>
+            <p class="submit-error-panel__message">{{ submitError.message }}</p>
+            <ul v-if="submitError.details.length" class="submit-error-panel__list">
+              <li v-for="detail in submitError.details" :key="detail">{{ detail }}</li>
+            </ul>
+          </section>
+        </form>
+      </main>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, watch } from 'vue'
+import { computed, onMounted, reactive, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import SellPreviewCard from '~/components/SellPreviewCard.vue'
-import { CATEGORY_KEY_TO_LABEL, CATEGORY_TREE, getSubcategoriesByKey } from '~/constants/categories'
+import { CATEGORY_KEY_TO_LABEL, CATEGORY_TREE, getSubcategoriesByKey, parseCategoriaLabel } from '~/constants/categories'
 
 const maxImages = 3
 const uiMessages = useUiMessages()
 const router = useRouter()
+const route = useRoute()
 const itemsStore = useItemsStore()
 const { loadSessionUser } = useSessionUser()
 const submitError = reactive({
@@ -160,6 +147,28 @@ const form = reactive({
 const selectedFiles = reactive<File[]>([])
 const categoryOptions = CATEGORY_TREE
 const availableSubcategories = computed(() => getSubcategoriesByKey(form.categoria))
+const editingItemId = computed(() => {
+  const value = route.query.edit
+  return typeof value === 'string' && value.length ? value : null
+})
+const isEditMode = computed(() => editingItemId.value !== null)
+
+function applyItemToForm(item: any) {
+  const parsedCategoryLabel = parseCategoriaLabel(item?.categoria).parent || (item?.categoria ?? '')
+  const categoryMatch = CATEGORY_TREE.find((category) => category.label === parsedCategoryLabel) ?? null
+  form.titulo = item?.titulo ?? ''
+  form.precioEur = Number(item?.precioEur ?? 0)
+  form.categoria = categoryMatch?.key ?? ''
+  form.subcategoria = item?.subcategoria ?? parseCategoriaLabel(item?.categoria).subcategory ?? ''
+  form.marca = item?.marca ?? ''
+  form.talla = item?.talla ?? ''
+  form.estado = item?.estado ?? 'Usado'
+  form.descripcion = item?.descripcion ?? ''
+  form.imagenes = Array.isArray(item?.images) && item.images.length
+    ? [...item.images]
+    : (item?.imagen ? [item.imagen] : [])
+  selectedFiles.splice(0, selectedFiles.length)
+}
 
 watch(() => form.categoria, (nextCategory) => {
   if (!nextCategory) {
@@ -198,6 +207,11 @@ function onImagesChange(e: Event) {
 }
 
 function resetForm() {
+  if (isEditMode.value) {
+    void loadEditingItem()
+    return
+  }
+
   form.titulo = ''
   form.precioEur = 0
   form.categoria = ''
@@ -217,11 +231,43 @@ function validateForm(): string | null {
   if (!form.categoria) return 'Selecciona una categoria.'
   if (!form.descripcion.trim()) return 'Añade una descripcion del articulo.'
   if (!form.precioEur || form.precioEur <= 0) return 'Indica un precio mayor que 0.'
-  if (selectedFiles.length === 0) return 'Sube al menos una imagen para publicar.'
+  if (selectedFiles.length === 0 && form.imagenes.length === 0) return 'Sube al menos una imagen para publicar.'
   return null
 }
 
 const isFormReady = computed(() => validateForm() === null)
+
+async function loadEditingItem() {
+  if (!editingItemId.value) return
+
+  const currentUser = loadSessionUser().value
+  if (!currentUser?.token) {
+    uiMessages.info('Inicia sesion para editar tu articulo.')
+    await router.push('/auth?mode=login&redirect=' + encodeURIComponent(`/vender?edit=${editingItemId.value}`))
+    return
+  }
+
+  try {
+    const existingItem = itemsStore.getById(editingItemId.value) ?? await itemsStore.fetchById(editingItemId.value)
+    if (!existingItem) {
+      uiMessages.error('No se pudo cargar el articulo para editar.')
+      await router.push('/perfil#mis-publicaciones')
+      return
+    }
+
+    applyItemToForm(existingItem)
+  } catch (error) {
+    console.error('No se pudo cargar el articulo para editar:', error)
+    uiMessages.error('No se pudo cargar el articulo para editar.')
+    await router.push('/perfil#mis-publicaciones')
+  }
+}
+
+onMounted(() => {
+  if (isEditMode.value) {
+    void loadEditingItem()
+  }
+})
 
 async function onSubmit() {
   submitError.message = ''
@@ -244,13 +290,17 @@ async function onSubmit() {
   let uploadedImageUrls: string[] = []
 
   try {
-    uploadedImageUrls = await itemsStore.uploadImages([...selectedFiles])
-    if (!uploadedImageUrls.length) {
-      uiMessages.error('No se pudieron subir las imagenes. Intentalo de nuevo.')
-      return
+    if (selectedFiles.length > 0) {
+      uploadedImageUrls = await itemsStore.uploadImages([...selectedFiles])
+      if (!uploadedImageUrls.length) {
+        uiMessages.error('No se pudieron subir las imagenes. Intentalo de nuevo.')
+        return
+      }
+    } else {
+      uploadedImageUrls = [...form.imagenes]
     }
 
-    await itemsStore.createItem({
+    const payload = {
       titulo: form.titulo.trim(),
       descripcion: form.descripcion.trim(),
       precioEur: form.precioEur,
@@ -261,9 +311,16 @@ async function onSubmit() {
       estado: form.estado,
       imagen: uploadedImageUrls[0],
       images: uploadedImageUrls
-    })
+    }
 
-    uiMessages.success('Articulo publicado correctamente. Ya aparece en el marketplace.')
+    if (isEditMode.value && editingItemId.value) {
+      await itemsStore.updateItem(editingItemId.value, payload)
+      uiMessages.success('Articulo actualizado correctamente.')
+    } else {
+      await itemsStore.createItem(payload)
+      uiMessages.success('Articulo publicado correctamente. Ya aparece en el marketplace.')
+    }
+
     resetForm()
     await router.push('/explorar')
   } catch (error: any) {
@@ -275,7 +332,9 @@ async function onSubmit() {
       }
     }
 
-    const fallbackMessage = 'No se pudo publicar el articulo. Revisa los datos e intentalo de nuevo.'
+    const fallbackMessage = isEditMode.value
+      ? 'No se pudo actualizar el articulo. Revisa los datos e intentalo de nuevo.'
+      : 'No se pudo publicar el articulo. Revisa los datos e intentalo de nuevo.'
     const message = error?.data?.message || fallbackMessage
     const details = error?.data?.errors && typeof error.data.errors === 'object'
       ? Object.values(error.data.errors).map((value) => String(value))
@@ -301,21 +360,7 @@ async function onSubmit() {
 
 .sell-header {
   text-align: center;
-  margin: 18px auto 26px;
-}
-
-.sell-kicker {
-  margin: 0;
-  display: inline-flex;
-  align-items: center;
-  padding: 8px 14px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #1fb981;
-  background: rgba(15, 118, 110, 0.12);
+  margin: 24px auto 26px;
 }
 
 .sell-title {
@@ -335,49 +380,13 @@ async function onSubmit() {
 }
 
 .sell-layout {
-  display: grid;
-  grid-template-columns: minmax(320px, 430px) minmax(360px, 1fr);
-  gap: 26px;
-  align-items: start;
-}
-
-.preview-column {
-  position: sticky;
-  top: 128px;
-}
-
-.preview-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 20px;
-  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.08);
-  padding: 14px;
-}
-
-.preview-card__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.preview-card__head h2 {
-  margin: 0;
-  font-size: 1rem;
-  color: #0f172a;
-}
-
-.preview-card__badge {
-  font-size: 12px;
-  font-weight: 700;
-  color: #1fb981;
-  background: rgba(15, 118, 110, 0.12);
-  border-radius: 999px;
-  padding: 6px 10px;
+  display: block;
 }
 
 .form-column {
   min-width: 0;
+  max-width: 920px;
+  margin: 0 auto;
 }
 
 .sell-form {
@@ -593,18 +602,7 @@ textarea {
 }
 
 @media (max-width: 980px) {
-  .sell-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .preview-column {
-    position: static;
-  }
-
-  .preview-card {
-    max-width: 460px;
-    margin: 0 auto;
-  }
+  .sell-layout { display: block; }
 }
 
 @media (max-width: 760px) {

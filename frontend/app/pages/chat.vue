@@ -124,14 +124,8 @@
           <form class="composer" @submit.prevent="sendMessage">
             <div class="composer-topbar">
               <span class="composer-hint">Mensaje privado</span>
-              <span class="composer-hint composer-hint--muted">Enter para enviar</span>
             </div>
             <div class="composer-box">
-              <button class="composer-attach" type="button" title="Adjuntar archivo" @click="notifyAttachmentSoon">
-                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                  <path d="M7.5 10.5l5.5-5.5a3 3 0 1 1 4.24 4.24l-7.4 7.4a5 5 0 0 1-7.07-7.07l8.3-8.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-              </button>
               <textarea
                 v-model="draftMessage"
                 rows="3"
@@ -146,7 +140,6 @@
             <div class="composer-actions">
               <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
               <p v-else class="counter-text">{{ draftMessage.trim().length }}/1000</p>
-              <span class="composer-chip">Privado y cifrado</span>
             </div>
           </form>
         </template>
@@ -774,6 +767,7 @@ watch(orderedMessages, async () => {
 
 .field select,
 .composer textarea {
+  flex: 1;
   width: 100%;
   border: 1px solid var(--rm-border);
   border-radius: 14px;
@@ -1172,7 +1166,7 @@ watch(orderedMessages, async () => {
   margin-bottom: 10px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 10px;
   color: #64748b;
   font-size: 0.82rem;
@@ -1188,9 +1182,8 @@ watch(orderedMessages, async () => {
 }
 
 .composer-box {
-  display: grid;
-  grid-template-columns: 44px 1fr 116px;
-  gap: 10px;
+  display: flex;
+  gap: 12px;
   align-items: end;
 }
 
@@ -1217,6 +1210,7 @@ watch(orderedMessages, async () => {
   color: #ffffff;
   font-weight: 800;
   border: 0;
+  flex: 0 0 160px;
 }
 
 .composer-send:disabled {

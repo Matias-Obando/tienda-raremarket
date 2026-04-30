@@ -123,17 +123,24 @@
             <ItemCard
               :item="item"
               :show-badge="true"
-              :show-fav="true"
+              :show-fav="false"
             />
-            <button
-              v-if="!isDemoMode"
-              type="button"
-              class="delete-publication-btn"
-              :disabled="deletingItemId === item.id"
-              @click="openDeleteModal(item.id, item.titulo)"
-            >
-              {{ deletingItemId === item.id ? 'Eliminando...' : 'Eliminar publicacion' }}
-            </button>
+            <div v-if="!isDemoMode" class="published-actions">
+              <NuxtLink
+                :to="{ path: '/vender', query: { edit: item.id } }"
+                class="edit-publication-btn"
+              >
+                Editar publicación
+              </NuxtLink>
+              <button
+                type="button"
+                class="delete-publication-btn"
+                :disabled="deletingItemId === item.id"
+                @click="openDeleteModal(item.id, item.titulo)"
+              >
+                {{ deletingItemId === item.id ? 'Eliminando...' : 'Eliminar publicacion' }}
+              </button>
+            </div>
           </article>
         </div>
       </article>
@@ -862,11 +869,41 @@ onBeforeUnmount(() => {
   font-weight: 700;
   font-size: 0.82rem;
   cursor: pointer;
+  flex: 1;
 }
 
 .delete-publication-btn:disabled {
   opacity: 0.65;
   cursor: not-allowed;
+}
+
+.published-actions {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.edit-publication-btn {
+  flex: 1;
+  min-height: 36px;
+  border-radius: 10px;
+  border: 1px solid #d2dae4;
+  background: #f8fafc;
+  color: #5b6472;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.edit-publication-btn:hover {
+  border-color: #1fb981;
+  background: #f0fdf9;
+  color: #1fb981;
 }
 
 .delete-modal {

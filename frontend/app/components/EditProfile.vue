@@ -83,7 +83,7 @@
         <div class="form-actions">
           <button type="button" class="cancel-btn" @click="onCancel">Cancelar</button>
           <button type="submit" class="save-btn" :disabled="isSaving">
-            <span class="icon-save"></span> {{ isSaving ? 'Guardando...' : 'Guardar cambios' }}
+            {{ isSaving ? 'Guardando...' : 'Guardar' }}
           </button>
         </div>
       </form>

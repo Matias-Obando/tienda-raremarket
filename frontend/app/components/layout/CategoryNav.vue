@@ -84,7 +84,6 @@ const activeSubcategories = computed(() => getSubcategoriesByKey(activeCategoryK
 
 function linkFor(key: string) {
   const next: Record<string, any> = { ...route.query }
-  const currentCat = typeof route.query.cat === 'string' ? route.query.cat : null
 
   if (key === 'new') {
     delete next.cat
@@ -92,14 +91,11 @@ function linkFor(key: string) {
     return { path: '/explorar', query: next }
   }
 
-  if (currentCat === key) {
-    delete next.cat
+  if (typeof route.query.cat !== 'string' || route.query.cat !== key) {
+    next.cat = key
     delete next.subcat
-    return { path: '/explorar', query: next }
   }
 
-  next.cat = key
-  delete next.subcat
   return { path: '/explorar', query: next }
 }
 

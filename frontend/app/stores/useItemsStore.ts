@@ -24,6 +24,8 @@ type CreateItemRequest = {
   images: string[]
 }
 
+type UpdateItemRequest = CreateItemRequest
+
 export const useItemsStore = defineStore('items', {
   state: () => ({
     items: [] as Item[],
@@ -108,6 +110,26 @@ export const useItemsStore = defineStore('items', {
 
       this.items = [created, ...this.items]
       return created
+    },
+    async updateItem(itemId: string, payload: UpdateItemRequest) {
+      const config = useRuntimeConfig()
+      const { loadSessionUser } = useSessionUser()
+      const user = loadSessionUser().value
+
+      if (!user?.token) {
+        throw new Error('Debes iniciar sesion para editar un articulo.')
+      }
+
+      const updated = await $fetch<Item>(`${config.public.API_BASE_URL}/items/${itemId}`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${user.token}`
+        },
+        body: payload
+      })
+
+      this.items = this.items.map((item) => (item.id === itemId ? updated : item))
+      return updated
     },
     async uploadImages(files: File[]) {
       const config = useRuntimeConfig()
