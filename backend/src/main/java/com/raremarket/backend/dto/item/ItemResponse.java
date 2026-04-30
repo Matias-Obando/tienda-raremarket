@@ -12,6 +12,7 @@ public class ItemResponse {
     private String descripcion;
     private double precioEur;
     private String categoria;
+    private String subcategoria;
     private String marca;
     private String talla;
     private String estado;
@@ -29,6 +30,7 @@ public class ItemResponse {
         response.setDescripcion(item.getDescripcion());
         response.setPrecioEur(item.getPrecioEur());
         response.setCategoria(item.getCategoria());
+        response.setSubcategoria(item.getSubcategoria());
         response.setMarca(item.getMarca());
         response.setTalla(item.getTalla());
         response.setEstado(item.getEstado());
@@ -86,6 +88,14 @@ public class ItemResponse {
 
     public void setCategoria(String categoria) {
         this.categoria = categoria;
+    }
+
+    public String getSubcategoria() {
+        return subcategoria;
+    }
+
+    public void setSubcategoria(String subcategoria) {
+        this.subcategoria = subcategoria;
     }
 
     public String getMarca() {

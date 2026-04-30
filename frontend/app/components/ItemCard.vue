@@ -44,11 +44,9 @@
         </div>
 
         <div class="meta">
-          <span class="brand">{{ item.marca }}</span>
-          <span class="dot">·</span>
-          <span class="size">{{ item.talla }}</span>
-          <span class="dot">·</span>
-          <span class="cat">{{ item.categoria }}</span>
+          <span v-if="item.marca" class="meta-text">{{ item.marca }}</span>
+          <span v-if="item.marca && item.talla" class="meta-sep">·</span>
+          <span v-if="item.talla" class="meta-text">Talla {{ item.talla }}</span>
         </div>
 
         <div class="created">{{ item.creadoHace }}</div>
@@ -215,8 +213,18 @@ onBeforeUnmount(() => {
   display: flex;
   gap: 6px;
   align-items: center;
+  flex-wrap: wrap;
 }
-.dot { opacity: .6; }
+.meta-text {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+.meta-sep {
+  color: #cbd5e1;
+  line-height: 1;
+}
 .created {
   margin-top: 8px;
   color: #9ca3af;

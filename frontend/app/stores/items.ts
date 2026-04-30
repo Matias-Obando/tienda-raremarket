@@ -1,12 +1,6 @@
 export type Talla = 'XS' | 'S' | 'M' | 'L' | 'XL'
 export type Estado = 'Nuevo' | 'Como nuevo' | 'Usado'
-export type Categoria =
-  | 'Camisetas'
-  | 'Sudaderas'
-  | 'Pantalones'
-  | 'Chaquetas'
-  | 'Zapatillas'
-  | 'Accesorios'
+export type Categoria = string
 
 export type Item = {
   id: string
@@ -15,6 +9,7 @@ export type Item = {
   descripcion: string
   precioEur: number
   categoria: Categoria
+  subcategoria?: string
   marca: string
   talla: Talla
   estado: Estado

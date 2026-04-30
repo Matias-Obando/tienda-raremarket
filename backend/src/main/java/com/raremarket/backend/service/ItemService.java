@@ -37,6 +37,7 @@ public class ItemService {
     public List<ItemResponse> listItems(
             String query,
             String categoria,
+            String subcategoria,
             String talla,
             String estado,
             Double minPrice,
@@ -58,6 +59,7 @@ public class ItemService {
             (root, ignoredQuery, cb) -> cb.isTrue(root.get("available")),
             searchSpecification(query),
             equalsIgnoreCase("categoria", categoria),
+            equalsIgnoreCase("subcategoria", subcategoria),
             equalsIgnoreCase("talla", talla),
             equalsIgnoreCase("estado", estado),
             sellerId == null ? null : (root, ignoredQuery, cb) -> cb.equal(root.get("sellerId"), sellerId),
@@ -122,7 +124,20 @@ public class ItemService {
     private void applyRequest(Item item, ItemUpsertRequest request, boolean isCreate) {
         item.setTitulo(requireText(request.getTitulo(), "titulo"));
         item.setDescripcion(requireText(request.getDescripcion(), "descripcion"));
-        item.setCategoria(requireText(request.getCategoria(), "categoria"));
+
+        String normalizedCategory = requireText(request.getCategoria(), "categoria");
+        String normalizedSubcategory = optionalText(request.getSubcategoria());
+
+        if (normalizedSubcategory == null && normalizedCategory.contains(">")) {
+            String[] parts = normalizedCategory.split(">", 2);
+            normalizedCategory = parts[0].trim();
+            if (parts.length > 1) {
+                normalizedSubcategory = optionalText(parts[1]);
+            }
+        }
+
+        item.setCategoria(normalizedCategory);
+        item.setSubcategoria(normalizedSubcategory);
         item.setMarca(requireText(request.getMarca(), "marca"));
         item.setTalla(requireText(request.getTalla(), "talla"));
         item.setEstado(requireText(request.getEstado(), "estado"));
@@ -198,8 +213,18 @@ public class ItemService {
                 containsIgnoreCase("titulo", term),
                 containsIgnoreCase("descripcion", term),
                 containsIgnoreCase("marca", term),
-                containsIgnoreCase("categoria", term)
+                containsIgnoreCase("categoria", term),
+                containsIgnoreCase("subcategoria", term)
         );
+    }
+
+    private String optionalText(String value) {
+        if (value == null) {
+            return null;
+        }
+
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private Specification<Item> equalsIgnoreCase(String field, String value) {

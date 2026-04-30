@@ -1,6 +1,10 @@
 <template>
   <div class="rm-page">
-    <section class="promo-hero" :style="{ '--promo-hero-image': `url(${promoHeroImage})` }">
+    <section
+      v-if="showPromoHero"
+      class="promo-hero"
+      :style="{ '--promo-hero-image': `url(${promoHeroImage})` }"
+    >
       <div class="rm-container promo-hero__inner">
         <div class="promo-hero__content">
           <p class="promo-kicker">Moda sostenible · Venta rápida</p>
@@ -44,6 +48,7 @@
 import { onMounted, computed } from 'vue'
 import ItemCard from '~/components/ItemCard.vue'
 import { useItemsStore } from '~/stores/useItemsStore'
+import { matchesCategoryKey, parseCategoriaLabel } from '~/constants/categories'
 
 const store = useItemsStore()
 const route = useRoute()
@@ -64,24 +69,46 @@ const q = computed(() => {
   return typeof v === 'string' ? v : ''
 })
 
-const mapCatToCategoria: Record<string, Categoria> = {
-  shirts: 'Camisetas',
-  pants: 'Pantalones',
-  sneakers: 'Zapatillas',
-  acc: 'Accesorios',
-}
-
-const activeCategoria = computed<Categoria | null>(() => {
+const activeCategoria = computed<string | null>(() => {
   if (!cat.value) return null
-  return mapCatToCategoria[cat.value] ?? null
+  return cat.value
 })
 
 const activeLabel = computed(() => activeCategoria.value)
 
+const subcat = computed(() => {
+  const v = route.query.subcat
+  return typeof v === 'string' && v.length ? v : null
+})
+
+const showPromoHero = computed(() => !cat.value && !subcat.value && !q.value.trim())
+
 
 const byCategoria = computed(() => {
   if (!activeCategoria.value) return store.items
-  return store.items.filter((it) => it.categoria === activeCategoria.value)
+  return store.items.filter((it) => matchesCategoryKey(it.categoria, activeCategoria.value as string))
+})
+
+const bySubcategoria = computed(() => {
+  if (!subcat.value) return byCategoria.value
+
+  const normalizedSubcat = norm(subcat.value)
+  return byCategoria.value.filter((it) => {
+    const nativeSubcategory = norm(it.subcategoria ?? '')
+    if (nativeSubcategory && nativeSubcategory === normalizedSubcat) {
+      return true
+    }
+
+    const parsed = parseCategoriaLabel(it.categoria)
+    const parsedSubcategory = norm(parsed.subcategory)
+
+    if (parsedSubcategory && parsedSubcategory === normalizedSubcat) {
+      return true
+    }
+
+    const haystack = norm(`${it.titulo} ${it.descripcion ?? ''}`)
+    return haystack.includes(normalizedSubcat)
+  })
 })
 
 function norm(s: string) {
@@ -92,13 +119,13 @@ const filteredItems = computed(() => {
   const query = norm(q.value.trim())
 
   const base = query
-    ? byCategoria.value.filter((it) => {
+    ? bySubcategoria.value.filter((it) => {
         const haystack = norm(
-          `${it.titulo} ${it.marca} ${it.categoria} ${it.estado} ${it.talla} ${it.descripcion ?? ''}`,
+          `${it.titulo} ${it.marca} ${it.categoria} ${it.subcategoria ?? ''} ${it.estado} ${it.talla} ${it.descripcion ?? ''}`,
         )
         return haystack.includes(query)
       })
-    : byCategoria.value
+    : bySubcategoria.value
 
   const arr = [...base]
 

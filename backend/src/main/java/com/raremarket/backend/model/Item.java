@@ -40,6 +40,9 @@ public class Item {
     @Column(nullable = false)
     private String categoria;
 
+    @Column(name = "subcategoria")
+    private String subcategoria;
+
     @Column(nullable = false)
     private String marca;
 
@@ -165,6 +168,14 @@ public class Item {
 
     public void setCategoria(String categoria) {
         this.categoria = categoria;
+    }
+
+    public String getSubcategoria() {
+        return subcategoria;
+    }
+
+    public void setSubcategoria(String subcategoria) {
+        this.subcategoria = subcategoria;
     }
 
     public String getMarca() {
