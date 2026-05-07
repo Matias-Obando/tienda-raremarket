@@ -652,7 +652,7 @@ function openContact() {
 
 function goToSellerProfile() {
   if (!item.value?.sellerId) return
-  navigateTo(`/perfil/${encodeURIComponent(item.value.sellerId)}`)
+  navigateTo(`/vendedor/${encodeURIComponent(item.value.sellerId)}`)
 }
 
 const LS_KEY = 'closely:favorites'

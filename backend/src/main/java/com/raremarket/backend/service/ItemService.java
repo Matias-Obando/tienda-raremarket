@@ -96,8 +96,20 @@ public class ItemService {
     public ItemResponse updateItem(String id, String authenticatedUserId, ItemUpsertRequest request) {
         Item item = findItem(id);
         ensureItemOwnership(item, authenticatedUserId);
+
+        List<String> previousImageUrls = collectItemImageUrls(item);
         applyRequest(item, request, false);
-        return ItemResponse.from(itemRepository.save(item));
+        Item saved = itemRepository.save(item);
+
+        List<String> nextImageUrls = collectItemImageUrls(saved);
+        List<String> urlsToDelete = previousImageUrls.stream()
+                .filter(url -> !nextImageUrls.contains(url))
+                .toList();
+        if (!urlsToDelete.isEmpty()) {
+            supabaseStorageService.deleteItemImagesForOwner(authenticatedUserId, urlsToDelete);
+        }
+
+        return ItemResponse.from(saved);
     }
 
     @Transactional
