@@ -56,7 +56,7 @@
           <h2>📱 Dinámicas</h2>
           <ul>
             <li><NuxtLink to="/item/[id]">Detalle de Producto (dinámico)</NuxtLink></li>
-            <li><NuxtLink to="/perfil/[id]">Perfil de Vendedor (dinámico)</NuxtLink></li>
+            <li><NuxtLink to="/vendedor/[id]">Perfil de Vendedor (dinámico)</NuxtLink></li>
           </ul>
         </section>
       </nav>

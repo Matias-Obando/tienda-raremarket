@@ -65,6 +65,32 @@
         </div>
       </section>
 
+      <section class="card seller-map">
+        <div class="seller-map__head">
+          <div>
+            <p class="seller-map__kicker">Ubicación</p>
+            <h2 class="seller-map__title">Dónde se encuentra {{ sellerName }}</h2>
+          </div>
+          <p class="seller-map__location">
+            {{ sellerLocationLabel }}
+          </p>
+        </div>
+
+        <div v-if="sellerHasLocation" class="seller-map__frame">
+          <iframe
+            class="seller-map__iframe"
+            :src="sellerMapSrc"
+            :title="`Mapa de ubicación de ${sellerName}`"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+          ></iframe>
+        </div>
+
+        <p v-else class="seller-map__empty">
+          Este vendedor todavía no ha añadido una ubicación pública.
+        </p>
+      </section>
+
       <section class="card seller-items">
         <div class="seller-items__head">
           <h2>Artículos de {{ sellerName }}</h2>
@@ -119,6 +145,7 @@ type SellerPreview = {
   id: string
   username: string
   avatarUrl?: string
+  location?: string
 }
 
 const route = useRoute()
@@ -133,6 +160,13 @@ const loadingContact = ref(false)
 const sellerId = computed(() => String(route.params.id || ''))
 const sellerName = computed(() => seller.value?.username?.trim() || 'Vendedor Closely')
 const sellerAvatar = computed(() => seller.value?.avatarUrl || '')
+const sellerLocation = computed(() => seller.value?.location?.trim() || '')
+const sellerHasLocation = computed(() => sellerLocation.value.length > 0)
+const sellerLocationLabel = computed(() => sellerHasLocation.value ? sellerLocation.value : 'Sin ubicación pública')
+const sellerMapSrc = computed(() => {
+  if (!sellerHasLocation.value) return ''
+  return `https://www.google.com/maps?q=${encodeURIComponent(sellerLocation.value)}&output=embed`
+})
 const sellerInitial = computed(() => sellerName.value.charAt(0).toUpperCase())
 
 const publishedItems = computed<Item[]>(() => {
@@ -396,6 +430,67 @@ onMounted(async () => {
   padding: 20px 24px;
 }
 
+.seller-map {
+  padding: 20px 24px;
+}
+
+.seller-map__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.seller-map__kicker {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #1fb981;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.seller-map__title {
+  margin: 6px 0 0;
+  font-size: 1.05rem;
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.seller-map__location {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.92rem;
+  text-align: right;
+  max-width: 46%;
+}
+
+.seller-map__frame {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #dbe4ee;
+  background: #f8fafc;
+  min-height: 280px;
+}
+
+.seller-map__iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 280px;
+  border: 0;
+}
+
+.seller-map__empty {
+  margin: 0;
+  padding: 18px;
+  border-radius: 14px;
+  background: #f8fafc;
+  color: #64748b;
+  border: 1px dashed #dbe4ee;
+}
+
 .info-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -492,8 +587,14 @@ onMounted(async () => {
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 220px));
+  justify-content: center;
+  gap: 10px;
+}
+
+.grid :deep(.card) {
+  max-width: 220px;
+  margin: 0 auto;
 }
 
 /* Modal */
@@ -639,7 +740,7 @@ onMounted(async () => {
 /* Responsive */
 @media (max-width: 900px) {
   .grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   }
 
   .seller-hero {
@@ -705,6 +806,19 @@ onMounted(async () => {
     padding: 18px;
   }
 
+  .seller-map {
+    padding: 18px;
+  }
+
+  .seller-map__head {
+    flex-direction: column;
+  }
+
+  .seller-map__location {
+    text-align: left;
+    max-width: none;
+  }
+
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
@@ -747,4 +861,3 @@ onMounted(async () => {
   }
 }
 </style>
-
