@@ -91,8 +91,14 @@ public class UserController {
         SupabaseStorageService.UploadResult uploadedAvatar = null;
         try {
             if (avatar != null && !avatar.isEmpty()) {
-                uploadedAvatar = supabaseStorageService.uploadAvatar(avatar, id);
-                user.setAvatarUrl(uploadedAvatar.publicUrl());
+                try {
+                    uploadedAvatar = supabaseStorageService.uploadAvatar(avatar, id);
+                    user.setAvatarUrl(uploadedAvatar.publicUrl());
+                } catch (RuntimeException storageEx) {
+                    // Supabase Storage is unreachable - allow profile update without avatar
+                    System.err.println("Advertencia: No se pudo subir el avatar a Supabase Storage. El perfil se actualizará sin cambios en el avatar. Causa: " + storageEx.getMessage());
+                    user.setAvatarUrl(null);
+                }
             } else if (Boolean.TRUE.equals(clearAvatar)) {
                 user.setAvatarUrl(null);
             }
@@ -125,15 +131,6 @@ public class UserController {
                 }
             }
             throw new ResponseStatusException(HttpStatus.CONFLICT, ex.getMessage());
-        } catch (IllegalStateException ex) {
-            if (uploadedAvatar != null) {
-                try {
-                    supabaseStorageService.deleteAvatar(uploadedAvatar.storagePath());
-                } catch (RuntimeException cleanupEx) {
-                    System.err.println("No se pudo limpiar el avatar subido: " + cleanupEx.getMessage());
-                }
-            }
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, ex.getMessage());
         }
     }
 }
