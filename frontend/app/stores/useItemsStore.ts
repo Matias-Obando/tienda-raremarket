@@ -1,10 +1,17 @@
 import { defineStore } from 'pinia'
 import type { Item, Categoria, Talla, Estado } from './items'
 import { mockItems } from './items'
+import {
+  matchesCategorySelection,
+  matchesSubcategorySelection,
+  normalizeCategoryText,
+  resolveCategoryLabel
+} from '~/constants/categories'
 
 type Filters = {
   query: string
   categoria?: Categoria | undefined
+  subcategoria?: string | undefined
   talla?: Talla | undefined
   estado?: Estado | undefined
   minPrice?: number | null
@@ -42,14 +49,15 @@ export const useItemsStore = defineStore('items', {
   getters: {
     total: (state) => state.items.length,
     filteredItems: (state) => {
-      const q = state.filters.query?.trim().toLowerCase() ?? ''
+      const q = normalizeCategoryText(state.filters.query)
       return state.items.filter((it) => {
         if (q) {
-          const inTitle = it.titulo.toLowerCase().includes(q)
-          const inDesc = (it.descripcion || '').toLowerCase().includes(q)
+          const inTitle = normalizeCategoryText(it.titulo).includes(q)
+          const inDesc = normalizeCategoryText(it.descripcion).includes(q)
           if (!inTitle && !inDesc) return false
         }
-        if (state.filters.categoria && it.categoria !== state.filters.categoria) return false
+        if (state.filters.categoria && !matchesCategorySelection(it.categoria, state.filters.categoria)) return false
+        if (state.filters.subcategoria && !matchesSubcategorySelection(it.categoria, it.subcategoria, state.filters.subcategoria)) return false
         if (state.filters.talla && it.talla !== state.filters.talla) return false
         if (state.filters.estado && it.estado !== state.filters.estado) return false
         if (state.filters.minPrice != null && it.precioEur < state.filters.minPrice) return false
@@ -65,7 +73,8 @@ export const useItemsStore = defineStore('items', {
         const config = useRuntimeConfig()
         const params: any = {}
         if (this.filters.query) params.query = this.filters.query
-        if (this.filters.categoria) params.categoria = this.filters.categoria
+        if (this.filters.categoria) params.categoria = resolveCategoryLabel(this.filters.categoria) ?? this.filters.categoria
+        if (this.filters.subcategoria) params.subcategoria = this.filters.subcategoria
         if (this.filters.talla) params.talla = this.filters.talla
         if (this.filters.estado) params.estado = this.filters.estado
         if (this.filters.minPrice != null) params.minPrice = this.filters.minPrice
@@ -199,7 +208,7 @@ export const useItemsStore = defineStore('items', {
       this.filters = { ...this.filters, ...payload }
     },
     clearFilters() {
-      this.filters = { query: '', categoria: undefined, talla: undefined, estado: undefined, minPrice: null, maxPrice: null }
+      this.filters = { query: '', categoria: undefined, subcategoria: undefined, talla: undefined, estado: undefined, minPrice: null, maxPrice: null }
     },
     // getById local solo si ya tienes los items cargados
     getById(id: string) {

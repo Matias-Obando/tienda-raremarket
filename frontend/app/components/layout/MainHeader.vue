@@ -200,7 +200,7 @@
     </transition>
   </header>
 
-  <CategoryNav :categories="categories" />
+  <CategoryNav v-if="showCategoryNav" :categories="categories" :show-subcategories="false" />
 </template>
 
 <script setup lang="ts">
@@ -234,6 +234,7 @@ const navLinks = [
   { label: 'Mensajes', to: '/chat' },
   { label: 'Vender', to: '/vender' }
 ]
+const showCategoryNav = computed(() => true)
 
 function isActivePath(path: string) {
   return route.path === path || route.path.startsWith(`${path}/`)

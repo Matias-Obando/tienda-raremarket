@@ -548,6 +548,13 @@ function prevCheckoutStep() {
   checkoutStep.value = 1
 }
 
+function closeCheckout() {
+  checkoutError.value = ''
+  checkoutLoading.value = false
+  checkoutStep.value = 1
+  checkoutOpen.value = false
+}
+
 function handlePrimaryAction() {
   if (checkoutStep.value === 1) {
     nextCheckoutStep()
