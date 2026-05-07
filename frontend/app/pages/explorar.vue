@@ -28,18 +28,32 @@
       </div>
     </section>
 
-    <div class="rm-container">
-      <div v-if="filteredItems.length === 0" class="empty">
-      No hay productos con ese filtro/búsqueda.
+    <div :class="['rm-container', 'explore-layout', { 'no-sidebar': showPromoHero }]">
+      <ExploreFiltersSidebar v-if="!showPromoHero" :total-results="filteredItems.length" :category-counts="categoryCounts" />
 
-      <div class="emptyActions">
-        <NuxtLink to="/explorar" class="pill">Ver todos</NuxtLink>
-      </div>
-      </div>
+      <main class="explore-content">
+        <div v-if="!showPromoHero" class="explore-head">
+          <div>
+            <p class="explore-kicker">Marketplace</p>
+            <h2 id="catalogo">Explorar artículos</h2>
+            <p>Filtra por categoría, subcategoría, talla, estado y precio desde el panel lateral.</p>
+          </div>
 
-      <div v-else id="catalogo" class="grid">
-        <ItemCard v-for="it in filteredItems" :key="it.id" :item="it" />
-      </div>
+          <div v-if="!showPromoHero" class="explore-badge">{{ filteredItems.length }} resultados</div>
+        </div>
+
+        <div v-if="filteredItems.length === 0" class="empty">
+          No hay productos con ese filtro/búsqueda.
+
+          <div class="emptyActions">
+            <NuxtLink to="/explorar" class="pill">Ver todos</NuxtLink>
+          </div>
+        </div>
+
+        <div v-else class="grid">
+          <ItemCard v-for="it in filteredItems" :key="it.id" :item="it" />
+        </div>
+      </main>
     </div>
   </div>
 </template>
@@ -47,8 +61,17 @@
 <script setup lang="ts">
 import { onMounted, computed } from 'vue'
 import ItemCard from '~/components/ItemCard.vue'
+import ExploreFiltersSidebar from '~/components/explore/ExploreFiltersSidebar.vue'
 import { useItemsStore } from '~/stores/useItemsStore'
-import { matchesCategoryKey, parseCategoriaLabel } from '~/constants/categories'
+import {
+  matchesCategorySelection,
+  matchesSubcategorySelection,
+  normalizeCategoryText,
+  resolveCategoryLabel,
+  resolveCategoryKey,
+  composeCategoriaLabel,
+  parseCategoriaLabel
+} from '~/constants/categories'
 
 const store = useItemsStore()
 const route = useRoute()
@@ -69,6 +92,31 @@ const q = computed(() => {
   return typeof v === 'string' ? v : ''
 })
 
+const activeSize = computed(() => {
+  const v = route.query.talla
+  return typeof v === 'string' && v.length ? v : null
+})
+
+const activeState = computed(() => {
+  const v = route.query.estado
+  return typeof v === 'string' && v.length ? v : null
+})
+
+const minPrice = computed(() => {
+  const v = route.query.minPrice
+  return typeof v === 'string' && v.length ? Number(v) : null
+})
+
+const maxPrice = computed(() => {
+  const v = route.query.maxPrice
+  return typeof v === 'string' && v.length ? Number(v) : null
+})
+
+const sortValue = computed(() => {
+  const v = route.query.sort
+  return typeof v === 'string' && v.length ? v : ''
+})
+
 const activeCategoria = computed<string | null>(() => {
   if (!cat.value) return null
   return cat.value
@@ -83,53 +131,62 @@ const subcat = computed(() => {
 
 const showPromoHero = computed(() => !cat.value && !subcat.value && !q.value.trim())
 
+const categoryCounts = computed(() => {
+  return store.items.reduce((acc, item) => {
+    const key = resolveCategoryKey(item.categoria) ?? resolveCategoryKey(parseCategoriaLabel(item.categoria).parent) ?? item.categoria
+    acc[key] = (acc[key] ?? 0) + 1
+    return acc
+  }, {} as Record<string, number>)
+})
+
 
 const byCategoria = computed(() => {
   if (!activeCategoria.value) return store.items
-  return store.items.filter((it) => matchesCategoryKey(it.categoria, activeCategoria.value as string))
+  return store.items.filter((it) => matchesCategorySelection(it.categoria, activeCategoria.value))
 })
 
 const bySubcategoria = computed(() => {
   if (!subcat.value) return byCategoria.value
 
-  const normalizedSubcat = norm(subcat.value)
   return byCategoria.value.filter((it) => {
-    const nativeSubcategory = norm(it.subcategoria ?? '')
-    if (nativeSubcategory && nativeSubcategory === normalizedSubcat) {
+    if (matchesSubcategorySelection(it.categoria, it.subcategoria, subcat.value)) {
       return true
     }
 
-    const parsed = parseCategoriaLabel(it.categoria)
-    const parsedSubcategory = norm(parsed.subcategory)
-
-    if (parsedSubcategory && parsedSubcategory === normalizedSubcat) {
-      return true
-    }
-
-    const haystack = norm(`${it.titulo} ${it.descripcion ?? ''}`)
+    const normalizedSubcat = normalizeCategoryText(subcat.value)
+    const haystack = normalizeCategoryText(`${it.titulo} ${it.descripcion ?? ''}`)
     return haystack.includes(normalizedSubcat)
   })
 })
 
-function norm(s: string) {
-  return s.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '')
-}
-
 const filteredItems = computed(() => {
-  const query = norm(q.value.trim())
+  const query = normalizeCategoryText(q.value)
 
   const base = query
     ? bySubcategoria.value.filter((it) => {
-        const haystack = norm(
+        const haystack = normalizeCategoryText(
           `${it.titulo} ${it.marca} ${it.categoria} ${it.subcategoria ?? ''} ${it.estado} ${it.talla} ${it.descripcion ?? ''}`,
         )
         return haystack.includes(query)
       })
     : bySubcategoria.value
 
-  const arr = [...base]
+  const withExtraFilters = base.filter((it) => {
+    if (activeSize.value && it.talla !== activeSize.value) return false
+    if (activeState.value && it.estado !== activeState.value) return false
+    if (minPrice.value != null && !Number.isNaN(minPrice.value) && it.precioEur < minPrice.value) return false
+    if (maxPrice.value != null && !Number.isNaN(maxPrice.value) && it.precioEur > maxPrice.value) return false
+    return true
+  })
 
-  return arr
+  const sorted = [...withExtraFilters]
+  if (sortValue.value === 'price_asc') {
+    sorted.sort((a, b) => a.precioEur - b.precioEur)
+  } else if (sortValue.value === 'price_desc') {
+    sorted.sort((a, b) => b.precioEur - a.precioEur)
+  }
+
+  return sorted
 })
 </script>
 
@@ -148,6 +205,56 @@ const filteredItems = computed(() => {
   margin: 0 auto;
   padding-left: 40px;
   padding-right: 40px;
+}
+
+.explore-layout {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+  margin-top: 18px;
+}
+
+.explore-content {
+  min-width: 0;
+}
+
+.explore-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.explore-kicker {
+  margin: 0 0 6px;
+  color: #0f766e;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.explore-head h2 {
+  margin: 0;
+  font-size: clamp(1.6rem, 2.3vw, 2.2rem);
+  letter-spacing: -0.04em;
+}
+
+.explore-head p {
+  margin: 8px 0 0;
+  color: #64748b;
+}
+
+.explore-badge {
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #dbe3ec;
+  color: #0f172a;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .promo-hero {
@@ -405,6 +512,30 @@ const filteredItems = computed(() => {
 }
 @media (max-width: 520px) {
   .grid { grid-template-columns: repeat(1, 1fr); }
+}
+
+.explore-layout.no-sidebar {
+  grid-template-columns: 1fr;
+}
+
+@media (max-width: 1200px) {
+  .explore-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .explore-head {
+    align-items: start;
+  }
+}
+
+@media (max-width: 720px) {
+  .explore-head {
+    flex-direction: column;
+  }
+
+  .explore-badge {
+    width: fit-content;
+  }
 }
 
 

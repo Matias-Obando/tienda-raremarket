@@ -21,6 +21,45 @@ export const CATEGORY_KEY_TO_LABEL: Record<string, string> = CATEGORY_TREE.reduc
   return acc
 }, {} as Record<string, string>)
 
+export function normalizeCategoryText(value: string | null | undefined): string {
+  return (value ?? '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+}
+
+export function resolveCategoryLabel(value: string | null | undefined): string | null {
+  const normalized = normalizeCategoryText(value)
+  if (!normalized) {
+    return null
+  }
+
+  const byKey = CATEGORY_TREE.find((node) => normalizeCategoryText(node.key) === normalized)
+  if (byKey) {
+    return byKey.label
+  }
+
+  const byLabel = CATEGORY_TREE.find((node) => normalizeCategoryText(node.label) === normalized)
+  const fallback = (value ?? '').trim()
+  return byLabel?.label ?? (fallback || null)
+}
+
+export function resolveCategoryKey(value: string | null | undefined): string | null {
+  const normalized = normalizeCategoryText(value)
+  if (!normalized) {
+    return null
+  }
+
+  const byKey = CATEGORY_TREE.find((node) => normalizeCategoryText(node.key) === normalized)
+  if (byKey) {
+    return byKey.key
+  }
+
+  const byLabel = CATEGORY_TREE.find((node) => normalizeCategoryText(node.label) === normalized)
+  return byLabel?.key ?? null
+}
+
 export function getSubcategoriesByKey(categoryKey: string | null | undefined): string[] {
   if (!categoryKey) {
     return []
@@ -57,4 +96,38 @@ export function matchesCategoryKey(categoria: string | null | undefined, categor
 
   const { parent } = parseCategoriaLabel(categoria)
   return parent.toLowerCase() === expectedParent.toLowerCase()
+}
+
+export function matchesCategorySelection(categoria: string | null | undefined, selection: string | null | undefined): boolean {
+  const normalizedSelection = normalizeCategoryText(selection)
+  if (!normalizedSelection) {
+    return false
+  }
+
+  const parsed = parseCategoriaLabel(categoria)
+  const itemParent = normalizeCategoryText(parsed.parent)
+  const itemCategory = normalizeCategoryText(categoria)
+  const resolvedLabel = normalizeCategoryText(resolveCategoryLabel(selection))
+  const resolvedKey = normalizeCategoryText(resolveCategoryKey(selection))
+
+  return [itemParent, itemCategory].includes(normalizedSelection) ||
+    (resolvedLabel ? [itemParent, itemCategory].includes(resolvedLabel) : false) ||
+    (resolvedKey ? [itemParent, itemCategory].includes(resolvedKey) : false)
+}
+
+export function matchesSubcategorySelection(
+  categoria: string | null | undefined,
+  itemSubcategory: string | null | undefined,
+  selection: string | null | undefined
+): boolean {
+  const normalizedSelection = normalizeCategoryText(selection)
+  if (!normalizedSelection) {
+    return false
+  }
+
+  const parsed = parseCategoriaLabel(categoria)
+  const itemSub = normalizeCategoryText(itemSubcategory)
+  const parsedSub = normalizeCategoryText(parsed.subcategory)
+
+  return [itemSub, parsedSub].includes(normalizedSelection)
 }

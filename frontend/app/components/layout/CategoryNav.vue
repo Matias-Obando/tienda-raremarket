@@ -19,7 +19,7 @@
           </li>
         </ul>
         <ul
-          v-if="activeSubcategories.length"
+          v-if="props.showSubcategories && activeSubcategories.length"
           class="rm-subcatnav__scroller"
           role="tablist"
           aria-label="Subcategorías"
@@ -61,11 +61,15 @@ const route = useRoute()
 
 const props = defineProps({
   categories: {
-    type: Array as () => Array<{ key: string; label: string }>,
+    type: Array as () => Array<{ key: string; label: string }> ,
     default: () => ([
       { key: 'new', label: 'Inicio' },
       ...CATEGORY_TREE.map((node) => ({ key: node.key, label: node.label }))
     ])
+  },
+  showSubcategories: {
+    type: Boolean,
+    default: true
   }
 })
 
