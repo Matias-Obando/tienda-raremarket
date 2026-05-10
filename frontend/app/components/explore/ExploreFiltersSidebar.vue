@@ -1,11 +1,24 @@
 <template>
-  <aside class="filters-panel">
-    <div class="filters-panel__hero">
-      <p class="filters-kicker">Filtrar catálogo</p>
-      <h2>Refina tu búsqueda</h2>
-      <p>
-        Usa los filtros para acotar por categoría, estado, talla o precio sin perder el foco.
-      </p>
+  <aside :class="['filters-panel', { 'filters-panel--open': isOpen }]">
+    <div class="filters-panel__header">
+      <div class="filters-panel__hero">
+        <p class="filters-kicker">Filtrar catálogo</p>
+        <h2>Refina tu búsqueda</h2>
+        <p>
+          Usa los filtros para acotar por categoría, estado, talla o precio sin perder el foco.
+        </p>
+      </div>
+      <button
+        type="button"
+        class="filters-close-btn"
+        @click="$emit('close-filters')"
+        aria-label="Cerrar filtros"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
     </div>
 
     <section class="filters-section">
@@ -15,7 +28,6 @@
       </div>
 
       <div class="select-stack">
-
         <label class="select-field">
           <span>Tipo</span>
           <select :value="activeSubcategory ?? ''" :disabled="!activeCategory" @change="updateSubcategory">
@@ -30,46 +42,18 @@
 
     <section class="filters-section">
       <h3>Talla</h3>
-      <div class="chip-row">
-        <NuxtLink
-          :to="linkFor({ talla: null })"
-          class="chip"
-          :class="{ 'chip--active': !activeSize }"
-        >
-          Todas
-        </NuxtLink>
-        <NuxtLink
-          v-for="size in sizeOptions"
-          :key="size"
-          :to="linkFor({ talla: size })"
-          class="chip"
-          :class="{ 'chip--active': activeSize === size }"
-        >
-          {{ size }}
-        </NuxtLink>
-      </div>
+      <select :value="activeSize ?? ''" @change="updateQuerySelect('talla', $event)">
+        <option value="">Todas</option>
+        <option v-for="size in sizeOptions" :key="size" :value="size">{{ size }}</option>
+      </select>
     </section>
 
     <section class="filters-section">
       <h3>Estado</h3>
-      <div class="chip-row">
-        <NuxtLink
-          :to="linkFor({ estado: null })"
-          class="chip"
-          :class="{ 'chip--active': !activeState }"
-        >
-          Todos
-        </NuxtLink>
-        <NuxtLink
-          v-for="state in stateOptions"
-          :key="state"
-          :to="linkFor({ estado: state })"
-          class="chip"
-          :class="{ 'chip--active': activeState === state }"
-        >
-          {{ state }}
-        </NuxtLink>
-      </div>
+      <select :value="activeState ?? ''" @change="updateQuerySelect('estado', $event)">
+        <option value="">Todos</option>
+        <option v-for="state in stateOptions" :key="state" :value="state">{{ state }}</option>
+      </select>
     </section>
 
     <section class="filters-section">
@@ -95,28 +79,29 @@
       </select>
     </section>
 
-    <section class="filters-section filters-section--summary">
-      <p class="summary-label">Resultados actuales</p>
-      <div class="summary-value">{{ totalResults }}</div>
-      <NuxtLink to="/explorar" class="summary-link">Ver catálogo limpio</NuxtLink>
-    </section>
+
   </aside>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { CATEGORY_TREE, getSubcategoriesByKey } from '~/constants/categories'
+import { getSubcategoriesByKey } from '~/constants/categories'
 
 type QueryLike = Record<string, string | number | null | undefined>
 
 const route = useRoute()
 
-const props = defineProps<{
+defineProps<{
   totalResults: number
   categoryCounts?: Record<string, number>
+  isOpen?: boolean
 }>()
 
-const categoryOptions = CATEGORY_TREE
+defineEmits<{
+  'toggle-filters': []
+  'close-filters': []
+}>()
+
 const sizeOptions = ['XS', 'S', 'M', 'L', 'XL']
 const stateOptions = ['Nuevo', 'Como nuevo', 'Usado']
 
@@ -130,14 +115,8 @@ const sortValue = computed(() => route.query.sort as string | undefined)
 
 const activeSubcategories = computed(() => getSubcategoriesByKey(activeCategory.value))
 
-const categoryCounts = computed(() => props.categoryCounts ?? {})
-
-function isCategoryActive(categoryKey: string) {
-  return activeCategory.value === categoryKey
-}
-
 function linkFor(nextValues: QueryLike) {
-  const next: Record<string, string> = { ...route.query } as Record<string, string>
+  const next: Record<string, string> = { ...(route.query as Record<string, string>) }
 
   for (const [key, value] of Object.entries(nextValues)) {
     if (value === null || value === undefined || value === '') {
@@ -150,18 +129,16 @@ function linkFor(nextValues: QueryLike) {
   return { path: '/explorar', query: next }
 }
 
-function updateCategory(event: Event) {
+function updateQuerySelect(field: 'talla' | 'estado', event: Event) {
   const target = event.target as HTMLSelectElement | null
   const next = { ...route.query }
 
   if (!target?.value) {
-    delete next.cat
-    delete next.subcat
-    return navigateTo({ path: '/explorar', query: next })
+    delete next[field]
+  } else {
+    next[field] = target.value
   }
 
-  next.cat = target.value
-  delete next.subcat
   return navigateTo({ path: '/explorar', query: next })
 }
 
@@ -248,7 +225,8 @@ function updateSort(event: Event) {
   gap: 12px;
 }
 
-.filters-section__head {
+.filters-section__head,
+.filters-section__head-with-toggle {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -263,10 +241,49 @@ function updateSort(event: Event) {
   text-decoration: none;
 }
 
+.section-toggle-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #0f172a;
+  transition: transform 0.2s ease, color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.section-toggle-btn:hover {
+  color: #0f766e;
+}
+
+.section-toggle-btn svg {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.2s ease;
+}
+
+.section-toggle-btn[aria-expanded="false"] svg {
+  transform: rotate(-90deg);
+}
+
 .chip-row {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.section-fade-enter-active,
+.section-fade-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.section-fade-enter-from,
+.section-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
 }
 
 .chip {
@@ -308,7 +325,9 @@ function updateSort(event: Event) {
   color: #475569;
 }
 
-.select-field select {
+.select-field select,
+.price-grid input,
+.filters-section select {
   width: 100%;
   border: 1px solid #dbe3ec;
   border-radius: 14px;
@@ -328,16 +347,6 @@ function updateSort(event: Event) {
   gap: 6px;
   font-size: 13px;
   color: #475569;
-}
-
-.price-grid input,
-select {
-  width: 100%;
-  border: 1px solid #dbe3ec;
-  border-radius: 14px;
-  padding: 11px 12px;
-  background: #fff;
-  color: #0f172a;
 }
 
 .filters-section--summary {
@@ -366,6 +375,108 @@ select {
 @media (max-width: 1200px) {
   .filters-panel {
     position: static;
+  }
+}
+
+.filters-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.filters-close-btn {
+  display: none;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #0f172a;
+  transition: color 0.2s ease;
+}
+
+.filters-close-btn:hover {
+  color: #0f766e;
+}
+
+.filters-close-btn svg {
+  width: 100%;
+  height: 100%;
+  stroke-width: 2.5;
+}
+
+@media (max-width: 920px) {
+  .filters-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: 100%;
+    height: 100vh;
+    border-radius: 0;
+    border: none;
+    background: #fff;
+    box-shadow: none;
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    padding: 16px;
+    overflow-y: auto;
+    gap: 16px;
+  }
+
+  .filters-panel--open {
+    transform: translateX(0);
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+  }
+
+  .filters-close-btn,
+  .section-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .filters-panel__hero {
+    padding-right: 0;
+  }
+
+  .filters-panel__hero h2 {
+    font-size: 1.4rem;
+  }
+
+  .filters-panel__hero p {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 640px) {
+  .filters-panel {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .filters-panel__header {
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 10;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e2e8f0;
+    margin: -12px -12px 0 -12px;
+    padding: 12px;
+  }
+
+  .filters-panel__hero {
+    margin-bottom: 0;
+  }
+
+  .filters-panel__hero p {
+    display: none;
   }
 }
 </style>

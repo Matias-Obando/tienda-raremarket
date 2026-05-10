@@ -126,6 +126,11 @@ public class ApiExceptionHandler {
             case "maxPrice cannot be negative" -> "El precio maximo no puede ser negativo.";
             case "minPrice cannot be greater than maxPrice" -> "El precio minimo no puede ser mayor que el maximo.";
             case "precioEur cannot be negative" -> "El precio no puede ser negativo.";
+            case "Brevo API no esta configurada" -> "El servicio de correo no esta configurado.";
+            case "BREVO_SENDER_EMAIL no esta configurado" -> "Falta configurar el correo remitente.";
+            case "No se pudo enviar el correo de recuperacion" -> "No se pudo enviar el correo de recuperacion.";
+            case "token is required" -> "Debes indicar un token de recuperacion valido.";
+            case "Invalid or expired reset token" -> "El enlace de recuperacion no es valido o ya expiro.";
             case "imagen is required" -> "Debes indicar una imagen principal.";
             case "Item seller not found" -> "No se pudo identificar el vendedor del articulo.";
             case "You cannot buy your own item" -> "No puedes comprar tu propio articulo.";

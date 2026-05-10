@@ -49,7 +49,7 @@
       <article class="profile-card">
         <div class="section-head">
           <h2>Mis pedidos</h2>
-          <span class="section-note">Gestiona compras y ventas simuladas</span>
+          <span class="section-note">Seguimiento de compras y ventas</span>
         </div>
 
         <div class="order-tabs">
@@ -84,14 +84,61 @@
               <img :src="order.itemImage" :alt="order.itemTitle" class="order-image" />
               <div>
                 <p v-if="order.deliveryMethod === 'shipping'" class="order-sub">
-                  Envio a: {{ order.shippingFullName }} · {{ order.shippingCity }}
+                  Envío a: {{ order.shippingFullName }} · {{ order.shippingCity }}
                 </p>
                 <p v-if="order.paymentBrand === 'EFECTIVO'" class="order-sub">Pago: En efectivo</p>
                 <p v-else class="order-sub">Pago simulado: {{ order.paymentBrand }} ****{{ order.paymentLast4 }}</p>
+                <p class="order-sub order-sub--muted">Pedido realizado {{ formatOrderDate(order.createdAt) }}</p>
               </div>
             </div>
 
-            <div class="order-actions">
+            <div v-if="ordersRole === 'buyer'" class="order-journey">
+              <div class="order-journey__head">
+                <span class="order-journey__label">Seguimiento</span>
+                <span class="order-journey__date">{{ order.deliveryMethod === 'shipping' ? 'Con envío protegido' : 'Entrega coordinada' }}</span>
+              </div>
+
+              <ol class="order-journey__list">
+                <li
+                  v-for="(step, stepIndex) in orderJourney(order)"
+                  :key="`${order.id}-${stepIndex}`"
+                  class="order-journey__step"
+                  :class="`order-journey__step--${step.state}`"
+                >
+                  <span class="order-journey__icon" aria-hidden="true">
+                    <svg v-if="step.icon === 'check'" viewBox="0 0 24 24" fill="none">
+                      <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <svg v-else-if="step.icon === 'box'" viewBox="0 0 24 24" fill="none">
+                      <path d="M4 7.5L12 3l8 4.5-8 4.5L4 7.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+                      <path d="M4 7.5V16.5L12 21l8-4.5V7.5" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+                      <path d="M12 12V21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                    </svg>
+                    <svg v-else-if="step.icon === 'truck'" viewBox="0 0 24 24" fill="none">
+                      <path d="M3 7h11v9H3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+                      <path d="M14 10h3l3 3v3h-6V10Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+                      <circle cx="8" cy="18" r="1.8" fill="currentColor" />
+                      <circle cx="18" cy="18" r="1.8" fill="currentColor" />
+                    </svg>
+                    <svg v-else viewBox="0 0 24 24" fill="none">
+                      <path d="M6 5h8l4 4v10H6V5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+                      <path d="M14 5v4h4" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+                      <path d="M8 13h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                      <path d="M8 16h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                    </svg>
+                  </span>
+                  <div class="order-journey__body">
+                    <div class="order-journey__row">
+                      <p class="order-journey__title">{{ step.title }}</p>
+                      <span class="order-journey__stamp">{{ step.dateLabel }}</span>
+                    </div>
+                    <p class="order-journey__text">{{ step.text }}</p>
+                  </div>
+                </li>
+              </ol>
+            </div>
+
+            <div v-else class="order-actions">
               <button
                 v-for="action in orderActions(order)"
                 :key="action.to"
@@ -240,6 +287,14 @@ type OrderAction = {
   to: string
 }
 
+type OrderJourneyStep = {
+  title: string
+  text: string
+  dateLabel: string
+  icon: 'check' | 'box' | 'truck' | 'flag'
+  state: 'done' | 'active' | 'pending' | 'cancelled'
+}
+
 const demoUser: SessionUser = {
   id: 'demo-user',
   username: 'Closely Demo',
@@ -318,14 +373,14 @@ async function loadPublishedItems() {
 
 function prettyStatus(status: string) {
   const map: Record<string, string> = {
-    PENDIENTE_ACEPTACION: 'Pendiente de aceptacion',
-    ACEPTADO: 'Aceptado',
+    PENDIENTE_ACEPTACION: 'Pedido recibido',
+    ACEPTADO: 'Pedido aprobado',
     RECHAZADO: 'Rechazado',
-    PREPARANDO_ENVIO: 'Preparando envio',
-    ENVIADO: 'Enviado',
+    PREPARANDO_ENVIO: 'El vendedor prepara tu pedido',
+    ENVIADO: 'Paquete enviado',
     QUEDADA_ACORDADA: 'Quedada acordada',
-    ENTREGADO: 'Vendido',
-    COMPLETADO: 'Completado',
+    ENTREGADO: 'Paquete entregado',
+    COMPLETADO: 'Entrega confirmada',
     CANCELADO: 'Cancelado'
   }
   return map[status] ?? status
@@ -333,31 +388,112 @@ function prettyStatus(status: string) {
 
 function orderActions(order: OrderSummary): OrderAction[] {
   if (ordersRole.value === 'seller') {
-    if (order.status === 'PENDIENTE_ACEPTACION') {
-      return [
-        { label: 'Aceptar', to: 'ACEPTADO' },
-        { label: 'Rechazar', to: 'RECHAZADO' }
-      ]
-    }
-    if (order.status === 'ACEPTADO' && order.deliveryMethod === 'shipping') {
-      return [
-        { label: 'Preparar envio', to: 'PREPARANDO_ENVIO' },
-        { label: 'Marcar enviado', to: 'ENVIADO' }
-      ]
-    }
     if (order.status === 'PREPARANDO_ENVIO') {
       return [{ label: 'Marcar enviado', to: 'ENVIADO' }]
     }
+    if (order.status === 'ENVIADO') {
+      return [{ label: 'Marcar entregado', to: 'ENTREGADO' }]
+    }
     return []
   }
-
-  if (order.status === 'PENDIENTE_ACEPTACION') {
-    return [{ label: 'Cancelar pedido', to: 'CANCELADO' }]
-  }
-  if (order.status === 'ENVIADO' || order.status === 'ENTREGADO') {
-    return [{ label: 'Confirmar completado', to: 'COMPLETADO' }]
-  }
   return []
+}
+
+function formatOrderDate(value: string) {
+  if (!value) {
+    return 'hace unos momentos'
+  }
+
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) {
+    return 'hace unos momentos'
+  }
+
+  return new Intl.DateTimeFormat('es-ES', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  }).format(parsed)
+}
+
+function formatJourneyDate(value: Date) {
+  return new Intl.DateTimeFormat('es-ES', {
+    day: '2-digit',
+    month: 'short'
+  }).format(value)
+}
+
+function addDays(value: Date, days: number) {
+  const next = new Date(value)
+  next.setDate(next.getDate() + days)
+  return next
+}
+
+function orderJourney(order: OrderSummary): OrderJourneyStep[] {
+  const normalized = (order.status || '').trim().toUpperCase()
+  const baseDate = new Date(order.createdAt)
+  const steps = [
+    {
+      title: 'Pedido realizado',
+      text: 'El pago quedó registrado y el pedido entró en la cola de preparación.'
+      , icon: 'check'
+    },
+    {
+      title: 'Vendedor preparando tu pedido',
+      text: 'La prenda se está revisando, empaquetando y dejando lista para salir.'
+      , icon: 'box'
+    },
+    {
+      title: 'Paquete enviado',
+      text: 'Tu pedido ya salió hacia la dirección de envío con seguimiento interno.'
+      , icon: 'truck'
+    },
+    {
+      title: 'Tu paquete llegó a destino',
+      text: 'La entrega se completó y el pedido quedó cerrado.'
+      , icon: 'flag'
+    }
+  ]
+
+  const activeIndex = (() => {
+    switch (normalized) {
+      case 'CANCELADO':
+      case 'RECHAZADO':
+        return -1
+      case 'PENDIENTE_ACEPTACION':
+      case 'ACEPTADO':
+      case 'PREPARANDO_ENVIO':
+        return 1
+      case 'ENVIADO':
+        return 2
+      case 'ENTREGADO':
+      case 'COMPLETADO':
+        return 3
+      default:
+        return 1
+    }
+  })()
+
+  return steps.map((step, index) => {
+    const offsetDays = [0, 1, 3, 5][index] ?? index * 2
+    const dateLabel = activeIndex === -1
+      ? `${index === 0 ? 'Cancelado' : 'Pendiente'} · ${formatJourneyDate(addDays(baseDate, offsetDays))}`
+      : `${index <= activeIndex ? '' : 'Previsto '} ${formatJourneyDate(addDays(baseDate, offsetDays))}`.replace(/\s+/g, ' ').trim()
+
+    if (activeIndex === -1) {
+      return {
+        ...step,
+        dateLabel,
+        state: index === 0 ? 'done' : 'cancelled'
+      }
+    }
+
+    return {
+      ...step,
+      dateLabel,
+      state: index < activeIndex ? 'done' : index === activeIndex ? 'active' : 'pending'
+    }
+  })
 }
 
 async function loadOrders() {
@@ -772,6 +908,166 @@ onBeforeUnmount(() => {
   margin: 0 0 4px;
   color: #475569;
   font-size: 0.83rem;
+}
+
+.order-sub--muted {
+  color: #64748b;
+}
+
+.order-journey {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #f8fbff 0%, #f3fbf8 100%);
+  border: 1px solid #dbe4ee;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.order-journey__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.order-journey__label {
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #0f766e;
+}
+
+.order-journey__date {
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.order-journey__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.order-journey__step {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 10px;
+  align-items: start;
+  position: relative;
+}
+
+.order-journey__step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 16px;
+  top: 34px;
+  bottom: -12px;
+  width: 2px;
+  background: #dbe4ee;
+}
+
+.order-journey__icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  margin-top: 1px;
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.06);
+}
+
+.order-journey__icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.order-journey__body {
+  min-width: 0;
+}
+
+.order-journey__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.order-journey__stamp {
+  flex-shrink: 0;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #64748b;
+  background: #ffffff;
+  border: 1px solid #dbe4ee;
+  border-radius: 999px;
+  padding: 4px 8px;
+}
+
+.order-journey__title {
+  margin: 0;
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 0.88rem;
+}
+
+.order-journey__text {
+  margin: 2px 0 0;
+  color: #64748b;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.order-journey__step--done .order-journey__icon {
+  border-color: #1fb981;
+  background: #d1fae5;
+  color: #0f766e;
+}
+
+.order-journey__step--active .order-journey__icon {
+  border-color: #0f766e;
+  background: #0f766e;
+  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+  color: #ffffff;
+}
+
+.order-journey__step--active .order-journey__title {
+  color: #0f766e;
+}
+
+.order-journey__step--done .order-journey__icon {
+  border-color: #1fb981;
+  background: #ecfdf5;
+  color: #0f766e;
+}
+
+.order-journey__step--cancelled .order-journey__icon {
+  border-color: #fca5a5;
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.order-journey__step--cancelled .order-journey__title,
+.order-journey__step--cancelled .order-journey__text {
+  color: #b91c1c;
+}
+
+.order-journey__step--pending .order-journey__icon {
+  background: #fff;
+  color: #94a3b8;
+}
+
+.order-journey__step--pending .order-journey__stamp {
+  color: #94a3b8;
 }
 
 .order-actions {

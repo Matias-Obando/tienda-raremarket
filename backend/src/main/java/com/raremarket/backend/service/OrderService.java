@@ -70,7 +70,7 @@ public class OrderService {
         }
         order.setPaymentBrand(detectCardBrand(cardDigits));
         order.setPaymentLast4(cardDigits.substring(cardDigits.length() - 4));
-        order.setStatus("PENDIENTE_ACEPTACION");
+        order.setStatus("PREPARANDO_ENVIO");
 
         applyDeliveryData(order, request);
 
@@ -157,23 +157,19 @@ public class OrderService {
     }
 
     private boolean canSellerTransition(String from, String to) {
-        if ("PENDIENTE_ACEPTACION".equals(from)) {
-            return "ACEPTADO".equals(to) || "RECHAZADO".equals(to);
-        }
-
-        if ("ACEPTADO".equals(from)) {
-            return "PREPARANDO_ENVIO".equals(to) || "ENVIADO".equals(to);
-        }
-
         if ("PREPARANDO_ENVIO".equals(from)) {
             return "ENVIADO".equals(to);
+        }
+
+        if ("ENVIADO".equals(from)) {
+            return "ENTREGADO".equals(to);
         }
 
         return false;
     }
 
     private boolean canBuyerTransition(String from, String to) {
-        if ("PENDIENTE_ACEPTACION".equals(from) && "CANCELADO".equals(to)) {
+        if (("PREPARANDO_ENVIO".equals(from) || "ACEPTADO".equals(from)) && "CANCELADO".equals(to)) {
             return true;
         }
 

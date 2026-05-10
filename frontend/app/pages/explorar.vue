@@ -29,7 +29,14 @@
     </section>
 
     <div :class="['rm-container', 'explore-layout', { 'no-sidebar': showPromoHero }]">
-      <ExploreFiltersSidebar v-if="!showPromoHero" :total-results="filteredItems.length" :category-counts="categoryCounts" />
+      <ExploreFiltersSidebar 
+        v-if="!showPromoHero" 
+        :total-results="filteredItems.length" 
+        :category-counts="categoryCounts"
+        :is-open="showFilters"
+        @toggle-filters="showFilters = !showFilters"
+        @close-filters="showFilters = false"
+      />
 
       <main class="explore-content">
         <div v-if="!showPromoHero" class="explore-head">
@@ -39,7 +46,20 @@
             <p>Filtra por categoría, subcategoría, talla, estado y precio desde el panel lateral.</p>
           </div>
 
-          <div v-if="!showPromoHero" class="explore-badge">{{ filteredItems.length }} resultados</div>
+          <div class="explore-head-actions">
+            <button 
+              v-if="!showPromoHero"
+              type="button"
+              class="filter-toggle-btn"
+              @click="showFilters = !showFilters"
+              :aria-label="showFilters ? 'Cerrar filtros' : 'Abrir filtros'"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+              </svg>
+            </button>
+            <div class="explore-badge">{{ filteredItems.length }} resultados</div>
+          </div>
         </div>
 
         <div v-if="filteredItems.length === 0" class="empty">
@@ -59,7 +79,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, computed } from 'vue'
+import { onMounted, computed, ref } from 'vue'
 import ItemCard from '~/components/ItemCard.vue'
 import ExploreFiltersSidebar from '~/components/explore/ExploreFiltersSidebar.vue'
 import { useItemsStore } from '~/stores/useItemsStore'
@@ -76,7 +96,7 @@ import {
 const store = useItemsStore()
 const route = useRoute()
 const promoHeroImage = '/bg/bg.png'
-
+const showFilters = ref(false)
 
 onMounted(async () => {
   await store.fetchAll()
@@ -478,6 +498,81 @@ const filteredItems = computed(() => {
 .sortSelect { border:1px solid var(--rm-border); background:#fff; color:var(--rm-text); border-radius:999px; padding:8px 10px; }
 
 @media (min-width:520px){ .sortLabel{ display:inline; } }
+
+.filter-toggle-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid #dbe3ec;
+  background: #fff;
+  color: #0f172a;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-toggle-btn:hover {
+  border-color: #0f766e;
+  background: #f0fffe;
+}
+
+.filter-toggle-btn svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+}
+
+.explore-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Responsive: Hide sidebar on mobile, show filter button */
+@media (max-width: 920px) {
+  .explore-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-toggle-btn {
+    display: flex;
+  }
+
+  .explore-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .explore-head-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .explore-badge {
+    order: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .rm-container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .explore-layout {
+    margin-top: 12px;
+  }
+
+  .explore-head h2 {
+    font-size: 1.4rem;
+  }
+
+  .explore-head p {
+    font-size: 14px;
+  }
+}
 .results { color:var(--rm-muted); font-size:13px; }
 .pill { display:inline-flex; align-items:center; gap:6px; border:1px solid var(--rm-border); background:#fff; color:var(--rm-text); border-radius:999px; padding:6px 10px; font-size:12px; font-weight:700; text-decoration:none; line-height:1; }
 .pill:hover { border-color: rgba(0,0,0,0.18); }
@@ -511,7 +606,10 @@ const filteredItems = computed(() => {
   .grid { grid-template-columns: repeat(2, minmax(0, calc(var(--card-max) - 80px))); }
 }
 @media (max-width: 520px) {
-  .grid { grid-template-columns: repeat(1, 1fr); }
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
 }
 
 .explore-layout.no-sidebar {

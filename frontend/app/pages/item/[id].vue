@@ -135,8 +135,10 @@
         <div class="checkout-shell">
           <div class="checkout-card">
             <div class="checkout-head">
-              <div>
-                <h3>Confirmar compra</h3>
+              <div class="checkout-head-copy">
+                <p class="checkout-pill">Compra protegida</p>
+                <h3>Revisar y pagar</h3>
+                <p class="checkout-subtitle">Tu pedido quedará registrado y pasará a preparación en cuanto confirmes el pago.</p>
               </div>
               <button class="checkout-close" :disabled="checkoutLoading" @click="closeCheckout" aria-label="Cerrar checkout">
                 <svg class="checkout-close__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -149,11 +151,11 @@
             <div class="checkout-steps" aria-label="Pasos de checkout">
               <div class="checkout-step" :class="{ 'checkout-step--active': checkoutStep === 1 }">
                 <span class="checkout-step__num">1</span>
-                <span>Envio y direccion</span>
+                <span>Datos de envío</span>
               </div>
               <div class="checkout-step" :class="{ 'checkout-step--active': checkoutStep === 2 }">
                 <span class="checkout-step__num">2</span>
-                <span>Pago</span>
+                <span>Pago seguro</span>
               </div>
             </div>
 
@@ -174,9 +176,10 @@
                 <p class="checkout-label">Tipo de entrega</p>
                 <label class="checkout-option checkout-option--active">
                   <span class="checkout-option__main">A domicilio</span>
-                  <span class="checkout-option__sub">Entrega estandar con seguimiento interno</span>
+                  <span class="checkout-option__sub">Entrega estándar con seguimiento y notificaciones</span>
                   <span class="checkout-option__chip">Seleccionado</span>
                 </label>
+                <p class="checkout-info">Entrega estimada: 2-4 días laborables. El vendedor prepara el paquete y el sistema guarda el seguimiento interno.</p>
               </section>
 
               <section v-if="checkoutStep === 1" class="checkout-block">
@@ -236,13 +239,27 @@
                   </button>
                 </div>
 
+                <div class="payment-preview" aria-label="Vista previa de pago">
+                  <p class="payment-preview__number">{{ paymentPreview.maskedNumber }}</p>
+                  <div class="payment-preview__bottom">
+                    <div>
+                      <span>Titular</span>
+                      <strong>{{ paymentPreview.holder }}</strong>
+                    </div>
+                    <div>
+                      <span>Vence</span>
+                      <strong>{{ paymentPreview.expiry }}</strong>
+                    </div>
+                  </div>
+                </div>
+
                 <div class="checkout-grid payment-grid">
                   <input v-model="checkoutForm.cardNumber" class="checkout-input checkout-input--full" :disabled="checkoutLoading" placeholder="Numero de tarjeta *" required />
                   <input v-model="checkoutForm.cardHolder" class="checkout-input checkout-input--full" :disabled="checkoutLoading" placeholder="Titular *" required />
                   <input v-model="checkoutForm.cardExpiry" class="checkout-input" :disabled="checkoutLoading" placeholder="MM/AA *" required />
                   <input v-model="checkoutForm.cardCvv" class="checkout-input" :disabled="checkoutLoading" placeholder="CVV *" required />
                 </div>
-                <p class="checkout-help checkout-help--secure">Pago seguro cifrado. PayPal y Apple Pay estaran disponibles proximamente.</p>
+                <p class="checkout-help checkout-help--secure">El cargo se autoriza al confirmar la compra. PayPal y Apple Pay estarán disponibles proximamente.</p>
               </section>
 
               <p v-if="checkoutError" class="checkout-msg checkout-msg--error">{{ checkoutError }}</p>
@@ -279,7 +296,12 @@
           </div>
 
           <aside class="checkout-summary" aria-label="Resumen de compra">
+            <p class="checkout-summary__eyebrow">Pedido protegido</p>
             <h4>Desglose del precio</h4>
+            <div class="checkout-summary__delivery">
+              <span>Entrega estimada</span>
+              <strong>2-4 días laborables</strong>
+            </div>
             <ul class="summary-list">
               <li>
                 <span>Articulo</span>
@@ -308,7 +330,12 @@
               {{ checkoutLoading ? 'Procesando...' : (checkoutStep === 1 ? 'Siguiente: Pago' : `Pagar ${formatMoney(totalPrice)}`) }}
             </button>
 
-            <p class="summary-note">{{ checkoutStep === 1 ? 'Completa envio y direccion para pasar al pago.' : 'Tus datos de pago se usan solo en esta simulacion.' }}</p>
+            <p class="summary-note">{{ checkoutStep === 1 ? 'Completa envio y direccion para pasar al pago.' : 'Tus datos de pago se usan solo en esta simulacion y el pedido pasara a preparacion al confirmar.' }}</p>
+            <div class="checkout-summary__trust">
+              <p>Protección al comprador incluida</p>
+              <p>Seguimiento del pedido y actualización del estado en tu perfil</p>
+              <p>Cobro simulado, confirmación inmediata y estado visible para comprador y vendedor</p>
+            </div>
           </aside>
         </div>
       </div>
@@ -456,6 +483,24 @@ const checkoutForm = reactive({
   cardCvv: ''
 })
 
+function onlyDigits(value: string) {
+  return value.replace(/\D/g, '')
+}
+
+function detectCardBrand(value: string) {
+  const digits = onlyDigits(value)
+  if (digits.startsWith('4')) {
+    return { brandKey: 'visa', brandLabel: 'Visa' }
+  }
+  if (/^(5[1-5]|2[2-7])/.test(digits)) {
+    return { brandKey: 'mastercard', brandLabel: 'Mastercard' }
+  }
+  if (/^3[47]/.test(digits)) {
+    return { brandKey: 'amex', brandLabel: 'American Express' }
+  }
+  return { brandKey: 'generic', brandLabel: 'Tarjeta' }
+}
+
 const itemPrice = computed(() => {
   const raw = Number(item.value?.precioEur ?? 0)
   return Number.isFinite(raw) ? Math.max(raw, 0) : 0
@@ -482,6 +527,22 @@ function formatMoney(value: number) {
     currency: 'EUR'
   }).format(value)
 }
+
+const paymentPreview = computed(() => {
+  const cardDigits = onlyDigits(checkoutForm.cardNumber).slice(0, 16)
+  const groups = cardDigits.padStart(16, '•').match(/.{1,4}/g) || ['••••', '••••', '••••', '••••']
+  const holder = checkoutForm.cardHolder.trim()
+  const expiry = checkoutForm.cardExpiry.trim()
+  const brand = detectCardBrand(checkoutForm.cardNumber)
+
+  return {
+    brandKey: brand.brandKey,
+    brandLabel: brand.brandLabel,
+    maskedNumber: groups.join(' '),
+    holder: holder ? holder.toUpperCase() : 'TITULAR DE LA TARJETA',
+    expiry: expiry || 'MM/AA'
+  }
+})
 
 function openCheckout() {
   loadSessionUser()
@@ -616,7 +677,7 @@ async function submitCheckout() {
     })
 
     checkoutOpen.value = false
-    checkoutSuccess.value = 'Pedido creado. El vendedor debe aceptarlo.'
+    checkoutSuccess.value = 'Tu pedido fue registrado. El vendedor empezará a prepararlo.'
     uiMessages.success('Pedido creado correctamente.')
     await store.fetchAll()
   } catch (error: any) {
@@ -1100,6 +1161,28 @@ border-radius:8px; }
     justify-content: space-between;
     gap: 12px;
   }
+
+  .checkout-head-copy {
+    display: grid;
+    gap: 4px;
+  }
+
+  .checkout-pill {
+    margin: 0;
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid #a7f3d0;
+    background: #ecfdf5;
+    color: #065f46;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
   
   .checkout-head h3 {
     margin: 0;
@@ -1138,9 +1221,10 @@ border-radius:8px; }
   }
   
   .checkout-subtitle {
-    margin: 6px 0 0;
+    margin: 0;
     color: #475569;
     font-size: 0.95rem;
+    line-height: 1.45;
   }
 
   .checkout-steps {
@@ -1417,6 +1501,97 @@ border-radius:8px; }
     gap: 6px;
   }
 
+  .payment-preview {
+    margin: 12px 0 2px;
+    border-radius: 18px;
+    border: 1px solid #dbe4ee;
+    background:
+      radial-gradient(circle at top right, rgba(16, 185, 129, 0.18), transparent 44%),
+      linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #111827 100%);
+    color: #ffffff;
+    padding: 14px;
+    box-shadow: 0 18px 32px rgba(15, 23, 42, 0.2);
+  }
+
+  .payment-preview__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .payment-preview__brand,
+  .payment-preview__chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    border-radius: 999px;
+    padding: 0 10px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .payment-preview__brand {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .payment-preview__chip {
+    background: rgba(16, 185, 129, 0.18);
+    border: 1px solid rgba(167, 243, 208, 0.24);
+    color: #d1fae5;
+  }
+
+  .payment-preview__brand--visa {
+    color: #dbeafe;
+  }
+
+  .payment-preview__brand--mastercard {
+    color: #ffe4e6;
+  }
+
+  .payment-preview__brand--amex {
+    color: #cffafe;
+  }
+
+  .payment-preview__brand--generic {
+    color: #f8fafc;
+  }
+
+  .payment-preview__number {
+    margin: 18px 0 14px;
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    word-spacing: 0.35em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .payment-preview__bottom {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+  }
+
+  .payment-preview__bottom span {
+    display: block;
+    color: rgba(226, 232, 240, 0.82);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .payment-preview__bottom strong {
+    display: block;
+    margin-top: 4px;
+    color: #ffffff;
+    font-size: 0.86rem;
+    font-weight: 800;
+  }
+
   .logo-chip {
     display: inline-flex;
     align-items: center;
@@ -1491,6 +1666,39 @@ border-radius:8px; }
     color: #0f172a;
   }
 
+  .checkout-summary__eyebrow {
+    margin: 0 0 6px;
+    color: #0f766e;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .checkout-summary__delivery {
+    margin-top: 12px;
+    padding: 12px;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #f0fdfa 0%, #ffffff 100%);
+    border: 1px solid #d1fae5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .checkout-summary__delivery span {
+    color: #475569;
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+
+  .checkout-summary__delivery strong {
+    color: #0f766e;
+    font-size: 0.88rem;
+    font-weight: 800;
+  }
+
   .summary-list {
     list-style: none;
     margin: 14px 0;
@@ -1540,6 +1748,28 @@ border-radius:8px; }
     color: #64748b;
     font-size: 0.86rem;
     text-align: center;
+  }
+
+  .checkout-summary__trust {
+    margin-top: 14px;
+    display: grid;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #f8fbff 0%, #f0fdfa 100%);
+    border: 1px solid #dbe4ee;
+  }
+
+  .checkout-summary__trust p {
+    margin: 0;
+    color: #334155;
+    font-size: 0.84rem;
+    line-height: 1.4;
+  }
+
+  .checkout-summary__trust p:first-child {
+    font-weight: 800;
+    color: #0f766e;
   }
   
   @media (max-width: 899px) {

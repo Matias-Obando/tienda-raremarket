@@ -44,6 +44,12 @@ Según tu necesidad, elige uno:
 - Archivos creados
 - Próximos pasos
 
+### ✉️ "Recuperación de contraseña" (5 min)
+→ Lee: **`RESUMEN_RECUPERACION_CONTRASENA_BREVO.md`**
+- Flujo implementado
+- Configuración Brevo
+- Pendientes y notas de uso
+
 ---
 
 ## 📁 Archivos creados para ti
@@ -58,6 +64,7 @@ Según tu necesidad, elige uno:
 | `REFERENCIA_RAPIDA.md` | Cheat sheet | Referencia rápida |
 | `SUPABASE_SETUP.md` | Guía | Documentación completa |
 | `CONEXION_SUPABASE_RESUMEN.md` | Resumen | Visión general |
+| `RESUMEN_RECUPERACION_CONTRASENA_BREVO.md` | Resumen | Flujo de recuperación de contraseña |
 | **← ESTE ARCHIVO** | Índice | Navegación |
 
 ### En carpeta `backend/`

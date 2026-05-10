@@ -1,13 +1,13 @@
 <template>
   <div>
     <UiMessageCenter />
-    <MainHeader v-if="$route.path !== '/auth'" />
+    <MainHeader v-if="!$route.path.startsWith('/auth')" />
 
     <main class="main">
       <NuxtPage />
     </main>
 
-    <MainFooter v-if="$route.path !== '/auth'" />
+    <MainFooter v-if="!$route.path.startsWith('/auth')" />
   </div>
 </template>
 
