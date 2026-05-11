@@ -1,12 +1,16 @@
 package com.raremarket.backend.controller;
 
 import com.raremarket.backend.dto.AuthResponse;
+import com.raremarket.backend.dto.ForgotPasswordRequest;
+import com.raremarket.backend.dto.ResetPasswordRequest;
 import com.raremarket.backend.dto.UserResponse;
 import com.raremarket.backend.dto.ProfileUpdateRequest;
 import com.raremarket.backend.model.User;
 import com.raremarket.backend.security.AuthTokenService;
+import com.raremarket.backend.service.PasswordResetService;
 import com.raremarket.backend.service.UserService;
 import com.raremarket.backend.service.SupabaseStorageService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -15,7 +19,9 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -29,6 +35,9 @@ public class UserController {
 
     @Autowired
     private AuthTokenService authTokenService;
+
+    @Autowired
+    private PasswordResetService passwordResetService;
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@RequestBody User user) {
@@ -57,6 +66,24 @@ public class UserController {
             return ResponseEntity.ok(AuthResponse.of(token, UserResponse.from(user)));
         }
         return ResponseEntity.status(401).body("Invalid credentials");
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Map<String, String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        passwordResetService.requestPasswordReset(request.getEmail());
+
+        Map<String, String> response = new LinkedHashMap<>();
+        response.put("message", "Si el correo existe, recibirás un enlace para restablecer tu contraseña.");
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Map<String, String>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        passwordResetService.resetPassword(request.getToken(), request.getPassword());
+
+        Map<String, String> response = new LinkedHashMap<>();
+        response.put("message", "Tu contraseña se actualizó correctamente.");
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping

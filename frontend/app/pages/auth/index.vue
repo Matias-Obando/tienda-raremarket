@@ -67,6 +67,7 @@
               {{ isSubmitting ? 'Entrando...' : 'Iniciar sesión' }}
             </button>
           </div>
+          <NuxtLink to="/auth/forgot" class="split-help-link">Olvidé mi contraseña</NuxtLink>
         </form>
       </transition>
       <p v-if="errorMessage" class="split-error">{{ errorMessage }}</p>
