@@ -1,6 +1,13 @@
 ALTER TABLE items
   ADD COLUMN IF NOT EXISTS subcategoria VARCHAR(80);
 
+ALTER TABLE items
+  ADD COLUMN IF NOT EXISTS genero VARCHAR(20);
+
+UPDATE items
+SET genero = COALESCE(NULLIF(trim(genero), ''), 'Unisex')
+WHERE genero IS NULL OR trim(genero) = '';
+
 UPDATE items
 SET
   categoria = trim(split_part(categoria, '>', 1)),

@@ -5,7 +5,7 @@
         <p class="filters-kicker">Filtrar catálogo</p>
         <h2>Refina tu búsqueda</h2>
         <p>
-          Usa los filtros para acotar por categoría, estado, talla o precio sin perder el foco.
+          Usa los filtros para acotar por categoría, género, estado, talla o precio sin perder el foco.
         </p>
       </div>
       <button
@@ -38,6 +38,14 @@
           </select>
         </label>
       </div>
+    </section>
+
+    <section class="filters-section">
+      <h3>Género</h3>
+      <select :value="activeGender ?? ''" @change="updateQuerySelect('genero', $event)">
+        <option value="">Todos</option>
+        <option v-for="gender in genderOptions" :key="gender" :value="gender">{{ gender }}</option>
+      </select>
     </section>
 
     <section class="filters-section">
@@ -104,9 +112,11 @@ defineEmits<{
 
 const sizeOptions = ['XS', 'S', 'M', 'L', 'XL']
 const stateOptions = ['Nuevo', 'Como nuevo', 'Usado']
+const genderOptions = ['Hombre', 'Mujer', 'Unisex']
 
 const activeCategory = computed(() => route.query.cat as string | undefined)
 const activeSubcategory = computed(() => route.query.subcat as string | undefined)
+const activeGender = computed(() => route.query.genero as string | undefined)
 const activeSize = computed(() => route.query.talla as string | undefined)
 const activeState = computed(() => route.query.estado as string | undefined)
 const minPrice = computed(() => route.query.minPrice as string | undefined)
@@ -129,7 +139,7 @@ function linkFor(nextValues: QueryLike) {
   return { path: '/explorar', query: next }
 }
 
-function updateQuerySelect(field: 'talla' | 'estado', event: Event) {
+function updateQuerySelect(field: 'genero' | 'talla' | 'estado', event: Event) {
   const target = event.target as HTMLSelectElement | null
   const next = { ...route.query }
 

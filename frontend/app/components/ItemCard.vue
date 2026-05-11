@@ -45,7 +45,9 @@
 
         <div class="meta">
           <span v-if="item.marca" class="meta-text">{{ item.marca }}</span>
-          <span v-if="item.marca && item.talla" class="meta-sep">·</span>
+          <span v-if="item.marca && (item.genero || item.talla)" class="meta-sep">·</span>
+          <span v-if="item.genero" class="meta-text">{{ item.genero }}</span>
+          <span v-if="item.genero && item.talla" class="meta-sep">·</span>
           <span v-if="item.talla" class="meta-text">Talla {{ item.talla }}</span>
         </div>
 

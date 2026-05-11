@@ -1,5 +1,6 @@
 export type Talla = 'XS' | 'S' | 'M' | 'L' | 'XL'
 export type Estado = 'Nuevo' | 'Como nuevo' | 'Usado'
+export type Genero = 'Hombre' | 'Mujer' | 'Unisex'
 export type Categoria = string
 
 export type Item = {
@@ -10,6 +11,7 @@ export type Item = {
   precioEur: number
   categoria: Categoria
   subcategoria?: string
+  genero?: Genero
   marca: string
   talla: Talla
   estado: Estado
@@ -26,6 +28,7 @@ export const mockItems: Item[] = [
     precioEur: 25,
     categoria: 'Sudaderas',
     marca: 'Nike',
+    genero: 'Hombre',
     talla: 'M',
     estado: 'Usado',
     imagen: 'https://picsum.photos/seed/ropa1/800/800',
@@ -43,6 +46,7 @@ export const mockItems: Item[] = [
     precioEur: 8,
     categoria: 'Camisetas',
     marca: 'Zara',
+    genero: 'Mujer',
     talla: 'S',
     estado: 'Como nuevo',
     imagen: 'https://picsum.photos/seed/ropa2/800/800',
@@ -60,6 +64,7 @@ export const mockItems: Item[] = [
     precioEur: 30,
     categoria: 'Chaquetas',
     marca: 'Pull&Bear',
+    genero: 'Unisex',
     talla: 'L',
     estado: 'Usado',
     imagen: 'https://picsum.photos/seed/ropa3/800/800',
@@ -77,6 +82,7 @@ export const mockItems: Item[] = [
     precioEur: 18,
     categoria: 'Pantalones',
     marca: 'Bershka',
+    genero: 'Hombre',
     talla: 'M',
     estado: 'Como nuevo',
     imagen: 'https://picsum.photos/seed/ropa4/800/800',
@@ -94,6 +100,7 @@ export const mockItems: Item[] = [
     precioEur: 22,
     categoria: 'Zapatillas',
     marca: 'Adidas',
+    genero: 'Unisex',
     talla: 'L',
     estado: 'Usado',
     imagen: 'https://picsum.photos/seed/ropa5/800/800',

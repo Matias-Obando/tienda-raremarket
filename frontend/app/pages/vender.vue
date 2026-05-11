@@ -53,6 +53,17 @@
 
             <div class="grid two">
               <label class="field">
+                <span class="label">Género*</span>
+                <select v-model="form.genero" required>
+                  <option value="Hombre">Hombre</option>
+                  <option value="Mujer">Mujer</option>
+                  <option value="Unisex">Unisex</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="grid two">
+              <label class="field">
                 <span class="label">Marca</span>
                 <input type="text" v-model="form.marca" placeholder="Ej: Zara, Nike, Mango" />
               </label>
@@ -138,6 +149,7 @@ const form = reactive({
   precioEur: 0,
   categoria: '',
   subcategoria: '',
+  genero: 'Unisex',
   marca: '',
   talla: '',
   estado: 'Usado',
@@ -160,6 +172,7 @@ function applyItemToForm(item: any) {
   form.precioEur = Number(item?.precioEur ?? 0)
   form.categoria = categoryMatch?.key ?? ''
   form.subcategoria = item?.subcategoria ?? parseCategoriaLabel(item?.categoria).subcategory ?? ''
+  form.genero = item?.genero ?? 'Unisex'
   form.marca = item?.marca ?? ''
   form.talla = item?.talla ?? ''
   form.estado = item?.estado ?? 'Usado'
@@ -216,6 +229,7 @@ function resetForm() {
   form.precioEur = 0
   form.categoria = ''
   form.subcategoria = ''
+  form.genero = 'Unisex'
   form.marca = ''
   form.talla = ''
   form.estado = 'Usado'
@@ -229,6 +243,7 @@ function resetForm() {
 function validateForm(): string | null {
   if (!form.titulo.trim()) return 'Añade un titulo para el articulo.'
   if (!form.categoria) return 'Selecciona una categoria.'
+  if (!form.genero) return 'Selecciona si el articulo es para hombre o mujer.'
   if (!form.descripcion.trim()) return 'Añade una descripcion del articulo.'
   if (!form.precioEur || form.precioEur <= 0) return 'Indica un precio mayor que 0.'
   if (selectedFiles.length === 0 && form.imagenes.length === 0) return 'Sube al menos una imagen para publicar.'
@@ -306,6 +321,7 @@ async function onSubmit() {
       precioEur: form.precioEur,
       categoria: CATEGORY_KEY_TO_LABEL[form.categoria] ?? form.categoria,
       subcategoria: form.subcategoria.trim() || undefined,
+      genero: form.genero,
       marca: form.marca.trim(),
       talla: form.talla.trim(),
       estado: form.estado,

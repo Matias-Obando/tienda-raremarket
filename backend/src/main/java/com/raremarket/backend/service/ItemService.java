@@ -38,6 +38,7 @@ public class ItemService {
             String query,
             String categoria,
             String subcategoria,
+            String genero,
             String talla,
             String estado,
             Double minPrice,
@@ -60,6 +61,7 @@ public class ItemService {
             searchSpecification(query),
             equalsIgnoreCase("categoria", categoria),
             equalsIgnoreCase("subcategoria", subcategoria),
+            equalsIgnoreCase("genero", genero),
             equalsIgnoreCase("talla", talla),
             equalsIgnoreCase("estado", estado),
             sellerId == null ? null : (root, ignoredQuery, cb) -> cb.equal(root.get("sellerId"), sellerId),
@@ -150,6 +152,7 @@ public class ItemService {
 
         item.setCategoria(normalizedCategory);
         item.setSubcategoria(normalizedSubcategory);
+        item.setGenero(requireText(request.getGenero(), "genero"));
         item.setMarca(requireText(request.getMarca(), "marca"));
         item.setTalla(requireText(request.getTalla(), "talla"));
         item.setEstado(requireText(request.getEstado(), "estado"));
@@ -226,7 +229,8 @@ public class ItemService {
                 containsIgnoreCase("descripcion", term),
                 containsIgnoreCase("marca", term),
                 containsIgnoreCase("categoria", term),
-                containsIgnoreCase("subcategoria", term)
+                containsIgnoreCase("subcategoria", term),
+                containsIgnoreCase("genero", term)
         );
     }
 
