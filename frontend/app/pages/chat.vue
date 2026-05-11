@@ -186,6 +186,11 @@ const { sessionUser, loadSessionUser, storageEventName } = useSessionUser()
 const { refreshUnreadChatCount } = useUnreadChatCount()
 const uiMessages = useUiMessages()
 
+let supabase: any = null
+if (typeof window !== 'undefined') {
+  supabase = useSupabaseClient()
+}
+
 const sessionReady = ref(false)
 const conversations = ref<Conversation[]>([])
 const messages = ref<Message[]>([])
@@ -199,6 +204,8 @@ const errorMessage = ref('')
 const selectedConversationId = ref('')
 const draftMessage = ref('')
 const deletingConversationId = ref('')
+let conversationChannel: any = null
+let activeChannelConversationId = ''
 const itemId = computed(() => typeof route.query.itemId === 'string' ? route.query.itemId : '')
 const itemTitle = computed(() => typeof route.query.itemTitle === 'string' ? route.query.itemTitle : '')
 const sellerIdFromQuery = computed(() => typeof route.query.sellerId === 'string' ? route.query.sellerId : '')
@@ -210,15 +217,15 @@ const selectedConversation = computed(() =>
   activeConversations.value.find((conversation) => conversation.id === selectedConversationId.value) ?? null
 )
 
-const activeConversations = computed(() => conversations.value)
+const activeConversations = computed(() => conversations.value ?? [])
 
-const activeMessages = computed(() => messages.value)
+const activeMessages = computed(() => messages.value ?? [])
 
 const orderedMessages = computed(() =>
-  [...activeMessages.value].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+  [...(activeMessages.value ?? [])].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
 )
 
-const filteredConversations = computed(() => activeConversations.value)
+const filteredConversations = computed(() => activeConversations.value ?? [])
 
 const isMobileConversationOpen = computed(() => isMobileLayout.value && !!selectedConversationId.value)
 
@@ -315,6 +322,51 @@ function closeConversation() {
   selectedConversationId.value = ''
 }
 
+async function stopConversationSubscription() {
+  if (!conversationChannel) {
+    activeChannelConversationId = ''
+    return
+  }
+
+  await supabase.removeChannel(conversationChannel)
+  conversationChannel = null
+  activeChannelConversationId = ''
+}
+
+async function subscribeToConversationMessages(conversationId: string) {
+  if (!process.client || !conversationId || !supabase) {
+    return
+  }
+
+  await stopConversationSubscription()
+  activeChannelConversationId = conversationId
+
+  conversationChannel = supabase
+    .channel(`conversation:${conversationId}:messages`)
+    .on('broadcast', { event: 'message_created' }, async () => {
+      if (selectedConversationId.value !== conversationId) {
+        return
+      }
+
+      await loadMessages(conversationId)
+      await loadConversations()
+      void refreshUnreadChatCount()
+    })
+    .subscribe()
+}
+
+async function broadcastMessageCreated(conversationId: string) {
+  if (!process.client || !conversationChannel || activeChannelConversationId !== conversationId) {
+    return
+  }
+
+  await conversationChannel.send({
+    type: 'broadcast',
+    event: 'message_created',
+    payload: { conversationId }
+  })
+}
+
 function getConversationContext() {
   const sellerId = sellerIdFromQuery.value
   if (!itemId.value || !sellerId || !sessionUser.value?.id) {
@@ -394,6 +446,7 @@ async function loadMessages(conversationId: string) {
 async function selectConversation(conversationId: string) {
   selectedConversationId.value = conversationId
   await loadMessages(conversationId)
+  await subscribeToConversationMessages(conversationId)
   if (canUseRealChat.value) {
     const headers = getAuthHeaders()
     if (!headers) {
@@ -440,10 +493,11 @@ async function openConversationFromProduct() {
       }
     })
 
-  await loadConversations()
-  void refreshUnreadChatCount()
+    await loadConversations()
+    void refreshUnreadChatCount()
     selectedConversationId.value = conversation.id
     await loadMessages(conversation.id)
+    await subscribeToConversationMessages(conversation.id)
     await router.replace({ path: '/chat', query: {} })
     uiMessages.success(`Chat abierto con ${context.sellerLabel}.`)
   } catch (error: any) {
@@ -471,7 +525,7 @@ async function sendMessage() {
   errorMessage.value = ''
   sendingMessage.value = true
   try {
-    await $fetch(`${config.public.API_BASE_URL}/chat/conversations/${selectedConversationId.value}/messages`, {
+    const savedMessage = await $fetch<Message>(`${config.public.API_BASE_URL}/chat/conversations/${selectedConversationId.value}/messages`, {
       method: 'POST',
       headers,
       body: {
@@ -483,6 +537,7 @@ async function sendMessage() {
     await loadMessages(selectedConversationId.value)
     await loadConversations()
     void refreshUnreadChatCount()
+    await broadcastMessageCreated(savedMessage.conversationId)
   } catch (error: any) {
     errorMessage.value = parseApiError(error, 'No se pudo enviar el mensaje.')
     uiMessages.error(errorMessage.value)
@@ -531,6 +586,7 @@ async function deleteConversation(conversationId: string) {
     selectedConversationId.value = ''
     draftMessage.value = ''
     messages.value = []
+    await stopConversationSubscription()
   }
 
   void loadConversations()
@@ -553,6 +609,7 @@ async function loadData() {
   if (conversationIdFromQuery.value) {
     selectedConversationId.value = conversationIdFromQuery.value
     await loadMessages(selectedConversationId.value)
+    await subscribeToConversationMessages(selectedConversationId.value)
     await router.replace({ path: '/chat', query: {} })
     return
   }
@@ -560,6 +617,7 @@ async function loadData() {
   if (!selectedConversationId.value && conversations.value.length) {
     selectedConversationId.value = conversations.value[0].id
     await loadMessages(selectedConversationId.value)
+    await subscribeToConversationMessages(selectedConversationId.value)
   }
 }
 
@@ -580,6 +638,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', syncLayout)
   window.removeEventListener(storageEventName, syncSession)
   window.removeEventListener('storage', syncSession)
+  void stopConversationSubscription()
 })
 
 watch(orderedMessages, async () => {

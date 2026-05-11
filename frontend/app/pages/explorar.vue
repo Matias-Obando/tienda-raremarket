@@ -43,7 +43,7 @@
           <div>
             <p class="explore-kicker">Marketplace</p>
             <h2 id="catalogo">Explorar artículos</h2>
-            <p>Filtra por categoría, género, subcategoría, talla, estado y precio desde el panel lateral.</p>
+            <p>Filtra por categoría, subcategoría, talla, estado y precio desde el panel lateral.</p>
           </div>
 
           <div class="explore-head-actions">
@@ -117,11 +117,6 @@ const activeSize = computed(() => {
   return typeof v === 'string' && v.length ? v : null
 })
 
-const activeGender = computed(() => {
-  const v = route.query.genero
-  return typeof v === 'string' && v.length ? v : null
-})
-
 const activeState = computed(() => {
   const v = route.query.estado
   return typeof v === 'string' && v.length ? v : null
@@ -154,7 +149,7 @@ const subcat = computed(() => {
   return typeof v === 'string' && v.length ? v : null
 })
 
-const showPromoHero = computed(() => !cat.value && !subcat.value && !activeGender.value && !q.value.trim())
+const showPromoHero = computed(() => !cat.value && !subcat.value && !q.value.trim())
 
 const categoryCounts = computed(() => {
   return store.items.reduce((acc, item) => {
@@ -190,14 +185,13 @@ const filteredItems = computed(() => {
   const base = query
     ? bySubcategoria.value.filter((it) => {
         const haystack = normalizeCategoryText(
-          `${it.titulo} ${it.marca} ${it.categoria} ${it.subcategoria ?? ''} ${it.genero ?? ''} ${it.estado} ${it.talla} ${it.descripcion ?? ''}`,
+          `${it.titulo} ${it.marca} ${it.categoria} ${it.subcategoria ?? ''} ${it.estado} ${it.talla} ${it.descripcion ?? ''}`,
         )
         return haystack.includes(query)
       })
     : bySubcategoria.value
 
   const withExtraFilters = base.filter((it) => {
-    if (activeGender.value && it.genero !== activeGender.value) return false
     if (activeSize.value && it.talla !== activeSize.value) return false
     if (activeState.value && it.estado !== activeState.value) return false
     if (minPrice.value != null && !Number.isNaN(minPrice.value) && it.precioEur < minPrice.value) return false
