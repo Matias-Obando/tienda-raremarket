@@ -198,14 +198,23 @@ async function submitResetPassword() {
 }
 
 .split-btn-primary {
-  border: none;
-  border-radius: 14px;
-  min-height: 46px;
-  padding: 0 18px;
-  background: linear-gradient(135deg, #0f766e, #1fb981);
+  width: 100%;
+  min-height: 48px;
+  background: #1fb981;
   color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 0 22px;
+  font-size: 1.02rem;
   font-weight: 700;
+  letter-spacing: -0.01em;
   cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.split-btn-primary:hover {
+  background: #0d655f;
+  transform: translateY(-1px);
 }
 
 .split-btn-primary:disabled {

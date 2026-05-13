@@ -18,7 +18,7 @@
           <NuxtLink to="/" class="auth-brand__logo" aria-label="Ir al inicio">
             <img :src="authLogo" alt="Closely" class="h-32 w-auto" />
           </NuxtLink>
-          <NuxtLink to="/explorar" class="auth-brand__link">Volver a explorar</NuxtLink>
+          <NuxtLink to="/explorar" class="auth-brand__link">Volver a Inicio</NuxtLink>
         </div>
 
         <div class="auth-panel__header">
@@ -28,53 +28,59 @@
           </p>
         </div>
 
-        <div class="split-auth-switch">
-        <button :class="{ active: mode === 'login' }" @click="mode = 'login'">Inicia sesión</button>
-        <button :class="{ active: mode === 'register' }" @click="mode = 'register'">Regístrate</button>
-      </div>
-
-      <transition name="fade" mode="out-in">
-        <form v-if="mode === 'register'" key="register" class="split-form" @submit.prevent="submitRegister">
-          <label>
-            <span>Nombre completo</span>
-            <input v-model="registerForm.name" type="text" required placeholder="Tu nombre completo" />
-          </label>
-          <label>
-            <span>Email</span>
-            <input v-model="registerForm.email" type="email" required placeholder="Tu email" />
-          </label>
-          <label>
-            <span>Contraseña</span>
-            <input v-model="registerForm.password" type="password" required placeholder="Contraseña" />
-          </label>
-          <div class="split-form-actions">
-            <button type="submit" class="split-btn-primary" :disabled="isSubmitting">
-              {{ isSubmitting ? 'Registrando...' : 'Registrarse' }}
-            </button>
+        <div class="auth-form-stage">
+          <div class="split-auth-switch">
+            <button :class="{ active: mode === 'login' }" @click="mode = 'login'">Inicia sesión</button>
+            <button :class="{ active: mode === 'register' }" @click="mode = 'register'">Regístrate</button>
           </div>
-        </form>
-        <form v-else key="login" class="split-form" @submit.prevent="submitLogin">
-          <label>
-            <span>Email</span>
-            <input v-model="loginForm.email" type="email" required placeholder="Tu email" />
-          </label>
-          <label>
-            <span>Contraseña</span>
-            <input v-model="loginForm.password" type="password" required placeholder="Contraseña" />
-          </label>
-          <div class="split-form-actions">
-            <button type="submit" class="split-btn-primary" :disabled="isSubmitting">
-              {{ isSubmitting ? 'Entrando...' : 'Iniciar sesión' }}
-            </button>
-          </div>
-          <NuxtLink to="/auth/forgot" class="split-help-link">Olvidé mi contraseña</NuxtLink>
-        </form>
-      </transition>
-      <p v-if="errorMessage" class="split-error">{{ errorMessage }}</p>
 
-        <p class="auth-legal">
-          Al continuar aceptas nuestros terminos y politica de privacidad.
-        </p>
+          <transition name="fade" mode="out-in">
+            <form v-if="mode === 'register'" key="register" class="split-form" @submit.prevent="submitRegister">
+              <label>
+                <span>Nombre completo</span>
+                <input v-model="registerForm.name" type="text" required placeholder="Tu nombre completo" />
+              </label>
+              <label>
+                <span>Email</span>
+                <input v-model="registerForm.email" type="email" required placeholder="Tu email" />
+              </label>
+              <label>
+                <span>Contraseña</span>
+                <input v-model="registerForm.password" type="password" required placeholder="Contraseña" />
+              </label>
+              <div class="split-form-actions">
+                <button type="submit" class="split-btn-primary" :disabled="isSubmitting">
+                  {{ isSubmitting ? 'Registrando...' : 'Registrarse' }}
+                </button>
+              </div>
+            </form>
+            <form v-else key="login" class="split-form" @submit.prevent="submitLogin">
+              <label>
+                <span>Email</span>
+                <input v-model="loginForm.email" type="email" required placeholder="Tu email" />
+              </label>
+              <label>
+                <span>Contraseña</span>
+                <input v-model="loginForm.password" type="password" required placeholder="Contraseña" />
+              </label>
+              <div class="split-form-actions">
+                <button type="submit" class="split-btn-primary" :disabled="isSubmitting">
+                  {{ isSubmitting ? 'Entrando...' : 'Iniciar sesión' }}
+                </button>
+              </div>
+              <div style="text-align: center; margin-top: 6px; display: flex; flex-direction: column; gap: 8px;">
+                <NuxtLink to="/auth/forgot" class="split-help-link">¿Olvidaste tu contraseña?</NuxtLink>
+                <NuxtLink to="/ayuda" class="split-help-link">¿Necesitas ayuda?</NuxtLink>
+              </div>
+            </form>
+          </transition>
+
+          <p v-if="errorMessage" class="split-error">{{ errorMessage }}</p>
+
+          <p class="auth-legal">
+            Al continuar aceptas nuestros terminos y politica de privacidad.
+          </p>
+        </div>
       </div>
     </div>
   </div>
@@ -188,21 +194,28 @@ async function submitLogin() {
 
 <style scoped>
 .auth-page {
-  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  height: 100vh;
   padding: clamp(14px, 2.4vw, 28px);
   background: var(--rm-page-bg);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .auth-shell {
-  min-height: calc(100vh - clamp(28px, 4.8vw, 56px));
+  width: 100%;
+  box-sizing: border-box;
+  height: calc(100vh - 2 * clamp(14px, 2.4vw, 28px));
   border-radius: 30px;
   overflow: hidden;
   background: #ffffff;
   border: 1px solid #e7ebf0;
   box-shadow: 0 24px 70px rgba(15, 23, 42, 0.1);
   display: grid;
-  grid-template-columns: minmax(300px, 1.1fr) minmax(360px, 1fr);
+  grid-template-columns: 1fr 1fr;
 }
 
 .auth-visual {
@@ -270,6 +283,16 @@ async function submitLogin() {
   justify-content: center;
   align-items: center;
   padding: clamp(26px, 3.6vw, 48px);
+  height: 100%;
+  overflow: hidden;
+  overflow-x: hidden;
+}
+
+.auth-form-stage {
+  width: 100%;
+  max-width: 390px;
+  display: flex;
+  flex-direction: column;
 }
 
 .auth-brand {
@@ -330,13 +353,13 @@ async function submitLogin() {
 
 .split-auth-switch {
   width: 100%;
-  max-width: 390px;
   display: flex;
   gap: 6px;
   background: #f2f7f7;
   border: 1px solid #dde8e6;
   padding: 5px;
   border-radius: 999px;
+  flex-shrink: 0;
 }
 
 .split-auth-switch button {
@@ -364,7 +387,6 @@ async function submitLogin() {
   flex-direction: column;
   gap: 18px;
   width: 100%;
-  max-width: 390px;
   margin: 20px auto 0;
   color: #0f172a;
 }
@@ -409,6 +431,19 @@ async function submitLogin() {
   margin-top: 10px;
 }
 
+.split-help-link {
+  color: #1fb981;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease;
+  display: inline-block;
+}
+
+.split-help-link:hover {
+  color: #0d655f;
+}
+
 .split-btn-primary {
   width: 100%;
   min-height: 48px;
@@ -420,7 +455,6 @@ async function submitLogin() {
   font-size: 1.02rem;
   font-weight: 700;
   letter-spacing: -0.01em;
-  box-shadow: 0 10px 20px rgba(15, 118, 110, 0.2);
   cursor: pointer;
   transition: background-color 0.2s ease, transform 0.2s ease;
 }
@@ -438,7 +472,6 @@ async function submitLogin() {
 .split-error {
   margin-top: 14px;
   max-width: 390px;
-  color: #b91c1c;
   width: 100%;
   background: #fef2f2;
   border: 1px solid #fecaca;
@@ -450,7 +483,6 @@ async function submitLogin() {
 .auth-legal {
   margin: 12px 0 0;
   max-width: 390px;
-  width: 100%;
   color: #64748b;
   font-size: 0.82rem;
   line-height: 1.45;

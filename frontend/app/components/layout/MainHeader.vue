@@ -79,7 +79,7 @@
                     <NuxtLink to="/perfil" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem" @click="closeDropdown">Mi perfil</NuxtLink>
                     <NuxtLink to="/chat" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem" @click="closeDropdown">Mis mensajes</NuxtLink>
                     <NuxtLink to="/perfil#mis-publicaciones" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem" @click="closeDropdown">Mis publicaciones</NuxtLink>
-                    <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50" role="menuitem" @click="signOut">
+                    <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50" role="menuitem" @click="openSignOutConfirm">
                       Cerrar sesión
                     </button>
                   </div>
@@ -107,6 +107,19 @@
               <span v-if="unreadChatCount > 0" class="action-pill-count">{{ unreadChatCount > 99 ? '99+' : unreadChatCount }}</span>
             </NuxtLink>
 
+            <NuxtLink
+              to="/ayuda"
+              class="action-pill"
+              aria-label="Centro de asistencia"
+              title="Centro de asistencia"
+            >
+              <svg class="h-5 w-5 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <path d="M12 18h.01" />
+                <path d="M9.09 9a3 3 0 1 1 5.82 1c0 2-3 2-3 5" />
+                <circle cx="12" cy="12" r="9" />
+              </svg>
+            </NuxtLink>
+
             <button class="bg-emerald-600 text-white px-3 py-2 rounded-full text-sm" @click="handleSell">Vender</button>
 
             <button class="p-2 rounded-md ml-1 focus:outline-none" aria-label="Abrir menú" @click="toggleMobile">
@@ -118,6 +131,19 @@
               </svg>
             </button>
           </div>
+
+          <NuxtLink
+            to="/ayuda"
+            class="hidden md:inline-flex items-center justify-center p-2 rounded-full hover:bg-gray-100 mr-2"
+            aria-label="Centro de asistencia"
+            title="Centro de asistencia"
+          >
+            <svg class="h-5 w-5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="9.5" />
+              <path d="M12 17h.01" />
+              <path d="M9.09 9a3 3 0 015.82 1c0 2-3 2-3 5" />
+            </svg>
+          </NuxtLink>
 
           <div class="hidden md:block text-sm font-medium text-slate-500 ml-2 tracking-wide">ES</div>
         </div>
@@ -156,8 +182,11 @@
             <NuxtLink v-if="user" to="/chat" class="block w-full py-3 rounded-full border text-gray-700 text-center">
               Mis mensajes
             </NuxtLink>
+            <NuxtLink to="/ayuda" class="block w-full py-3 rounded-full border text-gray-700 text-center">
+              Centro de asistencia
+            </NuxtLink>
             <button class="w-full py-3 rounded-full bg-emerald-600 text-white" @click="handleSell">Vender ahora</button>
-            <button v-if="user" class="w-full py-3 rounded-full border text-red-600" @click="signOut">Cerrar sesión</button>
+            <button v-if="user" class="w-full py-3 rounded-full border text-red-600" @click="openSignOutConfirm">Cerrar sesión</button>
           </div>
 
           <div class="border-t pt-3 mb-2">
@@ -182,6 +211,42 @@
             </div>
           </div>
         </aside>
+      </div>
+    </transition>
+
+    <transition name="fade">
+      <div v-if="signOutConfirmOpen" class="fixed inset-0 z-[80] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/45 backdrop-blur-[2px]" aria-hidden="true" @click="closeSignOutConfirm"></div>
+        <div class="relative w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-2xl p-6 sm:p-7">
+          <div class="flex items-start gap-4">
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">
+              <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <path d="M15 12H3m0 0 4-4m-4 4 4 4" />
+                <path d="M9 5v-1a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2h-6a2 2 0 0 1-2-2v-1" />
+              </svg>
+            </div>
+            <div class="min-w-0 flex-1">
+              <h2 class="text-lg sm:text-xl font-semibold text-slate-900">¿Estás seguro de que quieres cerrar sesión?</h2>
+            </div>
+          </div>
+
+          <div class="mt-6 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+            <button
+              type="button"
+              class="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+              @click="closeSignOutConfirm"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              class="inline-flex items-center justify-center rounded-full bg-red-600 px-5 py-3 text-sm font-semibold text-white hover:bg-red-700 transition-colors"
+              @click="signOut"
+            >
+              Sí, cerrar sesión
+            </button>
+          </div>
+        </div>
       </div>
     </transition>
 
@@ -224,6 +289,7 @@ const userInitial = computed(() => user.value?.username?.charAt(0).toUpperCase()
 const userAvatar = computed(() => user.value?.avatarUrl || '')
 const query = ref('')
 const dropdownOpen = ref(false)
+const signOutConfirmOpen = ref(false)
 const mobileOpen = ref(false)
 const mobileSearchOpen = ref(false)
 const avatarRef = ref<HTMLElement | null>(null)
@@ -259,6 +325,16 @@ function closeDropdown() {
   dropdownOpen.value = false
 }
 
+function openSignOutConfirm() {
+  dropdownOpen.value = false
+  mobileOpen.value = false
+  signOutConfirmOpen.value = true
+}
+
+function closeSignOutConfirm() {
+  signOutConfirmOpen.value = false
+}
+
 function toggleMobile() {
   mobileOpen.value = !mobileOpen.value
 }
@@ -281,6 +357,7 @@ function signOut() {
   clearSessionUser()
   dropdownOpen.value = false
   mobileOpen.value = false
+  signOutConfirmOpen.value = false
   navigateTo('/')
 }
 
@@ -296,6 +373,10 @@ function onOutsideClick(e: MouseEvent) {
 
 function onKeyDown(e: KeyboardEvent) {
   if (e.key === 'Escape') {
+    if (signOutConfirmOpen.value) {
+      closeSignOutConfirm()
+      return
+    }
     closeDropdown()
   }
 }
