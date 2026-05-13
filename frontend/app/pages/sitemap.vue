@@ -48,6 +48,7 @@
           <h2>ℹ️ Información</h2>
           <ul>
             <li><NuxtLink to="/acerca-de">Acerca de Nosotros</NuxtLink></li>
+            <li><NuxtLink to="/ayuda">Centro de Asistencia</NuxtLink></li>
             <li><NuxtLink to="/sitemap">Mapa del Sitio</NuxtLink></li>
           </ul>
         </section>
@@ -79,7 +80,7 @@
         <ul>
           <li>
             <strong>Soporte:</strong> 
-            <a href="mailto:soporte@closely.com">soporte@closely.com</a>
+            <a href="/ayuda">Centro de asistencia</a>
           </li>
           <li>
             <strong>Privacidad:</strong> 

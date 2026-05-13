@@ -338,7 +338,7 @@ async function loadConversationsCount() {
 
   try {
     const config = useRuntimeConfig()
-    const list = await $fetch<Array<{ id: string }>>(`${config.public.API_BASE_URL}/api/chat/conversations`, {
+    const list = await $fetch<Array<{ id: string }>>(`${config.public.API_BASE_URL}/chat/conversations`, {
       params: { userId: profileUser.value.id }
     })
     conversationsCount.value = list.length

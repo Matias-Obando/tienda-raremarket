@@ -17,6 +17,16 @@ import MainFooter from '~/components/layout/MainFooter.vue'
 import UiMessageCenter from '~/components/UiMessageCenter.vue'
 </script>
 
+<style>
+html {
+  overflow-y: scroll;
+}
+
+body {
+  min-height: 100vh;
+}
+</style>
+
 <style scoped>
 .main {
   min-height: 60vh;

@@ -32,6 +32,7 @@
             <li><NuxtLink class="l" to="/legal/disputas">Resolución de disputas</NuxtLink></li>
             <li><NuxtLink class="l" to="/legal/gdpr">Protección de datos</NuxtLink></li>
             <li><NuxtLink class="l" to="/acerca-de">Acerca de nosotros</NuxtLink></li>
+            <li><NuxtLink class="l" to="/ayuda">Centro de asistencia</NuxtLink></li>
           </ul>
         </nav>
       </div>
