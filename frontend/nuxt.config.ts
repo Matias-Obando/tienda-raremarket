@@ -2,11 +2,29 @@ export default defineNuxtConfig({
   // fecha recomendada por Nuxt / Nitro (evita el WARN de compatibilidad)
   compatibilityDate: '2026-03-20',
 
+  // Definir la carpeta raíz de la aplicación
+  srcDir: 'app',
+
   // CSS global
-  css: ['~/assets/css/main.css'],
+  css: ['~/recursos/css/main.css'],
+
+  dir: {
+    pages: 'paginas',
+    assets: 'recursos'
+  },
 
   // componentes automáticos
-  components: true,
+  components: {
+    dirs: ['~/componentes']
+  },
+
+  imports: {
+    dirs: ['~/utilidades']
+  },
+
+  pinia: {
+    storesDirs: ['./tiendas/**']
+  },
 
   // devtools
   devtools: { enabled: false },

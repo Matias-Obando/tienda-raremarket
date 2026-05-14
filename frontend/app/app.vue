@@ -1,20 +1,20 @@
 <template>
   <div>
     <UiMessageCenter />
-    <MainHeader v-if="!$route.path.startsWith('/auth')" />
+    <MainHeader v-if="!$route.path.startsWith('/autenticacion')" />
 
     <main class="main">
       <NuxtPage />
     </main>
 
-    <MainFooter v-if="!$route.path.startsWith('/auth')" />
+    <MainFooter v-if="!$route.path.startsWith('/autenticacion')" />
   </div>
 </template>
 
 <script setup lang="ts">
-import MainHeader from '~/components/layout/MainHeader.vue'
-import MainFooter from '~/components/layout/MainFooter.vue'
-import UiMessageCenter from '~/components/UiMessageCenter.vue'
+import MainHeader from '~/componentes/estructura/CabeceraPrincipal.vue'
+import MainFooter from '~/componentes/estructura/PiePaginaPrincipal.vue'
+import UiMessageCenter from '~/componentes/CentroMensajes.vue'
 </script>
 
 <style>
