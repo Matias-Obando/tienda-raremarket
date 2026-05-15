@@ -385,7 +385,7 @@ const sellerAvatar = computed(() => seller.value?.avatarUrl || '')
 const sellerInitial = computed(() => sellerDisplayName.value.charAt(0).toUpperCase())
 const isOwnItem = computed(() => {
   if (!sessionUser.value || !item.value) return false
-  return String(sessionUser.value.id) === String(item.value.sellerId)
+  return String(sessionUser.value?.id) === String(item.value.sellerId)
 })
 const sellerReviews = computed(() => {
   const seedBase = item.value?.sellerId ?? item.value?.id ?? '0'
@@ -667,7 +667,7 @@ async function submitCheckout() {
     await $fetch(`${config.public.API_BASE_URL}/orders`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${sessionUser.value.token}`
+        Authorization: `Bearer ${sessionUser.value?.token}`
       },
       body: {
         itemId: item.value.id,
