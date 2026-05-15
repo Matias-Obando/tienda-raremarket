@@ -32,6 +32,7 @@
 </template>
 
 <script setup lang="ts">
+import ItemCard from '~/componentes/TarjetaArticulo.vue'
 import type { Item } from '~/tiendas/articulos'
 
 const store = useItemsStore()

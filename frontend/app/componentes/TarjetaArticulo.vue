@@ -137,7 +137,7 @@ onBeforeUnmount(() => {
 
 .media {
   position: relative;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 4 / 5;
   background: var(--rm-soft);
   overflow: hidden;
 }
@@ -145,6 +145,7 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center top;
   display: block;
 }
 

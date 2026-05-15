@@ -32,7 +32,12 @@
             </svg>
           </button>
 
-          <img :src="currentImage" :alt="item.titulo" class="img" />
+          <div class="media-frame">
+            <Transition name="image-fade" mode="out-in">
+              <img :key="currentImage" :src="currentImage" :alt="item.titulo" class="img" />
+            </Transition>
+          </div>
+
         </div>
 
         <div class="thumbs" role="list" aria-label="Miniaturas">
@@ -705,7 +710,7 @@ function openContact() {
       path: '/autenticacion',
       query: {
         mode: 'login',
-        redirect: `/chat?itemId=${encodeURIComponent(item.value.id)}&itemTitle=${encodeURIComponent(item.value.titulo)}&sellerId=${encodeURIComponent(item.value.sellerId)}&sellerName=${encodeURIComponent(sellerDisplayName.value)}`
+        redirect: `/chat?itemId=${encodeURIComponent(item.value.id)}&itemTitle=${encodeURIComponent(item.value.titulo)}&sellerId=${encodeURIComponent(String(item.value.sellerId ?? ''))}&sellerName=${encodeURIComponent(sellerDisplayName.value)}`
       }
     })
     return
@@ -716,7 +721,7 @@ function openContact() {
     query: {
       itemId: item.value.id,
       itemTitle: item.value.titulo,
-      sellerId: item.value.sellerId,
+      sellerId: String(item.value.sellerId ?? ''),
       sellerName: sellerDisplayName.value
     }
   })
@@ -790,7 +795,7 @@ onBeforeUnmount(() => {
     gap: 18px;
   }
   @media (min-width: 900px) {
-    .product-grid { grid-template-columns: 56% 44%; align-items: start; }
+    .product-grid { grid-template-columns: minmax(0, 58%) minmax(0, 42%); align-items: start; }
   }
   
   .product-panel {
@@ -803,20 +808,38 @@ onBeforeUnmount(() => {
   .leftCol {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    padding: 14px;
+    gap: 12px;
+    padding: 16px;
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto;
   }
   
   .media {
     position: relative;
     border-radius: 18px;
     overflow: hidden;
-    background: var(--rm-soft);
-    height: 440px;
+    background: #f8fafc;
+    width: 100%;
+    height: clamp(420px, 56vw, 560px);
   }
-  @media (min-width: 1200px) { .media { height: 470px; } }
+
+  .media-frame {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    display: block;
+  }
   
-  .img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center center;
+    display: block;
+  }
   
   .badge {
     position: absolute;
@@ -859,16 +882,18 @@ onBeforeUnmount(() => {
   .thumbs {
     display: flex;
     gap: 12px;
-    margin-top: 12px;
+    margin-top: 0;
+    padding: 0;
+    position: static;
   }
   .thumb {
     flex: 1 1 0;
-    height: 96px;
-    border-radius: 8px;
+    height: 76px;
+    border-radius: 10px;
     overflow: hidden;
     border: 1px solid var(--rm-border);
     padding: 0;
-    background: transparent;
+    background: #fff;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -881,11 +906,20 @@ onBeforeUnmount(() => {
     box-shadow: 0 8px 20px rgba(16,185,129,0.06);
     transform: translateY(-2px);
   }
+
+  .image-fade-enter-active,
+  .image-fade-leave-active {
+    transition: opacity 0.18s ease;
+  }
+  .image-fade-enter-from,
+  .image-fade-leave-to {
+    opacity: 0;
+  }
   
   .rightCol {
     display: flex;
     flex-direction: column;
-    padding: 24px 24px 22px;
+    padding: 28px 26px 24px;
   }
   
   .title {

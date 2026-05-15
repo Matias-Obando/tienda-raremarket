@@ -1,10 +1,10 @@
 <template>
   <header class="sticky top-0 z-[90] bg-white border-b border-gray-200 pt-0 pb-0 shadow-none">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 md:py-3">
-      <div class="flex items-center justify-between gap-4">
+      <div class="flex items-center justify-between gap-4 sm:gap-5">
         <div class="flex items-center gap-4 flex-1 min-w-0">
           <NuxtLink to="/" class="flex items-center gap-3 shrink-0">
-            <img :src="logo" alt="Closely" class="h-18 md:h-24 w-auto rounded-md" />
+            <img :src="logo" alt="Closely" class="h-12 sm:h-16 md:h-24 w-auto rounded-md" />
           </NuxtLink>
 
           <div class="hidden md:flex flex-1 px-2">
@@ -29,7 +29,7 @@
           </div>
         </div>
 
-        <div class="flex items-center gap-3 shrink-0">
+        <div class="flex items-center gap-2 sm:gap-3 shrink-0">
           <div class="hidden md:flex items-center gap-3">
             <template v-if="!user">
               <div class="inline-flex items-center rounded-full border border-emerald-300 text-emerald-600 overflow-hidden">
@@ -43,9 +43,9 @@
               </div>
             </template>
 
-            <NuxtLink to="/vender" class="ml-1 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-full text-sm font-semibold shadow-sm transition-colors">
+            <button class="ml-1 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-full text-sm font-semibold shadow-sm transition-colors" @click="handleSell">
               Vender ahora
-            </NuxtLink>
+            </button>
 
             <div v-if="user" class="flex items-center gap-2">
               <NuxtLink to="/favoritos" class="action-pill" aria-label="Favoritos" title="Favoritos">
@@ -88,24 +88,12 @@
             </div>
           </div>
 
-          <div class="flex items-center gap-2 md:hidden">
+          <div class="flex items-center gap-1.5 md:hidden">
             <button class="p-2 rounded-full hover:bg-gray-100" aria-label="Buscar" @click="openMobileSearch">
               <svg class="h-6 w-6 text-gray-700" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M12.9 14.32a8 8 0 111.414-1.414l4.387 4.387-1.414 1.414-4.387-4.387zM8.5 15a6.5 6.5 0 100-13 6.5 6.5 0 000 13z" clip-rule="evenodd" />
               </svg>
             </button>
-
-            <NuxtLink
-              v-if="user"
-              to="/chat"
-              class="p-2 rounded-full hover:bg-gray-100 relative"
-              :aria-label="unreadChatCount > 0 ? `Mensajes, ${unreadChatCount} sin leer` : 'Mensajes'"
-            >
-              <svg class="h-6 w-6 text-gray-700" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-              </svg>
-              <span v-if="unreadChatCount > 0" class="action-pill-count">{{ unreadChatCount > 99 ? '99+' : unreadChatCount }}</span>
-            </NuxtLink>
 
             <NuxtLink
               to="/ayuda"
@@ -120,7 +108,7 @@
               </svg>
             </NuxtLink>
 
-            <button class="bg-emerald-600 text-white px-3 py-2 rounded-full text-sm" @click="handleSell">Vender</button>
+            <button class="bg-emerald-600 text-white px-3 py-2 rounded-full text-sm whitespace-nowrap" @click="handleSell">Vender</button>
 
             <button class="p-2 rounded-md ml-1 focus:outline-none" aria-label="Abrir menú" @click="toggleMobile">
               <svg v-if="!mobileOpen" class="h-6 w-6 text-gray-700" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -339,6 +327,11 @@ function toggleMobile() {
   mobileOpen.value = !mobileOpen.value
 }
 
+function closeMobileMenus() {
+  mobileOpen.value = false
+  mobileSearchOpen.value = false
+}
+
 function openMobileSearch() {
   mobileSearchOpen.value = true
 }
@@ -348,15 +341,21 @@ function closeMobileSearch() {
 }
 
 function handleSell() {
-  mobileOpen.value = false
+  closeMobileMenus()
   emit('sell')
+
+  if (!user.value?.token) {
+    navigateTo({ path: '/autenticacion', query: { mode: 'login', redirect: '/vender' } })
+    return
+  }
+
   navigateTo('/vender')
 }
 
 function signOut() {
   clearSessionUser()
   dropdownOpen.value = false
-  mobileOpen.value = false
+  closeMobileMenus()
   signOutConfirmOpen.value = false
   navigateTo('/')
 }
@@ -426,6 +425,7 @@ watch(
   () => route.fullPath,
   () => {
     closeDropdown()
+    closeMobileMenus()
   }
 )
 

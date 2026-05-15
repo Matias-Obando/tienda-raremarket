@@ -279,6 +279,13 @@ async function loadEditingItem() {
 }
 
 onMounted(() => {
+  const currentUser = loadSessionUser().value
+  if (!currentUser?.token) {
+    uiMessages.info('Inicia sesion para publicar tu articulo.')
+    void router.replace({ path: '/autenticacion', query: { mode: 'login', redirect: '/vender' } })
+    return
+  }
+
   if (isEditMode.value) {
     void loadEditingItem()
   }
