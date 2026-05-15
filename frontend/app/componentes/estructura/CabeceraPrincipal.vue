@@ -193,9 +193,15 @@
 
           <div class="border-t pt-3">
             <div class="flex flex-col gap-2">
-              <button v-for="(c, i) in categories" :key="'mob-' + i" class="text-left py-2 text-sm text-gray-700 hover:text-emerald-600" @click="$emit('select-category', c.key)">
+              <NuxtLink
+                v-for="(c, i) in categories"
+                :key="'mob-' + i"
+                :to="c.key === 'new' ? '/inicio' : { path: '/inicio', query: { cat: c.key } }"
+                class="text-left py-2 text-sm text-gray-700 hover:text-emerald-600"
+                @click="mobileOpen = false"
+              >
                 {{ c.label }}
-              </button>
+              </NuxtLink>
             </div>
           </div>
         </aside>
