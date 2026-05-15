@@ -12,7 +12,7 @@ import java.util.Arrays;
  */
 @Configuration
 public class CorsConfig implements WebMvcConfigurer {
-    @Value("${app.cors.allowed-origins:http://localhost:3000}")
+    @Value("${app.cors.allowed-origins:http://localhost:3000,https://tienda-raremarket-vert.vercel.app}")
     private String allowedOrigins;
 
     
