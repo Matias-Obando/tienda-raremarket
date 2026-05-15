@@ -74,11 +74,11 @@
 
         <template v-else>
           <header class="chat-header">
-            <div class="chat-header-main">
-              <span class="header-avatar" aria-hidden="true">{{ getInitial(selectedConversation.counterpartName) }}</span>
+              <div class="chat-header-main">
+              <span class="header-avatar" aria-hidden="true">{{ getInitial(selectedConversation?.counterpartName) }}</span>
               <div>
                 <p class="eyebrow">Conversación</p>
-                <h2>{{ selectedConversation.counterpartName }}</h2>
+                <h2>{{ selectedConversation?.counterpartName }}</h2>
                 <p class="header-sub">Disponible para responder</p>
               </div>
             </div>
@@ -404,7 +404,7 @@ function getConversationContext() {
 
   return {
     itemId: itemId.value,
-    buyerId: sessionUser.value.id,
+    buyerId: sessionUser.value?.id,
     sellerId,
     itemLabel: itemTitle.value || `Producto ${itemId.value}`,
     sellerLabel: sellerNameFromQuery.value || 'Vendedor'
@@ -427,7 +427,7 @@ async function loadConversations() {
   try {
     const loadedConversations = await $fetch<Conversation[]>(`${config.public.API_BASE_URL}/chat/conversations`, {
       headers,
-      params: { userId: sessionUser.value.id }
+      params: { userId: sessionUser.value?.id }
     })
     conversations.value = [...loadedConversations].sort((a, b) => {
       const aTime = new Date(a.updatedAt ?? 0).getTime()
@@ -459,7 +459,7 @@ async function loadMessages(conversationId: string) {
   try {
     messages.value = await $fetch<Message[]>(`${config.public.API_BASE_URL}/chat/conversations/${conversationId}/messages`, {
       headers,
-      params: { userId: sessionUser.value.id }
+      params: { userId: sessionUser.value?.id }
     })
     await scrollToBottom()
   } catch (error: any) {
@@ -476,7 +476,7 @@ async function selectConversation(conversationId: string) {
   selectedConversationId.value = conversationId
   await loadMessages(conversationId)
   await subscribeToConversationMessages(conversationId)
-  if (canUseRealChat.value) {
+    if (canUseRealChat.value) {
     const headers = getAuthHeaders()
     if (!headers) {
       return
@@ -485,7 +485,7 @@ async function selectConversation(conversationId: string) {
     await $fetch(`${config.public.API_BASE_URL}/chat/conversations/${conversationId}/read`, {
       method: 'PATCH',
       headers,
-      params: { userId: sessionUser.value.id }
+      params: { userId: sessionUser.value?.id }
     })
     await loadConversations()
     void refreshUnreadChatCount()
@@ -564,7 +564,7 @@ async function sendMessage() {
       method: 'POST',
       headers,
       body: {
-        senderId: sessionUser.value.id,
+        senderId: sessionUser.value?.id,
         content: draftMessage.value.trim()
       }
     })
@@ -686,9 +686,12 @@ async function loadData() {
   }
   
   if (!selectedConversationId.value && conversations.value.length) {
-    selectedConversationId.value = conversations.value[0].id
-    await loadMessages(selectedConversationId.value)
-    await subscribeToConversationMessages(selectedConversationId.value)
+    const first = conversations.value[0]
+    if (first) {
+      selectedConversationId.value = first.id
+      await loadMessages(selectedConversationId.value)
+      await subscribeToConversationMessages(selectedConversationId.value)
+    }
   }
 }
 
