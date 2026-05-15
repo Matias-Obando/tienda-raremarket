@@ -1,11 +1,11 @@
 {
   "$schema": "https://railway.com/railway.schema.json",
   "build": {
-    "builder": "RAILPACK",
+    "builder": "DOCKERFILE",
     "buildCommand": "./mvnw clean package -DskipTests",
     "watchPatterns": ["/backend/**"]
   },
   "deploy": {
-    "startCommand": "java -jar target/backend-0.0.1-SNAPSHOT.jar"
+    "startCommand": "java -jar /app/app.jar"
   }
 }
