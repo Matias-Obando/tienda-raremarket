@@ -338,7 +338,14 @@ async function loadConversationsCount() {
 
   try {
     const config = useRuntimeConfig()
+    // Si no hay token no intentamos llamar al endpoint protegido (evita 403)
+    if (!profileUser.value?.token) {
+      conversationsCount.value = 0
+      return
+    }
+    const headers = { Authorization: `Bearer ${profileUser.value.token}` }
     const list = await $fetch<Array<{ id: string }>>(`${config.public.API_BASE_URL}/chat/conversations`, {
+      headers,
       params: { userId: profileUser.value.id }
     })
     conversationsCount.value = list.length

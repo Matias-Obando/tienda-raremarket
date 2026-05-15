@@ -56,8 +56,8 @@
         <section class="sitemap-section">
           <h2>📱 Dinámicas</h2>
           <ul>
-            <li><NuxtLink to="/articulos/[id]">Detalle de Producto (dinámico)</NuxtLink></li>
-            <li><NuxtLink to="/vendedores/[id]">Perfil de Vendedor (dinámico)</NuxtLink></li>
+            <li><span class="sitemap-pattern">/articulos/:id</span> - Detalle de Producto</li>
+            <li><span class="sitemap-pattern">/vendedores/:id</span> - Perfil de Vendedor</li>
           </ul>
         </section>
       </nav>
@@ -182,6 +182,11 @@ h1 {
 .sitemap-section a:hover {
   color: #17a371;
   text-decoration: underline;
+}
+
+.sitemap-pattern {
+  font-weight: 600;
+  color: #0f172a;
 }
 
 .sitemap-info {
