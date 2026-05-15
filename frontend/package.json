@@ -23,7 +23,7 @@
     "vue-router": "^4.6.4"
   },
   "overrides": {
-    "serialize-javascript": "7.0.4"
+    "serialize-javascript": "7.0.5"
   },
   "devDependencies": {
     "@bomb.sh/tab": "^0.0.14",
