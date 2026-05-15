@@ -1,0 +1,28 @@
+name: Build backend Docker image
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'backend/**'
+
+jobs:
+  build-backend-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image
+        env:
+          DOCKER_BUILDKIT: 1
+        run: |
+          echo "Building Docker image from backend/Dockerfile"
+          docker --version
+          ls -la
+          echo "Context listing (root):"
+          find . -maxdepth 2 -type f | sed -n '1,200p'
+          docker build -f backend/Dockerfile -t tienda-backend:ci-debug .
