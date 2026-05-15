@@ -15,12 +15,16 @@
           Aún no tienes conversaciones. Empieza enviando un mensaje a un vendedor.
         </div>
         <div v-else class="conversations-list">
-          <button
+          <div
             v-for="conversation in filteredConversations"
             :key="conversation.id"
             class="conversation-row"
             :class="{ active: selectedConversationId === conversation.id }"
+            role="button"
+            tabindex="0"
             @click="selectConversation(conversation.id)"
+            @keydown.enter.prevent="selectConversation(conversation.id)"
+            @keydown.space.prevent="selectConversation(conversation.id)"
           >
             <div class="row-main">
               <div class="row-avatar" aria-hidden="true">{{ getInitial(conversation.counterpartName) }}</div>
@@ -42,12 +46,12 @@
                 title="Borrar chat"
                 aria-label="Borrar chat"
                 :disabled="deletingConversationId === conversation.id"
-                @click.stop="deleteConversation(conversation.id)"
+                @click.stop="askDeleteConversation(conversation.id)"
               >
                 ×
               </button>
             </div>
-          </button>
+          </div>
         </div>
       </aside>
 
@@ -144,6 +148,29 @@
           </form>
         </template>
       </section>
+      <!-- Confirmar borrado de conversación (modal) -->
+      <div v-if="confirmDeleteOpen" class="modal-overlay" @click.self="cancelDelete">
+        <div class="modal-card">
+          <div class="modal-header">
+            <h3>Confirmar borrado</h3>
+            <button class="modal-close" @click="cancelDelete" aria-label="Cerrar">×</button>
+          </div>
+          <div class="modal-body">
+            <p>Esta acción eliminará este chat y todos sus mensajes. ¿Quieres continuar?</p>
+          </div>
+          <div class="modal-footer">
+            <button class="modal-btn modal-btn--secondary" @click="cancelDelete">Cancelar</button>
+            <button
+              class="modal-btn modal-btn--primary"
+              @click="confirmDeleteConversation"
+              :disabled="deletingConversationId === pendingDeleteConversationId || !pendingDeleteConversationId"
+            >
+              <span v-if="deletingConversationId === pendingDeleteConversationId">Borrando...</span>
+              <span v-else>Borrar</span>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -204,6 +231,8 @@ const errorMessage = ref('')
 const selectedConversationId = ref('')
 const draftMessage = ref('')
 const deletingConversationId = ref('')
+const confirmDeleteOpen = ref(false)
+const pendingDeleteConversationId = ref('')
 let conversationChannel: any = null
 let activeChannelConversationId = ''
 const itemId = computed(() => typeof route.query.itemId === 'string' ? route.query.itemId : '')
@@ -481,6 +510,12 @@ async function openConversationFromProduct() {
     return
   }
 
+  if (!sessionUser.value?.id) {
+    errorMessage.value = 'Sesion invalida. Vuelve a iniciar sesion.'
+    uiMessages.error(errorMessage.value)
+    return
+  }
+
   errorMessage.value = ''
   try {
     const conversation = await $fetch<Conversation>(`${config.public.API_BASE_URL}/chat/conversations`, {
@@ -552,10 +587,10 @@ async function deleteConversation(conversationId: string) {
     return
   }
 
-  const confirmationMessage = 'Esta accion eliminara este chat y todos sus mensajes. ¿Quieres continuar?'
-  if (!window.confirm(confirmationMessage)) {
-    return
-  }
+  try { console.log('deleteConversation start', conversationId) } catch (e) {}
+  uiMessages.info('Borrando conversación...')
+
+  // El modal ya habrá confirmado la acción; aquí solo se ejecuta la petición.
 
   const headers = getAuthHeaders()
   if (!headers) {
@@ -570,11 +605,12 @@ async function deleteConversation(conversationId: string) {
     await $fetch(`${config.public.API_BASE_URL}/chat/conversations/${conversationId}`, {
       method: 'DELETE',
       headers,
-      params: { userId: sessionUser.value.id }
+      params: { userId: sessionUser.value?.id }
     })
   } catch (error: any) {
     errorMessage.value = parseApiError(error, 'No se pudo borrar el chat.')
     uiMessages.error(errorMessage.value)
+    try { console.log('deleteConversation error', error) } catch (e) {}
     return
   } finally {
     deletingConversationId.value = ''
@@ -592,6 +628,41 @@ async function deleteConversation(conversationId: string) {
   void loadConversations()
   void refreshUnreadChatCount()
   uiMessages.success('Chat borrado correctamente.')
+}
+
+function askDeleteConversation(conversationId: string) {
+  if (!canUseRealChat.value) {
+    uiMessages.error('Inicia sesion para borrar el chat.')
+    return
+  }
+
+  pendingDeleteConversationId.value = conversationId
+  confirmDeleteOpen.value = true
+  try { console.log('askDeleteConversation', conversationId) } catch (e) {}
+  uiMessages.info('Confirmación para borrar conversación')
+}
+
+function cancelDelete() {
+  pendingDeleteConversationId.value = ''
+  confirmDeleteOpen.value = false
+}
+
+async function confirmDeleteConversation() {
+  const id = pendingDeleteConversationId.value
+  if (!id) return
+  confirmDeleteOpen.value = false
+  try { console.log('confirmDeleteConversation', id) } catch (e) {}
+  // mark as deleting so UI can reflect state
+  deletingConversationId.value = id
+  try {
+    await deleteConversation(id)
+  } catch (e: any) {
+    uiMessages.error('Error al borrar el chat.')
+    try { console.log('confirmDeleteConversation error', e) } catch (e) {}
+  } finally {
+    deletingConversationId.value = ''
+    pendingDeleteConversationId.value = ''
+  }
 }
 
 async function loadData() {
@@ -653,6 +724,83 @@ watch(orderedMessages, async () => {
     radial-gradient(1200px 420px at 0% 0%, rgba(31, 185, 129, 0.08), transparent 65%),
     radial-gradient(900px 360px at 100% 100%, rgba(15, 23, 42, 0.06), transparent 70%);
 }
+
+/* Modal styles (copied from vendedores component) */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 16px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-card {
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+  max-width: 500px;
+  width: 100%;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.modal-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover { background: #e5e7eb; color: #1f2937; }
+
+.modal-body { padding: 20px 24px; }
+
+.modal-footer { display:flex; gap:10px; padding:16px 24px; border-top:1px solid #e5e7eb; justify-content:flex-end; }
+
+.modal-btn { height:40px; padding:0 16px; border-radius:999px; border:1px solid transparent; font-weight:600; cursor:pointer; transition:all .2s ease }
+.modal-btn--primary { background: var(--rm-primary); border-color: var(--rm-primary); color:#fff }
+.modal-btn--primary:hover:not(:disabled){ background: var(--rm-primary-hover) }
+.modal-btn--primary:disabled{ opacity:0.6; cursor:not-allowed }
+.modal-btn--secondary { background:#f8fafc; border-color:#e5e7eb; color:#64748b }
+.modal-btn--secondary:hover{ background:#e5e7eb; color:#0f172a }
 
 .chat-shell {
   max-width: 1320px;

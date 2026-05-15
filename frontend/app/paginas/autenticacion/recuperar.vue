@@ -39,7 +39,7 @@
 import { ref } from 'vue'
 
 definePageMeta({
-  alias: ['/auth/forgot']
+  alias: ['/auth/forgot', '/autenticacion/forgot']
 })
 
 const config = useRuntimeConfig()
