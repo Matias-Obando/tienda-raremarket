@@ -28,7 +28,7 @@
         <header class="admin-content__hero">
           <p class="admin-content__eyebrow">Bienvenido, administrador</p>
           <h2 class="admin-content__title">Métricas reales conectadas a la base de datos</h2>
-          <p class="admin-content__subtitle">Los gráficos y resúmenes se alimentan desde `/api/admin/metrics` con datos agregados en tiempo real.</p>
+          <p class="admin-content__subtitle"></p>
         </header>
 
         <div v-if="loading" class="admin-state">Cargando métricas...</div>
@@ -43,35 +43,7 @@
             </article>
           </section>
 
-          <section v-if="activeSection === 'negocio'" class="admin-grid">
-            <article class="admin-card" v-for="panel in businessPanels" :key="panel.title">
-              <p class="admin-card__eyebrow">{{ panel.kicker }}</p>
-              <h3 class="admin-card__title">{{ panel.title }}</h3>
-              <p class="admin-card__text">{{ panel.description }}</p>
-              <div class="admin-card__stats">
-                <div v-for="stat in panel.stats" :key="stat.label" class="admin-stat">
-                  <span class="admin-stat__value">{{ stat.value }}</span>
-                  <span class="admin-stat__label">{{ stat.label }}</span>
-                </div>
-              </div>
-            </article>
-          </section>
-
-          <section v-else-if="activeSection === 'tecnico'" class="admin-grid">
-            <article class="admin-card" v-for="panel in technicalPanels" :key="panel.title">
-              <p class="admin-card__eyebrow">{{ panel.kicker }}</p>
-              <h3 class="admin-card__title">{{ panel.title }}</h3>
-              <p class="admin-card__text">{{ panel.description }}</p>
-              <div class="admin-card__stats">
-                <div v-for="stat in panel.stats" :key="stat.label" class="admin-stat">
-                  <span class="admin-stat__value">{{ stat.value }}</span>
-                  <span class="admin-stat__label">{{ stat.label }}</span>
-                </div>
-              </div>
-            </article>
-          </section>
-
-          <section v-else class="admin-charts-grid">
+          <section v-if="activeSection === 'negocio'" class="admin-charts-grid">
             <AdminMetricChart
               title="Pedidos por día"
               eyebrow="Tendencia"
@@ -86,12 +58,24 @@
               title="Ingresos por día"
               eyebrow="Tendencia"
               subtitle="Facturación diaria en euros, extraída de la base de datos."
-              type="bar"
+              type="line"
               :labels="metrics.revenueTrend.labels"
               :series="[{ name: 'Ingresos (€)', data: metrics.revenueTrend.values }]"
               :colors="['#2563eb']"
             />
 
+            <AdminMetricChart
+              title="Categorías más activas"
+              eyebrow="Catálogo"
+              subtitle="Top de categorías con más artículos publicados."
+              type="donut"
+              :labels="metrics.topCategories.labels"
+              :series="metrics.topCategories.values.map(value => Number(value))"
+              :colors="topCategoryColors"
+            />
+          </section>
+
+          <section v-else-if="activeSection === 'tecnico'" class="admin-charts-grid">
             <AdminMetricChart
               title="Estado de pedidos"
               eyebrow="Distribución"
@@ -103,16 +87,6 @@
             />
 
             <AdminMetricChart
-              title="Categorías más activas"
-              eyebrow="Catálogo"
-              subtitle="Top de categorías con más artículos publicados."
-              type="bar"
-              :labels="metrics.topCategories.labels"
-              :series="[{ name: 'Artículos', data: metrics.topCategories.values.map(value => Number(value)) }]"
-              :colors="['#f59e0b']"
-            />
-
-            <AdminMetricChart
               title="Usuarios por rol"
               eyebrow="Accesos"
               subtitle="Distribución real entre usuarios y administradores."
@@ -121,6 +95,26 @@
               :series="metrics.userRoles.values"
               :colors="['#0f766e', '#7c3aed', '#2563eb']"
             />
+            <AdminMetricChart
+              title="Tiempo de respuesta (ms)"
+              eyebrow="Rendimiento"
+              subtitle="Promedio diario del tiempo de respuesta de la página (ms)."
+              type="line"
+              :labels="metrics.responseTimeTrend.labels"
+              :series="[{ name: 'RT (ms)', data: metrics.responseTimeTrend.values }]"
+              :colors="['#ef4444']"
+            />
+          </section>
+
+          <section v-else class="admin-grid">
+            <div class="kpis-accordion">
+              <details v-for="goal in kpiGoals" :key="goal.id" class="kpi-item">
+                <summary class="kpi-summary">{{ goal.title }}</summary>
+                <div class="kpi-body">
+                  <p>{{ goal.description }}</p>
+                </div>
+              </details>
+            </div>
           </section>
         </template>
       </section>
@@ -153,6 +147,7 @@ type AdminMetrics = {
   }
   ordersTrend: { labels: string[]; values: number[] }
   revenueTrend: { labels: string[]; values: number[] }
+  responseTimeTrend: { labels: string[]; values: number[] }
   orderStatuses: { labels: string[]; values: number[] }
   topCategories: { labels: string[]; values: number[] }
   userRoles: { labels: string[]; values: number[] }
@@ -258,6 +253,38 @@ const technicalPanels = computed(() => {
       ]
     }
   ]
+})
+
+const kpiGoals = [
+  {
+    id: 'kpi-growth',
+    title: 'Crecimiento de ingresos',
+    description: 'Aumentar los ingresos mensuales en un 20% durante los próximos 6 meses mediante promociones y optimización de las fichas de producto.'
+  },
+  {
+    id: 'kpi-activation',
+    title: 'Activación de compradores',
+    description: 'Incrementar la tasa de compradores activos en 30 días en un 15% mediante mejoras en la experiencia y campañas segmentadas.'
+  },
+  {
+    id: 'kpi-uptime',
+    title: 'Disponibilidad técnica',
+    description: 'Mantener la disponibilidad de la plataforma por encima del 99.9% y reducir tiempos de latencia promedio en picos de tráfico.'
+  },
+  {
+    id: 'kpi-listings',
+    title: 'Calidad de catálogo',
+    description: 'Aumentar el porcentaje de artículos con fotos y descripciones completas al 90% en 3 meses.'
+  }
+]
+
+const topCategoryColors = computed(() => {
+  if (!metrics.value) {
+    return ['#f59e0b', '#f97316', '#fb923c', '#facc15', '#f43f5e']
+  }
+
+  const n = Math.max(1, metrics.value.topCategories.labels.length)
+  return Array.from({ length: n }).map((_, i) => `hsl(${Math.round((i * 360) / n)} 85% 50%)`)
 })
 
 const loadMetrics = async () => {
@@ -439,24 +466,24 @@ onMounted(() => {
 
 .admin-summary-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
 }
 
 .admin-summary-card {
-  padding: 18px;
+  padding: 12px;
 }
 
 .admin-summary-card__value {
   display: block;
-  margin-bottom: 8px;
-  font-size: 1.4rem;
+  margin-bottom: 6px;
+  font-size: 1rem;
   color: #0f172a;
 }
 
 .admin-summary-card__note {
   color: #64748b;
-  font-size: 0.9rem;
+  font-size: 0.78rem;
 }
 
 .admin-grid,
@@ -471,6 +498,8 @@ onMounted(() => {
 
 .admin-charts-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 12px;
 }
 
 .admin-card--wide {
@@ -520,10 +549,60 @@ onMounted(() => {
   color: #64748b;
 }
 
+.kpis-accordion {
+  display: grid;
+  gap: 12px;
+}
+
+.kpi-item {
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+.kpi-summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.kpi-body {
+  margin-top: 8px;
+  color: #475569;
+  line-height: 1.6;
+}
+
 @media (max-width: 1100px) {
   .admin-summary-grid,
   .admin-charts-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-summary-grid,
+  .admin-charts-grid,
+  .admin-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .admin-shell {
+    padding: 0 12px;
+    gap: 12px;
+  }
+
+  .admin-content__hero {
+    padding: 16px;
+  }
+
+  .admin-summary-card__value {
+    font-size: 1.1rem;
+  }
+
+  .kpi-summary {
+    font-size: 1rem;
   }
 }
 

@@ -66,6 +66,28 @@ public class AdminMetricsService {
                 endDate,
                 false
         ));
+        // Load response time trend if available (table: http_requests with response_time_ms)
+        try {
+            response.setResponseTimeTrend(buildSeries(
+                loadDailyValueMap(
+                    """
+                        SELECT to_char(created_at::date, 'YYYY-MM-DD') AS label, COALESCE(AVG(response_time_ms), 0) AS value
+                        FROM http_requests
+                        WHERE created_at >= ?
+                        GROUP BY created_at::date
+                        ORDER BY created_at::date
+                        """,
+                    since,
+                    true
+                ),
+                startDate,
+                endDate,
+                false
+            ));
+        } catch (Exception ex) {
+            // If the table doesn't exist or query fails, return an empty series (zeros) to keep API stable
+            response.setResponseTimeTrend(buildSeries(new LinkedHashMap<>(), startDate, endDate, false));
+        }
         response.setOrderStatuses(loadBreakdown(
                 """
                         SELECT COALESCE(NULLIF(TRIM(status), ''), 'Sin estado') AS label, COUNT(*) AS value
