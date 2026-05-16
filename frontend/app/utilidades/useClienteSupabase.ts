@@ -4,7 +4,6 @@ let supabaseClient: SupabaseClient | null = null
 let missingConfigWarned = false
 
 export function useSupabaseClient() {
-  // No crear cliente en SSR
   if (typeof window === 'undefined') {
     return null as any
   }

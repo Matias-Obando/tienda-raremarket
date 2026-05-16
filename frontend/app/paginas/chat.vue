@@ -590,7 +590,6 @@ async function deleteConversation(conversationId: string) {
   try { console.log('deleteConversation start', conversationId) } catch (e) {}
   uiMessages.info('Borrando conversación...')
 
-  // El modal ya habrá confirmado la acción; aquí solo se ejecuta la petición.
 
   const headers = getAuthHeaders()
   if (!headers) {
@@ -676,7 +675,7 @@ async function loadData() {
   await loadConversations()
   void refreshUnreadChatCount()
   
-  // Si viene un conversationId en query, seleccionarlo directamente
+  
   if (conversationIdFromQuery.value) {
     selectedConversationId.value = conversationIdFromQuery.value
     await loadMessages(selectedConversationId.value)
@@ -728,7 +727,7 @@ watch(orderedMessages, async () => {
     radial-gradient(900px 360px at 100% 100%, rgba(15, 23, 42, 0.06), transparent 70%);
 }
 
-/* Modal styles (copied from vendedores component) */
+
 .modal-overlay {
   position: fixed;
   top: 0;

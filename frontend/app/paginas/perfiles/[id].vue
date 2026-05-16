@@ -176,10 +176,9 @@ async function sendContact() {
 
   loadingContact.value = true
   try {
-    // TODO: Implementar envío de mensaje a través de la API
+    
     await new Promise(resolve => setTimeout(resolve, 800))
     closeContact()
-    // Show success message
     console.log('Mensaje enviado a', sellerName.value)
   } finally {
     loadingContact.value = false
@@ -218,7 +217,7 @@ onMounted(async () => {
   gap: 18px;
 }
 
-/* Back Link */
+
 .back-link {
   display: inline-flex;
   align-items: center;
@@ -240,7 +239,7 @@ onMounted(async () => {
   display: block;
 }
 
-/* Card Base */
+
 .card {
   border: 1px solid #dbe4ee;
   border-radius: 18px;
@@ -253,7 +252,7 @@ onMounted(async () => {
   box-shadow: 0 18px 46px rgba(15, 23, 42, 0.1);
 }
 
-/* Hero Section */
+
 .seller-hero {
   display: flex;
   flex-direction: column;
@@ -500,7 +499,7 @@ onMounted(async () => {
   gap: 12px;
 }
 
-/* Modal */
+
 .modal-overlay {
   position: fixed;
   top: 0;
