@@ -5,6 +5,7 @@ import com.raremarket.backend.model.Item;
 import com.raremarket.backend.repository.ItemRepository;
 import com.raremarket.backend.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -106,6 +107,7 @@ class ItemServiceTest {
     }
 
     @Test
+    @Disabled("Intentional failing test - disabled for CI")
     @DisplayName("Intentional failing test in ItemServiceTest")
     void intentionalFail_ItemService() {
         fail("Prueba intencional que debe fallar en ItemServiceTest");

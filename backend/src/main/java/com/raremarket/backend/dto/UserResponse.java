@@ -10,6 +10,7 @@ public class UserResponse {
     private String location;
     private String phone;
     private String bio;
+    private String role;
 
     public static UserResponse from(User user) {
         UserResponse response = new UserResponse();
@@ -20,6 +21,7 @@ public class UserResponse {
         response.setLocation(user.getLocation());
         response.setPhone(user.getPhone());
         response.setBio(user.getBio());
+        response.setRole(user.getRole());
         return response;
     }
 
@@ -77,5 +79,13 @@ public class UserResponse {
 
     public void setBio(String bio) {
         this.bio = bio;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }

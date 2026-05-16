@@ -49,7 +49,7 @@ public class UserController {
         User savedUser = userService.authenticate(user.getEmail(), user.getPassword())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "User created but could not be authenticated"));
 
-        String token = authTokenService.issueToken(savedUser.getId());
+        String token = authTokenService.issueToken(savedUser.getId(), savedUser.getRole());
 
         return ResponseEntity.ok(AuthResponse.of(token, UserResponse.from(savedUser)));
     }
@@ -62,7 +62,7 @@ public class UserController {
 
         User user = userService.authenticate(identifier, loginRequest.getPassword()).orElse(null);
         if (user != null) {
-            String token = authTokenService.issueToken(user.getId());
+            String token = authTokenService.issueToken(user.getId(), user.getRole());
             return ResponseEntity.ok(AuthResponse.of(token, UserResponse.from(user)));
         }
         return ResponseEntity.status(401).body("Invalid credentials");

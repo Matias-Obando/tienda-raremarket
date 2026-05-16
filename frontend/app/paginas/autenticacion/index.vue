@@ -128,6 +128,7 @@ type AuthApiResponse = {
     id: string
     username: string
     email: string
+    role?: string
     avatarUrl?: string
     location?: string
     phone?: string
@@ -159,7 +160,12 @@ async function submitRegister() {
       token: response.token
     })
     uiMessages.success('Registro completado. Bienvenido a Closely.')
-    await router.push(getRedirectPath())
+    // If user is admin, send to admin dashboard
+    if (response.user.role === 'admin') {
+      await router.push('/admin/dashboard')
+    } else {
+      await router.push(getRedirectPath())
+    }
   } catch (error: any) {
     errorMessage.value = error?.data?.message || error?.data || 'No se pudo completar el registro.'
     uiMessages.error(errorMessage.value)
@@ -186,7 +192,12 @@ async function submitLogin() {
       token: response.token
     })
     uiMessages.success('Sesion iniciada correctamente.')
-    await router.push(getRedirectPath())
+    // If user is admin, send to admin dashboard
+    if (response.user.role === 'admin') {
+      await router.push('/admin/dashboard')
+    } else {
+      await router.push(getRedirectPath())
+    }
   } catch (error: any) {
     errorMessage.value = error?.data?.message || error?.data || 'Email o contraseña incorrectos.'
     uiMessages.error(errorMessage.value)
