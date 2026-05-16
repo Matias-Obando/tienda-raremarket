@@ -60,4 +60,10 @@ public class User {
 
     public String getBio() { return bio; }
     public void setBio(String bio) { this.bio = bio; }
+
+    @Column(name = "role", length = 40)
+    private String role;
+
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
 }

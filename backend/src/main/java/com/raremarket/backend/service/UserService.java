@@ -56,6 +56,9 @@ public class UserService {
         user.setEmail(normalizedEmail);
         user.setPassword(encoded); // Para compatibilidad legacy
         user.setPasswordHash(encoded); // Para compatibilidad con columna password_hash
+        // Ensure role is set; default to 'user' if none provided
+        String providedRole = blankToNull(user.getRole());
+        user.setRole(providedRole != null ? providedRole.trim().toLowerCase() : "user");
         userRepository.save(user);
         return true;
     }

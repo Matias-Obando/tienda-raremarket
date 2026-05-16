@@ -2,6 +2,7 @@ export type SessionUser = {
   id: string
   username: string
   email: string
+  role?: string
   token?: string
   avatarUrl?: string
   location?: string

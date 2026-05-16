@@ -27,3 +27,11 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
 
 CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user_id ON password_reset_tokens (user_id);
 CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_token_hash ON password_reset_tokens (token_hash);
+
+-- Ensure users have a role column and set default 'user' for existing rows
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS role VARCHAR(40);
+
+UPDATE users
+SET role = COALESCE(NULLIF(trim(role), ''), 'user')
+WHERE role IS NULL OR trim(role) = '';

@@ -28,11 +28,16 @@ public class AuthTokenService {
     }
 
     public String issueToken(String userId) {
+        return issueToken(userId, "user");
+    }
+
+    public String issueToken(String userId, String role) {
         try {
             long now = Instant.now().getEpochSecond();
             long exp = now + tokenLifetimeSeconds;
 
-            String payload = userId + ":" + exp;
+            String safeRole = role == null ? "user" : role.trim().toLowerCase();
+            String payload = userId + ":" + safeRole + ":" + exp;
             byte[] payloadBytes = payload.getBytes(StandardCharsets.UTF_8);
             String payloadPart = BASE64_URL_ENCODER.encodeToString(payloadBytes);
             String signaturePart = sign(payloadPart);
@@ -42,7 +47,20 @@ public class AuthTokenService {
         }
     }
 
-    public Optional<String> extractUserId(String token) {
+    public static class UserTokenPayload {
+        private final String userId;
+        private final String role;
+
+        public UserTokenPayload(String userId, String role) {
+            this.userId = userId;
+            this.role = role;
+        }
+
+        public String getUserId() { return userId; }
+        public String getRole() { return role; }
+    }
+
+    public Optional<UserTokenPayload> extractPayload(String token) {
         if (token == null || token.isBlank()) {
             return Optional.empty();
         }
@@ -62,8 +80,8 @@ public class AuthTokenService {
 
         try {
             String payload = new String(BASE64_URL_DECODER.decode(payloadPart), StandardCharsets.UTF_8);
-            String[] payloadParts = payload.split(":", 2);
-            if (payloadParts.length != 2) {
+            String[] payloadParts = payload.split(":", 3);
+            if (payloadParts.length < 2) {
                 return Optional.empty();
             }
 
@@ -72,13 +90,16 @@ public class AuthTokenService {
                 return Optional.empty();
             }
 
-            long exp = Long.parseLong(payloadParts[1]);
+            String role = payloadParts.length == 3 ? payloadParts[1].trim() : "user";
+            String expPart = payloadParts.length == 3 ? payloadParts[2] : payloadParts[1];
+
+            long exp = Long.parseLong(expPart);
             long now = Instant.now().getEpochSecond();
             if (now >= exp) {
                 return Optional.empty();
             }
 
-            return Optional.of(userId);
+            return Optional.of(new UserTokenPayload(userId, role));
         } catch (Exception ex) {
             return Optional.empty();
         }
