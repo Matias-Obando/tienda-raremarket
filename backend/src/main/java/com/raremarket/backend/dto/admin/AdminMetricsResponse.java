@@ -7,6 +7,7 @@ public class AdminMetricsResponse {
     private Summary summary;
     private Series ordersTrend;
     private Series revenueTrend;
+    private Series responseTimeTrend;
     private Breakdown orderStatuses;
     private Breakdown topCategories;
     private Breakdown userRoles;
@@ -33,6 +34,14 @@ public class AdminMetricsResponse {
 
     public void setRevenueTrend(Series revenueTrend) {
         this.revenueTrend = revenueTrend;
+    }
+
+    public Series getResponseTimeTrend() {
+        return responseTimeTrend;
+    }
+
+    public void setResponseTimeTrend(Series responseTimeTrend) {
+        this.responseTimeTrend = responseTimeTrend;
     }
 
     public Breakdown getOrderStatuses() {

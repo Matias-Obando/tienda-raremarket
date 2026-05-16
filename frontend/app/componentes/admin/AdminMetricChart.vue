@@ -137,13 +137,19 @@ const chartOptions = computed<ApexOptions>(() => {
 }
 
 .metric-chart-card__empty {
-  min-height: 280px;
+  min-height: 240px;
   display: grid;
   place-items: center;
   color: #64748b;
   background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
   border-radius: 18px;
   border: 1px dashed #cbd5e1;
+}
+
+@media (max-width: 640px) {
+  .metric-chart-card__empty {
+    min-height: 200px;
+  }
 }
 
 @media (max-width: 640px) {
