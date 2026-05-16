@@ -1,7 +1,8 @@
 <template>
   <div>
     <UiMessageCenter />
-    <MainHeader v-if="!$route.path.startsWith('/autenticacion')" />
+    <AdminHeader v-if="$route.path.startsWith('/admin')" />
+    <MainHeader v-else-if="!$route.path.startsWith('/autenticacion')" />
 
     <main class="main">
       <NuxtPage />
@@ -13,6 +14,7 @@
 
 <script setup lang="ts">
 import MainHeader from '~/componentes/estructura/CabeceraPrincipal.vue'
+import AdminHeader from '~/componentes/estructura/CabeceraAdmin.vue'
 import MainFooter from '~/componentes/estructura/PiePaginaPrincipal.vue'
 import UiMessageCenter from '~/componentes/CentroMensajes.vue'
 </script>

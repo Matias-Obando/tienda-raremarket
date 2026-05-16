@@ -77,6 +77,7 @@
                 <transition name="fade">
                   <div v-if="dropdownOpen" class="absolute right-0 mt-2 w-44 bg-white border rounded-md shadow-lg py-1 z-50" role="menu" aria-label="User menu">
                     <NuxtLink to="/perfil" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem" @click="closeDropdown">Mi perfil</NuxtLink>
+                    <NuxtLink v-if="isAdmin" to="/admin/dashboard" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem" @click="closeDropdown">Dashboard</NuxtLink>
                     <NuxtLink to="/chat" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem" @click="closeDropdown">Mis mensajes</NuxtLink>
                     <NuxtLink to="/perfil#mis-publicaciones" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem" @click="closeDropdown">Mis publicaciones</NuxtLink>
                     <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50" role="menuitem" @click="openSignOutConfirm">
@@ -166,6 +167,9 @@
             </NuxtLink>
             <NuxtLink v-if="user" to="/favoritos" class="block w-full py-3 rounded-full border text-gray-700 text-center">
               Favoritos
+            </NuxtLink>
+            <NuxtLink v-if="isAdmin" to="/admin/dashboard" class="block w-full py-3 rounded-full border text-gray-700 text-center">
+              Dashboard admin
             </NuxtLink>
             <NuxtLink v-if="user" to="/chat" class="block w-full py-3 rounded-full border text-gray-700 text-center">
               Mis mensajes
@@ -279,6 +283,7 @@ const emit = defineEmits<{
 
 const logo = logoAsset
 const user = computed(() => sessionUser.value)
+const isAdmin = computed(() => user.value?.role === 'admin')
 const userInitial = computed(() => user.value?.username?.charAt(0).toUpperCase() || 'U')
 const userAvatar = computed(() => user.value?.avatarUrl || '')
 const query = ref('')
@@ -289,11 +294,19 @@ const mobileSearchOpen = ref(false)
 const avatarRef = ref<HTMLElement | null>(null)
 const favoriteCount = ref(0)
 const favoritesStorageKey = 'closely:favorites'
-const navLinks = [
-  { label: 'Inicio', to: '/inicio' },
-  { label: 'Mensajes', to: '/chat' },
-  { label: 'Vender', to: '/vender' }
-]
+const navLinks = computed(() => {
+  const links = [
+    { label: 'Inicio', to: '/inicio' },
+    { label: 'Mensajes', to: '/chat' },
+    { label: 'Vender', to: '/vender' }
+  ]
+
+  if (isAdmin.value) {
+    links.unshift({ label: 'Dashboard admin', to: '/admin/dashboard' })
+  }
+
+  return links
+})
 const showCategoryNav = computed(() => true)
 
 function isActivePath(path: string) {
