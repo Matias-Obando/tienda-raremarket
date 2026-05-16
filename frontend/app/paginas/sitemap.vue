@@ -8,7 +8,7 @@
 
       <nav class="sitemap-nav">
         <section class="sitemap-section">
-          <h2>🏠 Principales</h2>
+          <h2>Principales</h2>
           <ul>
             <li><NuxtLink to="/">Inicio</NuxtLink></li>
             <li><NuxtLink to="/inicio">Catálogo</NuxtLink></li>
@@ -19,7 +19,7 @@
         </section>
 
         <section class="sitemap-section">
-          <h2>👤 Perfil</h2>
+          <h2>Perfil</h2>
           <ul>
             <li><NuxtLink to="/perfil">Mi Perfil</NuxtLink></li>
             <li><NuxtLink to="/editar-perfil">Editar Perfil</NuxtLink></li>
@@ -28,7 +28,7 @@
         </section>
 
         <section class="sitemap-section">
-          <h2>⚖️ Legal</h2>
+          <h2>Legal</h2>
           <ul>
             <li><NuxtLink to="/legal/aviso-legal">Aviso Legal</NuxtLink></li>
             <li><NuxtLink to="/legal/terminos-condiciones">Términos y Condiciones</NuxtLink></li>
@@ -45,7 +45,7 @@
         </section>
 
         <section class="sitemap-section">
-          <h2>ℹ️ Información</h2>
+          <h2>Información</h2>
           <ul>
             <li><NuxtLink to="/acerca-de">Acerca de Nosotros</NuxtLink></li>
             <li><NuxtLink to="/ayuda">Centro de Asistencia</NuxtLink></li>
@@ -53,13 +53,6 @@
           </ul>
         </section>
 
-        <section class="sitemap-section">
-          <h2>📱 Dinámicas</h2>
-          <ul>
-            <li><span class="sitemap-pattern">/articulos/:id</span> - Detalle de Producto</li>
-            <li><span class="sitemap-pattern">/vendedores/:id</span> - Perfil de Vendedor</li>
-          </ul>
-        </section>
       </nav>
 
       <section class="sitemap-info">
@@ -98,7 +91,7 @@
       </section>
 
       <div class="legal-footer">
-        <p><strong>Última actualización:</strong> 22 de abril de 2026</p>
+        <p><strong>Última actualización:</strong> 14 de mayo de 2026</p>
       </div>
     </div>
   </div>

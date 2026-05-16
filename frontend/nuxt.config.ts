@@ -1,11 +1,10 @@
 export default defineNuxtConfig({
-  // fecha recomendada por Nuxt / Nitro (evita el WARN de compatibilidad)
+  
   compatibilityDate: '2026-03-20',
 
-  // Definir la carpeta raíz de la aplicación
   srcDir: 'app',
 
-  // CSS global
+  
   css: ['~/recursos/css/main.css'],
 
   dir: {
@@ -13,7 +12,7 @@ export default defineNuxtConfig({
     assets: 'recursos'
   },
 
-  // componentes automáticos
+
   components: {
     dirs: ['~/componentes']
   },
@@ -26,10 +25,10 @@ export default defineNuxtConfig({
     storesDirs: ['./tiendas/**']
   },
 
-  // devtools
+  
   devtools: { enabled: false },
 
-  // módulos
+  
   modules: [
     '@pinia/nuxt',
     '@nuxtjs/tailwindcss',
@@ -38,7 +37,7 @@ export default defineNuxtConfig({
 
 
 
-  // PostCSS config (Nuxt usará estos plugins en la compilación)
+
   postcss: {
     plugins: {
       tailwindcss: {},
