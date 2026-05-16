@@ -10,4 +10,3 @@
 - main (principal): no se toca directo
 - desarrollo: integración
 - tarea/...: trabajo de cada cosa
-
