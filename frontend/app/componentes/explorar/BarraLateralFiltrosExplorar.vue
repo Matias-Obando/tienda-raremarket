@@ -87,6 +87,16 @@
       </select>
     </section>
 
+    <div class="filters-panel__actions">
+      <button
+        type="button"
+        class="filters-apply-btn"
+        @click="$emit('close-filters')"
+      >
+        Aplicar filtros
+      </button>
+    </div>
+
 
   </aside>
 </template>
@@ -382,6 +392,10 @@ function updateSort(event: Event) {
   margin-top: 4px;
 }
 
+.filters-panel__actions {
+  display: none;
+}
+
 @media (max-width: 1200px) {
   .filters-panel {
     position: static;
@@ -462,6 +476,7 @@ function updateSort(event: Event) {
   .filters-panel__hero p {
     font-size: 13px;
   }
+
 }
 
 @media (max-width: 640px) {
@@ -487,6 +502,31 @@ function updateSort(event: Event) {
 
   .filters-panel__hero p {
     display: none;
+  }
+
+  .filters-panel__actions {
+    display: block;
+    position: sticky;
+    bottom: 0;
+    padding-top: 0;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0), #fff 24px);
+  }
+
+  .filters-apply-btn {
+    width: 100%;
+    border: none;
+    border-radius: 16px;
+    padding: 14px 16px;
+    background: #0f766e;
+    color: #fff;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    box-shadow: 0 14px 28px rgba(15, 118, 110, 0.24);
+  }
+
+  .filters-apply-btn:hover {
+    background: #115e59;
   }
 }
 </style>
