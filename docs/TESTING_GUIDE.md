@@ -14,16 +14,16 @@ Ubicación: `backend/src/test/java/com/raremarket/backend/service/PasswordResetS
 **Método testeado**: PasswordResetService
 
 **Casos de prueba**:
-- ✅ Solicitar reset de contraseña con email válido
-- ✅ Manejar usuario no existente
-- ✅ Normalizar email a minúsculas
-- ✅ Manejar email nulo/en blanco
-- ✅ Reset de contraseña con token válido
-- ✅ Validar token nulo/en blanco
-- ✅ Validar contraseña nula/en blanco
-- ✅ Manejar token inválido/expirado
-- ✅ Manejar usuario no encontrado durante reset
-- ✅ Trim whitespace en email y token
+-  Solicitar reset de contraseña con email válido
+-  Manejar usuario no existente
+-  Normalizar email a minúsculas
+-  Manejar email nulo/en blanco
+-  Reset de contraseña con token válido
+-  Validar token nulo/en blanco
+-  Validar contraseña nula/en blanco
+-  Manejar token inválido/expirado
+-  Manejar usuario no encontrado durante reset
+-  Trim whitespace en email y token
 
 **Total de tests**: 14
 
@@ -38,20 +38,20 @@ Ubicación: `backend/src/test/java/com/raremarket/backend/service/UserServiceTes
 - getAllUsers()
 
 **Casos de prueba**:
-- ✅ Registro exitoso de usuario
-- ✅ Validación de usuario nulo
-- ✅ Validación de email nulo/en blanco
-- ✅ Validación de contraseña nula/en blanco
-- ✅ Prevenir duplicados de username/email
-- ✅ Normalización de email
-- ✅ Generación automática de UUID
-- ✅ Autenticación con username
-- ✅ Autenticación con email
-- ✅ Validaciones de autenticación
-- ✅ Actualizar perfil exitosamente
-- ✅ Validar duplicados al actualizar
-- ✅ Permitir que usuario actualice su propio email
-- ✅ Limpiar avatar
+-  Registro exitoso de usuario
+-  Validación de usuario nulo
+-  Validación de email nulo/en blanco
+-  Validación de contraseña nula/en blanco
+-  Prevenir duplicados de username/email
+-  Normalización de email
+-  Generación automática de UUID
+-  Autenticación con username
+-  Autenticación con email
+-  Validaciones de autenticación
+-  Actualizar perfil exitosamente
+-  Validar duplicados al actualizar
+-  Permitir que usuario actualice su propio email
+-  Limpiar avatar
 
 **Total de tests**: 25
 
@@ -66,16 +66,16 @@ Ubicación: `backend/src/test/java/com/raremarket/backend/service/ChatServiceTes
 - deleteConversation()
 
 **Casos de prueba**:
-- ✅ Crear nueva conversación
-- ✅ Obtener conversación existente
-- ✅ Validar IDs de usuarios diferentes
-- ✅ Validar itemId no vacío
-- ✅ Validar existencia de usuarios
-- ✅ Listar conversaciones del usuario
-- ✅ Enviar mensaje exitosamente
-- ✅ Trim y validación de contenido
-- ✅ Marcar conversación como leída
-- ✅ Borrar conversación con autenticación
+-  Crear nueva conversación
+-  Obtener conversación existente
+-  Validar IDs de usuarios diferentes
+-  Validar itemId no vacío
+-  Validar existencia de usuarios
+-  Listar conversaciones del usuario
+-  Enviar mensaje exitosamente
+-  Trim y validación de contenido
+-  Marcar conversación como leída
+-  Borrar conversación con autenticación
 
 **Total de tests**: 21
 
@@ -203,12 +203,12 @@ mvn clean test jacoco:report
 
 ## Best Practices Utilizados
 
-✅ **Isolation**: Cada test es independiente
-✅ **Mocking**: Se mockean todas las dependencias externas
-✅ **Nombres claros**: Los tests describen qué están probando
-✅ **Casos edge**: Se incluyen validaciones de null, blank, etc.
-✅ **Assertions específicos**: Se verifica comportamiento exacto
-✅ **No integración**: Son tests unitarios, no de integración
+ **Isolation**: Cada test es independiente
+ **Mocking**: Se mockean todas las dependencias externas
+ **Nombres claros**: Los tests describen qué están probando
+ **Casos edge**: Se incluyen validaciones de null, blank, etc.
+ **Assertions específicos**: Se verifica comportamiento exacto
+ **No integración**: Son tests unitarios, no de integración
 
 ## Troubleshooting
 
